@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fleet Bots • Live Monitor</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+              900: '#14532d',
+            },
+            darkBg: '#0b0f17',
+            cardBg: '#131b26',
+            cardBorder: '#1f293d',
+            accent: '#3b82f6'
+          }
+        }
+      }
+    }
+  </script>
+  <script src="config.js"></script>
+  <style>
+    body {
+      background-color: #0b0f17;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #27354a;
+      border-radius: 4px;
+    }
+    .pulse-glow {
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.25);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Header Navigation -->
+  <header class="border-b border-[#1f293d] bg-[#111722]/90 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center font-black text-black text-lg shadow-md">
+          ⚡
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            Fleet Bot Monitor
+            <span id="liveStatusBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
+              Live
+            </span>
+          </h1>
+          <p id="lastUpdated" class="text-xs text-gray-400">Waiting for data...</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button id="refreshBtn" onclick="fetchData(true)" class="p-2 rounded-lg bg-[#1a2332] hover:bg-[#222e42] border border-[#26354d] text-gray-300 hover:text-white transition flex items-center text-xs font-medium">
+          <svg id="refreshIcon" class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span id="countdownText" class="hidden sm:inline">Refresh</span>
+        </button>
+        <button onclick="toggleSettingsModal()" class="p-2 rounded-lg bg-[#1a2332] hover:bg-[#222e42] border border-[#26354d] text-gray-300 hover:text-white transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
+
+    <!-- Gist ID Prompt Banner if not configured -->
+    <div id="setupBanner" class="hidden mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 text-blue-200">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="font-bold text-white text-sm">Gist ID Required</h3>
+          <p class="text-xs text-blue-300">Enter your GitHub Gist ID to connect this dashboard to your Droplet logs.</p>
+        </div>
+        <button onclick="toggleSettingsModal()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow">
+          Configure Gist ID
+        </button>
+      </div>
+    </div>
+
+    <!-- Overview Stat Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      
+      <!-- Total Profit -->
+      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm relative overflow-hidden">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Net Profit</div>
+        <div id="statTotalProfit" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">$0.00</div>
+        <div id="statProfitPill" class="mt-2 inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">
+          <span>0 trades</span>
+        </div>
+      </div>
+
+      <!-- Win Rate -->
+      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Win Rate</div>
+        <div id="statWinRate" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">0%</div>
+        <div class="mt-2 text-xs text-gray-400 flex items-center gap-1.5">
+          <span id="statWins" class="text-emerald-400 font-semibold">0W</span> /
+          <span id="statLosses" class="text-rose-400 font-semibold">0L</span>
+        </div>
+      </div>
+
+      <!-- Active Fleet Bots -->
+      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Active Fleet</div>
+        <div id="statActiveBots" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">0 / 0</div>
+        <div class="mt-2 text-xs text-gray-400">Containers Running</div>
+      </div>
+
+      <!-- Fleet Sync -->
+      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm">
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Auto-Sync</div>
+        <div id="syncIntervalText" class="text-2xl sm:text-3xl font-extrabold text-blue-400 tracking-tight">30s</div>
+        <div class="mt-2 text-xs text-emerald-400 flex items-center">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+          HTTPS Push Bridge
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Fleets List Container -->
+    <div id="fleetsContainer" class="space-y-6">
+      <div class="text-center py-16 text-gray-500">
+        <div class="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+        <p class="text-sm">Connecting to fleet feed...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-white">Dashboard Settings</h3>
+        <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        <div>
+          <label class="block text-gray-300 font-medium mb-1">GitHub Gist ID</label>
+          <input type="text" id="gistInput" placeholder="e.g. 7f8a123bc456..." class="w-full bg-[#0b0f17] border border-[#27354a] rounded-xl px-3 py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
+          <p class="text-[11px] text-gray-400 mt-1">Found in your Gist URL: <span class="text-gray-300">gist.github.com/username/<b>[GIST_ID]</b></span></p>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 font-medium mb-1">Refresh Frequency</label>
+          <select id="refreshIntervalSelect" class="w-full bg-[#0b0f17] border border-[#27354a] rounded-xl px-3 py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
+            <option value="15">Every 15 Seconds (Real-time)</option>
+            <option value="30" selected>Every 30 Seconds (Default)</option>
+            <option value="60">Every 1 Minute</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end space-x-2">
+        <button onclick="toggleSettingsModal()" class="px-4 py-2 rounded-xl text-gray-400 hover:text-white text-xs font-medium">Cancel</button>
+        <button onclick="saveSettings()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md">Save & Sync</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let GIST_ID = localStorage.getItem("fleet_gist_id") || (window.DEFAULT_GIST_ID || "");
+    let REFRESH_SECONDS = parseInt(localStorage.getItem("fleet_refresh_interval") || "30");
+    let countdown = REFRESH_SECONDS;
+    let timerId = null;
+
+    function toggleSettingsModal() {
+      const modal = document.getElementById("settingsModal");
+      document.getElementById("gistInput").value = GIST_ID;
+      document.getElementById("refreshIntervalSelect").value = REFRESH_SECONDS;
+      modal.classList.toggle("hidden");
+    }
+
+    function saveSettings() {
+      const input = document.getElementById("gistInput").value.trim();
+      const interval = parseInt(document.getElementById("refreshIntervalSelect").value);
+      if (input) {
+        GIST_ID = input;
+        localStorage.setItem("fleet_gist_id", GIST_ID);
+      }
+      REFRESH_SECONDS = interval;
+      localStorage.setItem("fleet_refresh_interval", interval);
+      document.getElementById("syncIntervalText").innerText = interval + "s";
+      toggleSettingsModal();
+      fetchData(true);
+    }
+
+    function formatRelativeTime(isoString) {
+      if (!isoString) return "Unknown";
+      try {
+        const diffMs = Date.now() - new Date(isoString).getTime();
+        const diffSec = Math.floor(diffMs / 1000);
+        if (diffSec < 5) return "Just now";
+        if (diffSec < 60) return `${diffSec}s ago`;
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin}m ago`;
+        const diffHr = Math.floor(diffMin / 60);
+        return `${diffHr}h ago`;
+      } catch (e) {
+        return isoString;
+      }
+    }
+
+    function styleLogLine(line) {
+      const lower = line.toLowerCase();
+      let colorClass = "text-gray-300";
+      let badge = "";
+
+      if (lower.includes("win") || lower.includes("won") || lower.includes("profit")) {
+        colorClass = "text-emerald-400 font-semibold";
+        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold mr-1.5">WIN</span>';
+      } else if (lower.includes("loss") || lower.includes("lost")) {
+        colorClass = "text-rose-400 font-semibold";
+        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 font-bold mr-1.5">LOSS</span>';
+      } else if (lower.includes("buy") || lower.includes("bought") || lower.includes("purchased")) {
+        colorClass = "text-cyan-300";
+        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-bold mr-1.5">BUY</span>';
+      } else if (lower.includes("cooldown") || lower.includes("waiting") || lower.includes("delay")) {
+        colorClass = "text-amber-300";
+        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 font-bold mr-1.5">WAIT</span>';
+      } else if (lower.includes("error")) {
+        colorClass = "text-red-400";
+        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-red-500/20 text-red-400 font-bold mr-1.5">ERR</span>';
+      }
+
+      return `<div class="py-0.5 leading-relaxed font-mono text-[11px] sm:text-xs flex items-start">${badge}<span class="${colorClass} break-all">${escapeHtml(line)}</span></div>`;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    async function fetchData(manual = false) {
+      if (!GIST_ID) {
+        document.getElementById("setupBanner").classList.remove("hidden");
+        document.getElementById("fleetsContainer").innerHTML = `
+          <div class="text-center py-12 text-gray-400">
+            <p class="text-sm">Please set your GitHub Gist ID using the settings icon above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      document.getElementById("setupBanner").classList.add("hidden");
+      const refreshIcon = document.getElementById("refreshIcon");
+      refreshIcon.classList.add("animate-spin");
+
+      try {
+        // Fetch Gist details directly from GitHub API
+        const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const gist = await res.json();
+
+        const file = gist.files["fleet_status.json"];
+        if (!file || !file.content) {
+          throw new Error("fleet_status.json not found in Gist");
+        }
+
+        const data = JSON.parse(file.content);
+        renderDashboard(data);
+        countdown = REFRESH_SECONDS;
+      } catch (err) {
+        console.error("Fetch error:", err);
+        document.getElementById("lastUpdated").innerText = "Sync issue: " + err.message;
+      } finally {
+        setTimeout(() => refreshIcon.classList.remove("animate-spin"), 500);
+      }
+    }
+
+    function renderDashboard(data) {
+      // 1. Overview Stats
+      const profitEl = document.getElementById("statTotalProfit");
+      const isProfitable = data.total_profit >= 0;
+      profitEl.innerText = `${isProfitable ? '+' : ''}$${data.total_profit.toFixed(2)}`;
+      profitEl.className = `text-2xl sm:text-3xl font-extrabold tracking-tight ${isProfitable ? 'text-emerald-400' : 'text-rose-400'}`;
+
+      document.getElementById("statProfitPill").innerHTML = `<span>${data.total_trades || 0} total trades</span>`;
+      document.getElementById("statWinRate").innerText = `${data.win_rate || 0}%`;
+      document.getElementById("statWins").innerText = `${data.total_wins || 0}W`;
+      document.getElementById("statLosses").innerText = `${data.total_losses || 0}L`;
+      document.getElementById("statActiveBots").innerText = `${data.total_active_bots || 0} / ${data.total_containers || 0}`;
+      document.getElementById("lastUpdated").innerText = `Updated ${formatRelativeTime(data.updated_at)}`;
+
+      // 2. Render Fleets & Bots
+      const container = document.getElementById("fleetsContainer");
+      if (!data.fleets || data.fleets.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-gray-500 bg-[#131b26] border border-[#1f293d] rounded-2xl">
+            No bot containers reported in this snapshot.
+          </div>
+        `;
+        return;
+      }
+
+      let html = "";
+      data.fleets.forEach(fleet => {
+        html += `
+          <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 sm:p-5 shadow-lg">
+            <div class="flex items-center justify-between pb-3 border-b border-[#1f293d] mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-base sm:text-lg font-bold text-white">${fleet.fleet_name}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[#1c2637] text-gray-300 border border-[#27354a]">
+                  ${fleet.bot_count} Bots
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              ${fleet.bots.map(bot => renderBotCard(bot)).join("")}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderBotCard(bot) {
+      const isRunning = bot.status === "RUNNING";
+      const isProfitable = bot.profit >= 0;
+      const logsHtml = (bot.logs && bot.logs.length > 0)
+        ? bot.logs.map(styleLogLine).join("")
+        : '<p class="text-xs text-gray-500">No recent logs recorded.</p>';
+
+      return `
+        <div class="bg-[#0e141e] border border-[#1d273a] rounded-xl p-3.5 flex flex-col justify-between">
+          <div>
+            <!-- Bot Header -->
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full ${isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}"></span>
+                <span class="font-bold text-xs sm:text-sm text-gray-200">${bot.name}</span>
+              </div>
+              <span class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded ${isRunning ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
+                ${bot.status}
+              </span>
+            </div>
+
+            <!-- Stats Ribbon -->
+            <div class="grid grid-cols-3 gap-2 bg-[#131b26] rounded-lg p-2 text-center text-xs mb-3 border border-[#1f293d]">
+              <div>
+                <span class="block text-[10px] text-gray-400 uppercase">Profit</span>
+                <span class="font-bold ${isProfitable ? 'text-emerald-400' : 'text-rose-400'}">
+                  ${isProfitable ? '+' : ''}$${bot.profit.toFixed(2)}
+                </span>
+              </div>
+              <div>
+                <span class="block text-[10px] text-gray-400 uppercase">Record</span>
+                <span class="font-semibold text-gray-200">${bot.wins}W - ${bot.losses}L</span>
+              </div>
+              <div>
+                <span class="block text-[10px] text-gray-400 uppercase">Cur Stake</span>
+                <span class="font-semibold text-gray-200">$${bot.current_stake.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <!-- Simplified Activity Logs -->
+            <div class="text-[11px] font-semibold text-gray-400 mb-1 flex items-center justify-between">
+              <span>Recent Activity Feed</span>
+              <span class="text-[10px] text-gray-500">Docker Tail</span>
+            </div>
+            <div class="bg-[#090d14] border border-[#172030] rounded-lg p-2.5 max-h-36 overflow-y-auto custom-scroll">
+              ${logsHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Auto Refresh Countdown Loop
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        countdown = REFRESH_SECONDS;
+        fetchData();
+      }
+      const btn = document.getElementById("countdownText");
+      if (btn) btn.innerText = `Refresh (${countdown}s)`;
+    }, 1000);
+
+    // Initial Load
+    fetchData();
+  </script>
+</body>
+</html>
