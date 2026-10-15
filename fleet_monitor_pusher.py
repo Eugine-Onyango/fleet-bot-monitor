@@ -122,6 +122,7 @@ def build_payload():
         "Fleet 2 (Even/Odd)": [],
         "Fleet 1 (Even/Odd)": [],
         "Over/Under Fleet (50/50 Martingale)": [],
+        "Call/Put Fleet (Rise/Fall 30m)": [],
         "Other Bots": []
     }
     
@@ -183,6 +184,8 @@ def build_payload():
         # Categorize
         if "fleet2" in name:
             fleets_dict["Fleet 2 (Even/Odd)"].append(bot_info)
+        elif "call-put" in name:
+            fleets_dict["Call/Put Fleet (Rise/Fall 30m)"].append(bot_info)
         elif "over-under" in name:
             fleets_dict["Over/Under Fleet (50/50 Martingale)"].append(bot_info)
         elif "even-odd" in name:
