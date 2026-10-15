@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 # ================= CONFIGURATION =================
 # Replace these with your GitHub Gist details
 # You can also pass them via environment variables: GIST_ID and GITHUB_TOKEN
-GIST_ID = os.getenv("GIST_ID", "YOUR_GIST_ID_HERE")
+GIST_ID = os.getenv("GIST_ID", "e89e6db2da1433214922b69f101e15aa")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "YOUR_GITHUB_TOKEN_HERE")
 UPDATE_INTERVAL_SECONDS = 30  # Update every 30 seconds
 # =================================================
