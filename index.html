@@ -509,17 +509,129 @@
       };
     }
 
+    function parseToSeconds(input) {
+      if (typeof input === "number") return input;
+      if (!input || typeof input !== "string") return 0;
+      
+      let sec = 0;
+      const yMatch = input.match(/(\d+)\s*y/i) || input.match(/(\d+)\s*years?/i);
+      const moMatch = input.match(/(\d+)\s*months?/i);
+      const wMatch = input.match(/(\d+)\s*w/i) || input.match(/(\d+)\s*weeks?/i);
+      const dMatch = input.match(/(\d+)\s*d/i) || input.match(/(\d+)\s*days?/i);
+      const hMatch = input.match(/(\d+)\s*h/i) || input.match(/(\d+)\s*hours?/i);
+      const mMatch = input.match(/(\d+)\s*m/i) || input.match(/(\d+)\s*mins?|minutes?/i);
+      
+      if (yMatch) sec += parseInt(yMatch[1]) * 31536000;
+      if (moMatch) sec += parseInt(moMatch[1]) * 2592000;
+      if (wMatch) sec += parseInt(wMatch[1]) * 604800;
+      if (dMatch) sec += parseInt(dMatch[1]) * 86400;
+      if (hMatch) sec += parseInt(hMatch[1]) * 3600;
+      if (mMatch) sec += parseInt(mMatch[1]) * 60;
+
+      return sec;
+    }
+
+    function formatFriendlyUptime(totalSec) {
+      if (!totalSec || isNaN(totalSec) || totalSec < 60) {
+        return "Just started";
+      }
+
+      const secInMin = 60;
+      const secInHour = 3600;
+      const secInDay = 86400;
+      const secInWeek = 604800;
+      const secInMonth = 2592000;  // ~30 days
+      const secInYear = 31536000;   // 365 days
+
+      const years = Math.floor(totalSec / secInYear);
+      let rem = totalSec % secInYear;
+
+      const months = Math.floor(rem / secInMonth);
+      rem = rem % secInMonth;
+
+      const weeks = Math.floor(rem / secInWeek);
+      rem = rem % secInWeek;
+
+      const days = Math.floor(rem / secInDay);
+      rem = rem % secInDay;
+
+      const hours = Math.floor(rem / secInHour);
+      rem = rem % secInHour;
+
+      const mins = Math.floor(rem / secInMin);
+
+      // 1. Years
+      if (years > 0) {
+        const yStr = years === 1 ? "1 year" : `${years} years`;
+        if (months > 0) {
+          const mStr = months === 1 ? "1 month" : `${months} months`;
+          return `${yStr}, ${mStr}`;
+        }
+        return yStr;
+      }
+
+      // 2. Months
+      if (months > 0) {
+        const mStr = months === 1 ? "1 month" : `${months} months`;
+        if (weeks > 0) {
+          const wStr = weeks === 1 ? "1 week" : `${weeks} weeks`;
+          return `${mStr}, ${wStr}`;
+        } else if (days > 0) {
+          const dStr = days === 1 ? "1 day" : `${days} days`;
+          return `${mStr}, ${dStr}`;
+        }
+        return mStr;
+      }
+
+      // 3. Weeks (7+ days)
+      if (weeks > 0) {
+        const wStr = weeks === 1 ? "1 week" : `${weeks} weeks`;
+        if (days > 0) {
+          const dStr = days === 1 ? "1 day" : `${days} days`;
+          return `${wStr}, ${dStr}`;
+        } else if (hours > 0) {
+          const hStr = hours === 1 ? "1 hour" : `${hours} hours`;
+          return `${wStr}, ${hStr}`;
+        }
+        return wStr;
+      }
+
+      // 4. Days (24 hours to 6 days)
+      if (days > 0) {
+        const dStr = days === 1 ? "1 day" : `${days} days`;
+        if (hours > 0) {
+          const hStr = hours === 1 ? "1 hour" : `${hours} hours`;
+          return `${dStr}, ${hStr}`;
+        }
+        return dStr;
+      }
+
+      // 5. Hours (1 to 23 hours)
+      if (hours > 0) {
+        const hStr = hours === 1 ? "1 hour" : `${hours} hours`;
+        if (mins > 0) {
+          return `${hStr}, ${mins}m`;
+        }
+        return hStr;
+      }
+
+      // 6. Minutes (< 1 hour)
+      return `${mins} minutes`;
+    }
+
     function extractUptime(bot) {
+      if (bot.uptime_seconds && bot.uptime_seconds > 0) {
+        return formatFriendlyUptime(bot.uptime_seconds);
+      }
       if (bot.uptime && bot.uptime !== "0m" && bot.uptime !== "N/A") {
-        return bot.uptime;
+        const sec = parseToSeconds(bot.uptime);
+        if (sec > 0) return formatFriendlyUptime(sec);
       }
       if (bot.raw_status) {
-        const m = bot.raw_status.match(/Up\s+([0-9]+\s+[a-zA-Z]+(?:\s+[0-9]+\s+[a-zA-Z]+)?)/i);
-        if (m) {
-          return m[1];
-        }
+        const sec = parseToSeconds(bot.raw_status);
+        if (sec > 0) return formatFriendlyUptime(sec);
       }
-      return "Live";
+      return "Live Active";
     }
 
     function renderDashboard(data) {
@@ -537,7 +649,7 @@
 
       let overallPeak = data.overall_peak_stake || 0.35;
       let overallMarket = data.overall_peak_market || "";
-      let overallLongestUptime = data.longest_uptime || "";
+      let overallLongestSec = parseToSeconds(data.longest_uptime || 0);
 
       // 3. Fleets
       const container = document.getElementById("fleetsContainer");
@@ -559,11 +671,11 @@
         // Calculate fleet peak stake & uptime across bots
         let fleetPeak = fleet.fleet_peak_stake || 0.35;
         let fleetMarket = fleet.fleet_peak_market || "";
-        let fleetUptime = fleet.fleet_uptime || "";
+        let fleetMaxSec = parseToSeconds(fleet.fleet_uptime || 0);
 
         fleet.bots.forEach(b => {
           const info = extractPeakAndMarket(b);
-          const bUptime = extractUptime(b);
+          const bSec = b.uptime_seconds || parseToSeconds(b.uptime || b.raw_status || "");
 
           if (info.peakStake > fleetPeak) {
             fleetPeak = info.peakStake;
@@ -573,11 +685,11 @@
             overallPeak = info.peakStake;
             overallMarket = info.peakMarket;
           }
-          if (!fleetUptime || fleetUptime === "0m" || fleetUptime === "Live") {
-            if (bUptime && bUptime !== "Live") fleetUptime = bUptime;
+          if (bSec > fleetMaxSec) {
+            fleetMaxSec = bSec;
           }
-          if (!overallLongestUptime || overallLongestUptime === "0m") {
-            if (bUptime && bUptime !== "Live") overallLongestUptime = bUptime;
+          if (bSec > overallLongestSec) {
+            overallLongestSec = bSec;
           }
         });
 
@@ -585,7 +697,7 @@
           ? `$${fleetPeak.toFixed(2)} ${fleetMarket ? '(' + fleetMarket + ')' : ''}`
           : '$0.35';
 
-        const fleetUptimeDisplay = fleetUptime || "Live Active";
+        const fleetUptimeDisplay = formatFriendlyUptime(fleetMaxSec);
 
         html += `
           <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 card-shadow space-y-4">
@@ -624,7 +736,7 @@
       
       const uptimeValEl = document.getElementById("fleetUptimeVal");
       if (uptimeValEl) {
-        uptimeValEl.innerText = overallLongestUptime || "Live Active";
+        uptimeValEl.innerText = formatFriendlyUptime(overallLongestSec);
       }
 
       container.innerHTML = html;
