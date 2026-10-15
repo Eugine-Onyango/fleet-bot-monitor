@@ -75,6 +75,7 @@ def get_bot_state(name):
     # Method 2: Fallback to all standard paths
     num = name.split("-")[-1]
     possible_paths = [
+        f"/root/over_under_fleet_bot_{num}/state.json",
         f"/root/even_odd_fleet2_bot_{num}/state.json",
         f"/root/even_odd_millipede_bot_{num}/state.json",
         f"/root/over_under_millipede_bot_{num}/state.json",
@@ -120,7 +121,7 @@ def build_payload():
     fleets_dict = {
         "Fleet 2 (Even/Odd)": [],
         "Fleet 1 (Even/Odd)": [],
-        "Over/Under Fleet": [],
+        "Over/Under Fleet (50/50 Fibonacci)": [],
         "Other Bots": []
     }
     
@@ -182,10 +183,10 @@ def build_payload():
         # Categorize
         if "fleet2" in name:
             fleets_dict["Fleet 2 (Even/Odd)"].append(bot_info)
+        elif "over-under" in name:
+            fleets_dict["Over/Under Fleet (50/50 Fibonacci)"].append(bot_info)
         elif "even-odd" in name:
             fleets_dict["Fleet 1 (Even/Odd)"].append(bot_info)
-        elif "over-under" in name:
-            fleets_dict["Over/Under Fleet"].append(bot_info)
         else:
             fleets_dict["Other Bots"].append(bot_info)
 

@@ -183,6 +183,22 @@
       </div>
     </div>
 
+    <!-- Friendly Navigation Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 custom-scroll pt-1" id="fleetTabsBar">
+      <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
+        <span>🌟</span> All Fleets <span id="tabCount-all" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">0</span>
+      </button>
+      <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300">
+        <span>⭐</span> Team 2 (Even/Odd) <span id="tabCount-fleet2" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">0</span>
+      </button>
+      <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300">
+        <span>🚀</span> Team 1 (Even/Odd) <span id="tabCount-fleet1" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">0</span>
+      </button>
+      <button onclick="switchFleetTab('over_under')" id="tab-over_under" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300">
+        <span>🎯</span> Over/Under (50/50 Fib) <span id="tabCount-over_under" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">0</span>
+      </button>
+    </div>
+
     <!-- Fleets and Bots Container -->
     <div id="fleetsContainer" class="space-y-6">
       <div class="text-center py-16 text-slate-400">
@@ -233,6 +249,7 @@
     let countdown = REFRESH_SECONDS;
     let isSimpleMode = localStorage.getItem("fleet_simple_mode") !== "false"; // Default simple
     let currentTheme = localStorage.getItem("fleet_theme") || "light"; // Default cheerful light mode
+    let currentFleetTab = localStorage.getItem("active_fleet_tab") || "all";
 
     function applyTheme() {
       const html = document.documentElement;
@@ -261,6 +278,28 @@
       if (window.lastPayload) {
         renderDashboard(window.lastPayload);
       }
+    }
+
+    function switchFleetTab(tab) {
+      currentFleetTab = tab;
+      localStorage.setItem("active_fleet_tab", tab);
+      updateTabsUI();
+      if (window.lastPayload) {
+        renderDashboard(window.lastPayload);
+      }
+    }
+
+    function updateTabsUI() {
+      const tabs = ["all", "fleet2", "fleet1", "over_under"];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (!btn) return;
+        if (t === currentFleetTab) {
+          btn.className = "tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-emerald-500 text-white shadow-md shadow-emerald-500/20 border-transparent";
+        } else {
+          btn.className = "tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300";
+        }
+      });
     }
 
     function updateViewModeUI() {
@@ -317,6 +356,34 @@
       const minusMoneyMatch = line.match(/-\$([0-9.]+)/) || line.match(/lost.*?\$?([0-9.]+)/i);
       const stakeMatch = line.match(/@\s*\$([0-9.]+)/) || line.match(/step-up to \$([0-9.]+)/i) || line.match(/at \$([0-9.]+)/i);
 
+      if (lower.includes("fibonacci recovery complete") || (lower.includes("cycle result: win") && lower.includes("fibonacci"))) {
+        return {
+          icon: "🎉",
+          color: "text-emerald-700 dark:text-emerald-300",
+          text: `Fibonacci cycle recovered completely! Resetting safely back to start.`
+        };
+      }
+
+      if (lower.includes("win step-back") || lower.includes("stepped back from fib")) {
+        const m = line.match(/won\s*\+?\$([0-9.]+)/i);
+        const amt = m ? `+$${m[1]}` : "Win";
+        return {
+          icon: "🛡️",
+          color: "text-emerald-700 dark:text-emerald-300",
+          text: `Won ${amt}! Stepping back 2 levels in Fibonacci recovery.`
+        };
+      }
+
+      if (lower.includes("locked for fibonacci recovery") || lower.includes("stepped forward to fib")) {
+        const m = line.match(/fib\s*(\d+).*?\$([0-9.]+)/i);
+        const lvl = m ? `Level ${m[1]} ($${m[2]})` : "Next Level";
+        return {
+          icon: "🛡️",
+          color: "text-amber-800 dark:text-amber-300",
+          text: `Dip recorded. Moving to Fibonacci ${lvl} for gentle recovery.`
+        };
+      }
+
       if (lower.includes("won") || (lower.includes("settled") && lower.includes("profit/loss: +"))) {
         const amt = plusMoneyMatch ? `+$${plusMoneyMatch[1]}` : "Profit";
         return {
@@ -332,6 +399,24 @@
           icon: "🛡️",
           color: "text-amber-800 dark:text-amber-300",
           text: `Small dip (${amt}). Safety recovery active.`
+        };
+      }
+
+      if (lower.includes("under 5") || lower.includes("digitunder")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "🎯",
+          color: "text-indigo-700 dark:text-indigo-300",
+          text: `Placed 50/50 trade: <strong class="text-indigo-600 dark:text-indigo-400 font-bold">Under 5</strong> (${amt}).`
+        };
+      }
+
+      if (lower.includes("over 4") || lower.includes("digitover")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "🎯",
+          color: "text-indigo-700 dark:text-indigo-300",
+          text: `Placed 50/50 trade: <strong class="text-indigo-600 dark:text-indigo-400 font-bold">Over 4</strong> (${amt}).`
         };
       }
 
@@ -409,12 +494,12 @@
       if (rawName.includes("fleet2")) {
         const num = rawName.split("-").pop();
         return `Team 2 • Helper #${num}`;
-      } else if (rawName.includes("even-odd")) {
-        const num = rawName.split("-").pop();
-        return `Team 1 • Helper #${num}`;
       } else if (rawName.includes("over-under")) {
         const num = rawName.split("-").pop();
         return `Over/Under • Helper #${num}`;
+      } else if (rawName.includes("even-odd")) {
+        const num = rawName.split("-").pop();
+        return `Team 1 • Helper #${num}`;
       }
       return rawName;
     }
@@ -651,7 +736,32 @@
       let overallMarket = data.overall_peak_market || "";
       let overallLongestSec = parseToSeconds(data.longest_uptime || 0);
 
-      // 3. Fleets
+      // 3. Update Tab Counters
+      let countAll = 0;
+      let countFleet2 = 0;
+      let countFleet1 = 0;
+      let countOU = 0;
+
+      (data.fleets || []).forEach(f => {
+        const lower = f.fleet_name.toLowerCase();
+        const cnt = f.bot_count || (f.bots ? f.bots.length : 0);
+        countAll += cnt;
+        if (lower.includes("fleet 2")) countFleet2 += cnt;
+        else if (lower.includes("fleet 1")) countFleet1 += cnt;
+        else if (lower.includes("over-under") || lower.includes("over/under")) countOU += cnt;
+      });
+
+      const tabCountAllEl = document.getElementById("tabCount-all");
+      const tabCountF2El = document.getElementById("tabCount-fleet2");
+      const tabCountF1El = document.getElementById("tabCount-fleet1");
+      const tabCountOUEl = document.getElementById("tabCount-over_under");
+      if (tabCountAllEl) tabCountAllEl.innerText = countAll;
+      if (tabCountF2El) tabCountF2El.innerText = countFleet2;
+      if (tabCountF1El) tabCountF1El.innerText = countFleet1;
+      if (tabCountOUEl) tabCountOUEl.innerText = countOU;
+      updateTabsUI();
+
+      // 4. Fleets Container
       const container = document.getElementById("fleetsContainer");
       if (!data.fleets || data.fleets.length === 0) {
         container.innerHTML = `
@@ -662,11 +772,51 @@
         return;
       }
 
+      // Filter by active tab
+      let fleetsToRender = data.fleets || [];
+      if (currentFleetTab === "fleet2") {
+        fleetsToRender = fleetsToRender.filter(f => f.fleet_name.toLowerCase().includes("fleet 2"));
+      } else if (currentFleetTab === "fleet1") {
+        fleetsToRender = fleetsToRender.filter(f => f.fleet_name.toLowerCase().includes("fleet 1"));
+      } else if (currentFleetTab === "over_under") {
+        fleetsToRender = fleetsToRender.filter(f => f.fleet_name.toLowerCase().includes("over-under") || f.fleet_name.toLowerCase().includes("over/under"));
+      }
+
+      if (fleetsToRender.length === 0) {
+        if (currentFleetTab === "over_under") {
+          container.innerHTML = `
+            <div class="text-center py-12 bg-white dark:bg-[#1e293b] border-2 border-dashed border-emerald-300 dark:border-emerald-800/60 rounded-3xl p-6 shadow-sm space-y-3">
+              <span class="text-4xl block">🎯</span>
+              <h3 class="text-base font-black text-slate-800 dark:text-white">Over/Under Fleet (50/50 Fibonacci)</h3>
+              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+                Ready to be started! Once launched on your server console, all 4 helper bots will appear here live with 50/50 Under 5 / Over 4 trading, Fibonacci step-back recovery, and 20-minute rest cooldowns.
+              </p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl">
+              No bots currently active in this fleet tab.
+            </div>
+          `;
+        }
+        return;
+      }
+
       let html = "";
-      data.fleets.forEach(fleet => {
-        const friendlyFleetName = fleet.fleet_name
-          .replace("Fleet 2 (Even/Odd)", "⭐ Team 2 (5-Minute Strategy)")
-          .replace("Fleet 1 (Even/Odd)", "🚀 Team 1 (Even / Odd)");
+      fleetsToRender.forEach(fleet => {
+        let friendlyFleetName = fleet.fleet_name;
+        let fleetSubtitle = "Even / Odd Digits Strategy • 20m Safe Rest";
+        if (fleet.fleet_name.includes("Fleet 2")) {
+          friendlyFleetName = "⭐ Team 2 (Even / Odd)";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
+        } else if (fleet.fleet_name.includes("Fleet 1")) {
+          friendlyFleetName = "🚀 Team 1 (Even / Odd)";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
+        } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
+          friendlyFleetName = "🎯 Over/Under Fleet (50/50 Fibonacci)";
+          fleetSubtitle = "50% Under 5 / Over 4 • Fibonacci Step-Back • 20m Rest";
+        }
 
         // Calculate fleet peak stake & uptime across bots
         let fleetPeak = fleet.fleet_peak_stake || 0.35;
@@ -703,11 +853,14 @@
           <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 card-shadow space-y-4">
             
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
-              <div class="flex items-center gap-2">
-                <span class="text-base sm:text-lg font-black text-slate-900 dark:text-white">${friendlyFleetName}</span>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700">
-                  ${fleet.bot_count} Active
-                </span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-base sm:text-lg font-black text-slate-900 dark:text-white">${friendlyFleetName}</span>
+                  <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700">
+                    ${fleet.bot_count} Active
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">${fleetSubtitle}</p>
               </div>
               <div class="flex flex-wrap items-center gap-2 text-xs">
                 <span class="font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-1">
