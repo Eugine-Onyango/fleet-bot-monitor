@@ -34,8 +34,8 @@
     "stpRNG5"
   ],
   "initial_stake": 0.35,
-  "recovery_strategy": "fibonacci",
-  "fibonacci_sequence": [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987],
+  "recovery_strategy": "martingale",
+  "martingale_multiplier": 2.1,
   "max_losses": 99,
   "win_cooldown_minutes": 20,
   "loss_cooldown_seconds": 1200,

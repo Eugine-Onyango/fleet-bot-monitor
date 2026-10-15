@@ -23,8 +23,6 @@ BOT_NAME = os.getenv("BOT_NAME", "my-over-under-fleet-bot-1")
 UPTIME_OFFSET_SECONDS = int(os.getenv("UPTIME_OFFSET_SECONDS", "0"))
 START_TIME = time.time()
 
-FIB_SEQUENCE = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987]
-
 def get_uptime_string():
     elapsed = (time.time() - START_TIME) + UPTIME_OFFSET_SECONDS
     days = int(elapsed // 86400)
@@ -55,7 +53,6 @@ STATE = {
     "market_index": 0,
     "cycle_profit": 0.0,
     "cycle_stake": 0.35,
-    "fib_index": 0,
     "consecutive_cycle_losses": 0,
     "max_stake": 0.35,
     "max_stake_market": "N/A",
@@ -92,13 +89,6 @@ def load_config(verbose=False):
     except Exception as e:
         print(f"[ERROR] Failed to load config: {e}")
         sys.exit(1)
-
-def get_fib_stake(fib_idx):
-    fib_list = CONFIG.get("fibonacci_sequence", FIB_SEQUENCE)
-    base_stake = CONFIG.get("initial_stake", 0.35)
-    idx = max(0, min(len(fib_list) - 1, fib_idx))
-    multiplier = fib_list[idx]
-    return round(base_stake * multiplier, 2)
 
 def refill_market_basket():
     all_markets = list(CONFIG.get("markets", []))
@@ -198,9 +188,8 @@ def send_proposal(ws, contract_type, stake):
             STATE["max_stake_market"] = current_market
         save_state_unlocked()
 
-    fib_level = STATE.get("fib_index", 0)
     side_desc = "Under 5 (digits 0-4)" if contract_type == "DIGITUNDER" else "Over 4 (digits 5-9)"
-    print(f"   • [Trade {cycle_step}/2] Requesting 50/50 {contract_type} ({side_desc}) on {current_market} @ ${stake:.2f} (Fibonacci Level {fib_level})...")
+    print(f"   • [Trade {cycle_step}/2] Requesting 50/50 {contract_type} ({side_desc}) on {current_market} @ ${stake:.2f}...")
     ws.send(json.dumps(req))
 
 def send_buy(ws, proposal_id, stake):
@@ -269,9 +258,7 @@ def on_message(ws, message):
                 print(f"   • {s:<8}: Bias Score={d['bias']:.3f} -> Dominant: {dom_label} ({d['pct']:.1f}%)")
             print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with {best_data['dominant']} bias ({best_data['pct']:.1f}%). Sequence: {market_state['sequence']}")
 
-            fib_idx = STATE.get("fib_index", 0)
-            stake = get_fib_stake(fib_idx)
-            STATE["cycle_stake"] = stake
+            stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
             contract_type = market_state["sequence"][0]
             send_proposal(ws, contract_type, stake)
 
@@ -279,9 +266,7 @@ def on_message(ws, message):
         proposal = data.get("proposal", {})
         active_proposal_id = proposal.get("id")
         current_market = STATE.get("current_market")
-        fib_idx = STATE.get("fib_index", 0)
-        stake = get_fib_stake(fib_idx)
-        STATE["cycle_stake"] = stake
+        stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
         
         payout = proposal.get("payout", 0.0)
         with state_lock:
@@ -338,48 +323,25 @@ def on_message(ws, message):
                 if status == "won":
                     STATE["wins"] += 1
                     market_state["wins"] += 1
+                    last_cycle_won = True
                     
-                    # Update recovery cycle profit
-                    cycle_profit = round(STATE.get("cycle_profit", 0.0) + profit, 2)
-                    STATE["cycle_profit"] = cycle_profit
+                    # Full Martingale Win: reset stake and cycle profit
+                    STATE["cycle_profit"] = 0.0
+                    STATE["cycle_stake"] = CONFIG.get("initial_stake", 0.35)
+                    STATE["consecutive_cycle_losses"] = 0
+                    STATE["in_recovery"] = False
                     
-                    # Fibonacci step-back by 2 steps
-                    old_fib_idx = STATE.get("fib_index", 0)
-                    new_fib_idx = max(0, old_fib_idx - 2)
-                    STATE["fib_index"] = new_fib_idx
+                    advance_market_on_win()
                     
-                    # If recovered or returned to base level 0
-                    if cycle_profit >= 0.0 or new_fib_idx == 0:
-                        last_cycle_won = True
-                        STATE["fib_index"] = 0
-                        STATE["cycle_profit"] = 0.0
-                        STATE["cycle_stake"] = CONFIG.get("initial_stake", 0.35)
-                        STATE["consecutive_cycle_losses"] = 0
-                        STATE["in_recovery"] = False
-                        
-                        advance_market_on_win()
-                        
-                        print("\n" + "="*60)
-                        print(f"🎉 CYCLE RESULT: WIN (Fibonacci Recovery Complete on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 0.35):.2f}) [{BOT_NAME}]")
-                        print(f"   • Net Trade Profit: +${profit:.2f} (Cycle Profit: +${cycle_profit:.2f})")
-                        print(f"   • Market Unlocked: Will live scan fresh best market on next cycle")
-                        print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
-                        print(f"   • Max Session Drawdown (Deepest Loss): ${STATE.get('max_drawdown', 0.0):.2f}")
-                        print(f"   • Total Session Profit: ${STATE['total_profit']:.2f}")
-                        print("="*60)
-                    else:
-                        # Win stepped back 2 levels, but still in recovery deficit on this market
-                        next_stake = get_fib_stake(new_fib_idx)
-                        STATE["cycle_stake"] = next_stake
-                        STATE["in_recovery"] = True
-                        last_cycle_won = False
-                        
-                        print("\n" + "="*60)
-                        print(f"🛡️ WIN STEP-BACK: Won +${profit:.2f}! Stepped back from Fib {old_fib_idx} -> Fib {new_fib_idx} (${next_stake:.2f}) [{BOT_NAME}]")
-                        print(f"   • Remaining Cycle Deficit: ${cycle_profit:.2f}")
-                        print(f"   • Staying locked on {current_market} until cycle profit turns positive")
-                        print("="*60)
-
+                    print("\n" + "="*60)
+                    print(f"🎉 CYCLE RESULT: WIN (Martingale Recovery Complete on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 0.35):.2f}) [{BOT_NAME}]")
+                    print(f"   • Net Trade Profit: +${profit:.2f}")
+                    print(f"   • Market Unlocked: Will live scan fresh best market on next cycle")
+                    print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
+                    print(f"   • Max Session Drawdown (Deepest Loss): ${STATE.get('max_drawdown', 0.0):.2f}")
+                    print(f"   • Total Session Profit: ${STATE['total_profit']:.2f}")
+                    print("="*60)
+                    
                     save_state_unlocked()
                     trade_completed_event.set()
                     ws.close()
@@ -395,11 +357,9 @@ def on_message(ws, message):
                     if STATE["cycle_profit"] < STATE.get("max_cycle_loss", 0.0):
                         STATE["max_cycle_loss"] = round(STATE["cycle_profit"], 2)
                         
-                    # Fibonacci step-forward by 1 step
-                    old_fib_idx = STATE.get("fib_index", 0)
-                    new_fib_idx = min(len(FIB_SEQUENCE) - 1, old_fib_idx + 1)
-                    STATE["fib_index"] = new_fib_idx
-                    next_stake = get_fib_stake(new_fib_idx)
+                    # 2.1 Martingale Multiplier Step-Up
+                    multiplier = CONFIG.get("martingale_multiplier", 2.1)
+                    next_stake = round(last_stake * multiplier, 2)
                     STATE["cycle_stake"] = next_stake
                     save_state_unlocked()
                     
@@ -414,7 +374,7 @@ def on_message(ws, message):
                         cd_m = recovery_cd // 60
                         print("\n" + "="*60)
                         print(f"❌ CYCLE RESULT: LOSS (Both 50/50 O/U Trades Lost on {current_market}) [{BOT_NAME}]")
-                        print(f"🔒 [MARKET LOCKED FOR FIBONACCI RECOVERY] Stepping forward to Fib {new_fib_idx} (${next_stake:.2f}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown!")
+                        print(f"🔒 [MARKET LOCKED FOR 2.1 MARTINGALE RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown!")
                         print(f"   • Active Recovery Market: {current_market}")
                         print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
                         print(f"   • Max Session Drawdown: ${STATE.get('max_drawdown', 0.0):.2f}")
@@ -425,13 +385,13 @@ def on_message(ws, message):
                         trade_completed_event.set()
                         ws.close()
                     else:
-                        # Trade 1 lost -> Initiate Trade 2/2 immediately on opposite side with Fibonacci step-up stake
+                        # Trade 1 lost -> Initiate Trade 2/2 immediately on opposite side with 2.1 Martingale step-up stake
                         cycle_step += 1
                         active_proposal_id = None
                         active_contract_id = None
                         
                         next_type = current_sequence[cycle_step - 1]
-                        print(f"\n⚠️ Trade {cycle_step - 1} lost. Stepped forward to Fib {new_fib_idx} (${next_stake:.2f}). Initiating Trade {cycle_step}/2 immediately on {current_market} ({next_type})...")
+                        print(f"\n⚠️ Trade {cycle_step - 1} lost. 2.1 Martingale step-up to ${next_stake:.2f}. Initiating Trade {cycle_step}/2 immediately on {current_market} ({next_type})...")
                         send_proposal(ws, next_type, next_stake)
 
 def on_error(ws, error):
@@ -448,13 +408,11 @@ def on_open(ws):
     with state_lock:
         is_locked = STATE.get("in_recovery", False) and STATE.get("current_market") is not None
         current_market = STATE.get("current_market")
-        fib_idx = STATE.get("fib_index", 0)
-        stake = get_fib_stake(fib_idx)
-        STATE["cycle_stake"] = stake
+        stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
     
     if is_locked:
         # Bot is in recovery on its locked market -> place recovery trade directly
-        print(f"🔒 [LOCKED FIBONACCI RECOVERY] Bot is locked on {current_market} @ ${stake:.2f} (Fib Level {fib_idx}). Bypassing scanner.")
+        print(f"🔒 [LOCKED MARTINGALE RECOVERY] Bot is locked on {current_market} @ ${stake:.2f}. Bypassing scanner.")
         market_state = STATE["markets_state"].setdefault(current_market, {
             "wins": 0,
             "losses": 0,
@@ -531,16 +489,14 @@ def run_trade_cycle():
             
             now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             curr_mkt = STATE.get("current_market") or "Scanning on Wakeup..."
-            rec_str = "LOCKED (Fibonacci)" if STATE.get("in_recovery") else "SCANNING FRESH"
-            fib_idx = STATE.get("fib_index", 0)
-            stake = get_fib_stake(fib_idx)
-            STATE["cycle_stake"] = stake
+            rec_str = "LOCKED (2.1 Martingale)" if STATE.get("in_recovery") else "SCANNING FRESH"
+            stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
 
             print("\n" + "="*60)
             print(f"⚡ STARTING 50/50 OVER/UNDER TRADE CYCLE ({BOT_NAME}): {now_str}")
             print(f"   • Bot Uptime: {get_uptime_string()}")
             print(f"   • Active Market Status: {curr_mkt} [{rec_str}] (Basket remaining: {len(STATE.get('market_basket', []))})")
-            print(f"   • Active Fibonacci Stake: ${stake:.2f} (Fib Level {fib_idx}) (Deficit: ${STATE.get('cycle_profit', 0.0):.2f})")
+            print(f"   • Active Martingale Stake: ${stake:.2f} (Deficit: ${STATE.get('cycle_profit', 0.0):.2f})")
             print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
             print(f"   • Max Session Drawdown (Deepest Loss): ${STATE.get('max_drawdown', 0.0):.2f}")
             print(f"   • Deepest Cycle Deficit: ${STATE.get('max_cycle_loss', 0.0):.2f}")
@@ -574,7 +530,7 @@ def run_trade_cycle():
         release_lock()
 
 def main():
-    print(f"🤖 Initializing 50/50 Over/Under Fleet Bot (Fibonacci Recovery): {BOT_NAME}")
+    print(f"🤖 Initializing 50/50 Over/Under Fleet Bot (2.1 Martingale Recovery): {BOT_NAME}")
     load_config(verbose=True)
     load_state(verbose=True)
 
@@ -597,7 +553,7 @@ def main():
             cooldown = CONFIG.get("loss_cooldown_seconds", 1200)
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"⏱️ [20m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next Fibonacci recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+            print(f"⏱️ [20m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next Martingale recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
         else:
             cooldown = CONFIG.get("win_cooldown_minutes", 20) * 60
             cd_m = cooldown // 60

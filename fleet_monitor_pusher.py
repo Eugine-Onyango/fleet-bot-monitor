@@ -121,7 +121,7 @@ def build_payload():
     fleets_dict = {
         "Fleet 2 (Even/Odd)": [],
         "Fleet 1 (Even/Odd)": [],
-        "Over/Under Fleet (50/50 Fibonacci)": [],
+        "Over/Under Fleet (50/50 Martingale)": [],
         "Other Bots": []
     }
     
@@ -184,7 +184,7 @@ def build_payload():
         if "fleet2" in name:
             fleets_dict["Fleet 2 (Even/Odd)"].append(bot_info)
         elif "over-under" in name:
-            fleets_dict["Over/Under Fleet (50/50 Fibonacci)"].append(bot_info)
+            fleets_dict["Over/Under Fleet (50/50 Martingale)"].append(bot_info)
         elif "even-odd" in name:
             fleets_dict["Fleet 1 (Even/Odd)"].append(bot_info)
         else:

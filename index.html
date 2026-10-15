@@ -833,10 +833,10 @@
           heroTag.innerHTML = "🎯 Over / Under Fleet Profit";
         }
         if (peaceText) {
-          peaceText.innerHTML = '<span class="text-base">🛡️</span> Independent 50/50 Under 5 / Over 4 trading with Fibonacci recovery.';
+          peaceText.innerHTML = '<span class="text-base">🛡️</span> Independent 50/50 Under 5 / Over 4 trading with 2.1 Martingale recovery.';
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = "Over/Under Fleet is operating independently with Fibonacci recovery.";
+          comfortingNotice.innerText = "Over/Under Fleet is operating independently with 2.1 Martingale recovery.";
         }
         if (heroContainer) {
           heroContainer.className = "bg-gradient-to-br from-white via-indigo-50/50 to-purple-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#1a1c36] border-2 border-indigo-200 dark:border-indigo-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
@@ -876,7 +876,7 @@
         if (currentSystem === "ou") {
           tabsBar.innerHTML = `
             <button class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
-              <span>🎯</span> Over/Under 50/50 Fibonacci Helpers <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
+              <span>🎯</span> Over/Under 50/50 Martingale Helpers <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
             </button>
           `;
         } else {
@@ -940,8 +940,8 @@
           friendlyFleetName = "🚀 Team 1 (Even / Odd)";
           fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
         } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
-          friendlyFleetName = "🎯 Over/Under Fleet (50/50 Fibonacci)";
-          fleetSubtitle = "50% Under 5 / Over 4 • Fibonacci Step-Back • 20m Rest";
+          friendlyFleetName = "🎯 Over/Under Fleet (50/50 Martingale)";
+          fleetSubtitle = "50% Under 5 / Over 4 • 2.1 Martingale Recovery • 20m Rest";
         }
 
         // Calculate fleet peak stake & uptime across bots
