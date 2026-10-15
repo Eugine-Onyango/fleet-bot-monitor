@@ -167,15 +167,20 @@
 
     </div>
 
-    <!-- Comforting Status Note -->
-    <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-3.5 flex items-center justify-between text-xs sm:text-sm text-amber-900 dark:text-amber-200 shadow-sm">
+    <!-- Comforting Status Note with Fleet Uptime -->
+    <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-amber-900 dark:text-amber-200 shadow-sm gap-2">
       <div class="flex items-center space-x-2.5">
         <span class="text-xl">☀️</span>
-        <span class="font-medium">Relax! Your helpers take care of everything. Next update in:</span>
+        <span class="font-medium">Relax! Your helpers take care of everything automatically.</span>
       </div>
-      <span id="syncCountdownPill" class="text-xs font-black px-2.5 py-1 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
-        30s
-      </span>
+      <div class="flex items-center gap-2 self-end sm:self-auto">
+        <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+          ⏱️ Active: <span id="fleetUptimeVal">Checking...</span>
+        </span>
+        <span id="syncCountdownPill" class="text-xs font-black px-2.5 py-1 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
+          30s
+        </span>
+      </div>
     </div>
 
     <!-- Fleets and Bots Container -->
@@ -504,6 +509,19 @@
       };
     }
 
+    function extractUptime(bot) {
+      if (bot.uptime && bot.uptime !== "0m" && bot.uptime !== "N/A") {
+        return bot.uptime;
+      }
+      if (bot.raw_status) {
+        const m = bot.raw_status.match(/Up\s+([0-9]+\s+[a-zA-Z]+(?:\s+[0-9]+\s+[a-zA-Z]+)?)/i);
+        if (m) {
+          return m[1];
+        }
+      }
+      return "Live";
+    }
+
     function renderDashboard(data) {
       // 1. Total Profit
       const profitEl = document.getElementById("statTotalProfit");
@@ -519,6 +537,7 @@
 
       let overallPeak = data.overall_peak_stake || 0.35;
       let overallMarket = data.overall_peak_market || "";
+      let overallLongestUptime = data.longest_uptime || "";
 
       // 3. Fleets
       const container = document.getElementById("fleetsContainer");
@@ -537,12 +556,15 @@
           .replace("Fleet 2 (Even/Odd)", "⭐ Team 2 (5-Minute Strategy)")
           .replace("Fleet 1 (Even/Odd)", "🚀 Team 1 (Even / Odd)");
 
-        // Calculate fleet peak stake across bots
+        // Calculate fleet peak stake & uptime across bots
         let fleetPeak = fleet.fleet_peak_stake || 0.35;
         let fleetMarket = fleet.fleet_peak_market || "";
+        let fleetUptime = fleet.fleet_uptime || "";
 
         fleet.bots.forEach(b => {
           const info = extractPeakAndMarket(b);
+          const bUptime = extractUptime(b);
+
           if (info.peakStake > fleetPeak) {
             fleetPeak = info.peakStake;
             fleetMarket = info.peakMarket;
@@ -551,11 +573,19 @@
             overallPeak = info.peakStake;
             overallMarket = info.peakMarket;
           }
+          if (!fleetUptime || fleetUptime === "0m" || fleetUptime === "Live") {
+            if (bUptime && bUptime !== "Live") fleetUptime = bUptime;
+          }
+          if (!overallLongestUptime || overallLongestUptime === "0m") {
+            if (bUptime && bUptime !== "Live") overallLongestUptime = bUptime;
+          }
         });
 
         const fleetPeakBadge = fleetPeak > 0.35
           ? `$${fleetPeak.toFixed(2)} ${fleetMarket ? '(' + fleetMarket + ')' : ''}`
           : '$0.35';
+
+        const fleetUptimeDisplay = fleetUptime || "Live Active";
 
         html += `
           <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 card-shadow space-y-4">
@@ -567,7 +597,10 @@
                   ${fleet.bot_count} Active
                 </span>
               </div>
-              <div class="flex items-center gap-2 text-xs">
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+                  ⏱️ ${fleetUptimeDisplay}
+                </span>
                 <span class="font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800">
                   🏔️ Fleet Peak: ${fleetPeakBadge}
                 </span>
@@ -585,9 +618,14 @@
         `;
       });
 
-      // Update Overall Hero Peak
+      // Update Overall Hero Peak & Uptime
       document.getElementById("statOverallPeak").innerText = `$${overallPeak.toFixed(2)}`;
       document.getElementById("statOverallPeakMarket").innerText = overallMarket ? `on ${overallMarket}` : "All Markets";
+      
+      const uptimeValEl = document.getElementById("fleetUptimeVal");
+      if (uptimeValEl) {
+        uptimeValEl.innerText = overallLongestUptime || "Live Active";
+      }
 
       container.innerHTML = html;
     }
@@ -597,6 +635,7 @@
       const isProfitable = bot.profit >= 0;
       const friendlyName = friendlyBotName(bot.name);
       const peakInfo = extractPeakAndMarket(bot);
+      const botUptime = extractUptime(bot);
 
       let logsHtml = "";
       if (bot.logs && bot.logs.length > 0) {
@@ -645,7 +684,7 @@
                 <div>
                   <h4 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white">${friendlyName}</h4>
                   <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Safe & Active
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Running • ${botUptime}
                   </span>
                 </div>
               </div>

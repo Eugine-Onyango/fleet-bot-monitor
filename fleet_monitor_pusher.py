@@ -80,6 +80,28 @@ def get_bot_state(name):
                 pass
     return None
 
+def get_container_uptime(container_name):
+    started_raw = run_cmd(f"docker inspect -f '{{{{.State.StartedAt}}}}' {container_name}")
+    if not started_raw or "0001-01-01" in started_raw:
+        return "0m", 0
+    try:
+        clean_str = started_raw[:26] + "+00:00" if "T" in started_raw else started_raw
+        started_dt = datetime.fromisoformat(clean_str)
+        now_dt = datetime.now(timezone.utc)
+        elapsed_sec = max(0, int((now_dt - started_dt).total_seconds()))
+        days = elapsed_sec // 86400
+        hours = (elapsed_sec % 86400) // 3600
+        mins = (elapsed_sec % 3600) // 60
+        if days > 0:
+            short_str = f"{days}d {hours}h {mins}m"
+        elif hours > 0:
+            short_str = f"{hours}h {mins}m"
+        else:
+            short_str = f"{mins}m"
+        return short_str, elapsed_sec
+    except Exception:
+        return "0m", 0
+
 def build_payload():
     containers = get_containers()
     
@@ -103,6 +125,7 @@ def build_payload():
 
         state_data = get_bot_state(name)
         logs = get_simplified_logs(name)
+        uptime_str, uptime_sec = get_container_uptime(name)
 
         bot_profit = 0.0
         wins = 0
@@ -131,6 +154,8 @@ def build_payload():
             "name": name,
             "status": "RUNNING" if is_running else "STOPPED",
             "raw_status": c["status"],
+            "uptime": uptime_str,
+            "uptime_seconds": uptime_sec,
             "profit": round(bot_profit, 2),
             "wins": wins,
             "losses": losses,
@@ -152,29 +177,42 @@ def build_payload():
         else:
             fleets_dict["Other Bots"].append(bot_info)
 
-    # Convert to list of populated fleets & calculate fleet peak stakes
+    # Convert to list of populated fleets & calculate fleet peak stakes & uptimes
     fleet_list = []
     overall_peak_stake = 0.0
     overall_peak_market = ""
+    overall_max_uptime_sec = 0
+    overall_max_uptime_str = "0m"
 
     for f_name, bots in fleets_dict.items():
         if bots:
             fleet_peak = 0.0
             fleet_market = ""
+            fleet_max_sec = 0
+            fleet_uptime_str = "0m"
+
             for b in bots:
                 bstake = b.get("max_stake", 0.0)
+                bsec = b.get("uptime_seconds", 0)
                 if bstake > fleet_peak:
                     fleet_peak = bstake
                     fleet_market = b.get("max_stake_market", "")
                 if bstake > overall_peak_stake:
                     overall_peak_stake = bstake
                     overall_peak_market = b.get("max_stake_market", "")
+                if bsec > fleet_max_sec:
+                    fleet_max_sec = bsec
+                    fleet_uptime_str = b.get("uptime", "0m")
+                if bsec > overall_max_uptime_sec:
+                    overall_max_uptime_sec = bsec
+                    overall_max_uptime_str = b.get("uptime", "0m")
 
             fleet_list.append({
                 "fleet_name": f_name,
                 "bot_count": len(bots),
                 "fleet_peak_stake": round(fleet_peak, 2),
                 "fleet_peak_market": fleet_market,
+                "fleet_uptime": fleet_uptime_str,
                 "bots": sorted(bots, key=lambda x: x["name"])
             })
 
@@ -190,6 +228,7 @@ def build_payload():
         "total_losses": total_losses,
         "total_trades": total_trades,
         "win_rate": win_rate,
+        "longest_uptime": overall_max_uptime_str,
         "overall_peak_stake": round(overall_peak_stake, 2),
         "overall_peak_market": overall_peak_market,
         "fleets": fleet_list
