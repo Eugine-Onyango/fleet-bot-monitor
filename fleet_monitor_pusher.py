@@ -33,7 +33,7 @@ def get_containers():
         if len(parts) >= 3:
             name, status_str, state = parts[0], parts[1], parts[2]
             # Match our bot prefixes
-            if any(k in name for k in ["even-odd", "over-under", "millipede"]):
+            if any(k in name for k in ["even-odd", "over-under", "call-put", "millipede"]):
                 containers.append({"name": name, "status": status_str, "state": state})
     return containers
 
@@ -75,6 +75,7 @@ def get_bot_state(name):
     # Method 2: Fallback to all standard paths
     num = name.split("-")[-1]
     possible_paths = [
+        f"/root/call_put_fleet_bot_{num}/state.json",
         f"/root/over_under_fleet_bot_{num}/state.json",
         f"/root/even_odd_fleet2_bot_{num}/state.json",
         f"/root/even_odd_millipede_bot_{num}/state.json",
