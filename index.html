@@ -957,15 +957,8 @@
             fleetPeak = info.peakStake;
             fleetMarket = info.peakMarket;
           }
-          if (info.peakStake > overallPeak) {
-            overallPeak = info.peakStake;
-            overallMarket = info.peakMarket;
-          }
           if (bSec > fleetMaxSec) {
             fleetMaxSec = bSec;
-          }
-          if (bSec > overallLongestSec) {
-            overallLongestSec = bSec;
           }
         });
 
@@ -1008,15 +1001,6 @@
           </div>
         `;
       });
-
-      // Update Overall Hero Peak & Uptime
-      document.getElementById("statOverallPeak").innerText = `$${overallPeak.toFixed(2)}`;
-      document.getElementById("statOverallPeakMarket").innerText = overallMarket ? `on ${overallMarket}` : "All Markets";
-      
-      const uptimeValEl = document.getElementById("fleetUptimeVal");
-      if (uptimeValEl) {
-        uptimeValEl.innerText = formatFriendlyUptime(overallLongestSec);
-      }
 
       container.innerHTML = html;
     }
