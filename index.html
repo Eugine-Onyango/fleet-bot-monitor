@@ -424,14 +424,28 @@
       refreshIcon.classList.add("animate-spin");
 
       try {
-        const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`);
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        const gist = await res.json();
+        let data = null;
+        // 1. Primary: Use raw Gist CDN (Zero rate limit, fast & reliable)
+        try {
+          const rawUrl = `https://gist.githubusercontent.com/raw/${GIST_ID}/fleet_status.json?_t=${Date.now()}`;
+          const rawRes = await fetch(rawUrl);
+          if (rawRes.ok) {
+            data = await rawRes.json();
+          }
+        } catch (rawErr) {
+          console.warn("Raw Gist fetch note:", rawErr);
+        }
 
-        const file = gist.files["fleet_status.json"];
-        if (!file || !file.content) throw new Error("No data file found yet.");
+        // 2. Fallback: GitHub REST API
+        if (!data) {
+          const res = await fetch(`https://api.github.com/gists/${GIST_ID}?_t=${Date.now()}`);
+          if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+          const gist = await res.json();
+          const file = gist.files["fleet_status.json"];
+          if (!file || !file.content) throw new Error("No data file found yet.");
+          data = JSON.parse(file.content);
+        }
 
-        const data = JSON.parse(file.content);
         window.lastPayload = data;
         renderDashboard(data);
         countdown = REFRESH_SECONDS;
