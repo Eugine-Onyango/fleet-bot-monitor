@@ -463,10 +463,6 @@
       }
     }
 
-    function renderDashboard(data) {
-      // 1. Total Profit
-      const profitEl = document.getElementById("statTotalProfit");
-      const isProfitable = data.total_profit >= 0;
     function extractPeakAndMarket(bot) {
       let maxStake = bot.max_stake || 0.35;
       let maxMarket = bot.max_stake_market || "";
