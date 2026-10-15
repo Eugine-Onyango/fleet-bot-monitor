@@ -1,3 +1,2 @@
-// Set your public or secret Gist ID here once you create it.
-// Users can also enter or override it directly from the webapp interface on their phone or laptop.
-window.DEFAULT_GIST_ID = "";
+// Preconfigured with your Gist ID so the dashboard works out of the box!
+window.DEFAULT_GIST_ID = "e89e6db2da1433214922b69f101e15aa";
