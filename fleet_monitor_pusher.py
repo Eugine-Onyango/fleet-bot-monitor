@@ -63,12 +63,24 @@ def get_simplified_logs(container_name, lines=25):
     return simplified[-15:] if simplified else ["No recent trade events recorded yet."]
 
 def get_bot_state(name):
-    # Try finding associated state.json on disk
+    # Method 1: Ask Docker for the exact /app mounted host folder
+    mount_src = run_cmd(f"docker inspect -f '{{{{range .Mounts}}}}{{{{if eq .Destination \"/app\"}}}}{{{{.Source}}}}{{{{end}}}}{{{{end}}}}' {name}")
+    if mount_src and os.path.exists(f"{mount_src}/state.json"):
+        try:
+            with open(f"{mount_src}/state.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+
+    # Method 2: Fallback to all standard paths
+    num = name.split("-")[-1]
     possible_paths = [
+        f"/root/even_odd_fleet2_bot_{num}/state.json",
+        f"/root/even_odd_millipede_bot_{num}/state.json",
+        f"/root/over_under_millipede_bot_{num}/state.json",
+        f"/root/even_odd_fleet_bot_{num}/state.json",
         f"/root/{name.replace('my-', '').replace('-', '_')}/state.json",
-        f"/root/even_odd_fleet2_bot_{name.split('-')[-1]}/state.json",
-        f"/root/even_odd_fleet_bot_{name.split('-')[-1]}/state.json",
-        f"/root/over_under_millipede_bot_{name.split('-')[-1]}/state.json"
+        f"/root/{name}/state.json"
     ]
     
     for p in possible_paths:
