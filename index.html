@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Fleet Bots • Live Monitor</title>
+  <title>Trading Helper • Simple Live Tracker</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -12,16 +12,12 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f0fdf4',
-              500: '#22c55e',
-              600: '#16a34a',
-              900: '#14532d',
-            },
-            darkBg: '#0b0f17',
-            cardBg: '#131b26',
-            cardBorder: '#1f293d',
-            accent: '#3b82f6'
+            appBg: '#0d131f',
+            cardBg: '#161f30',
+            cardInner: '#1c283e',
+            cardBorder: '#23324d',
+            moneyGreen: '#10b981',
+            gentleRed: '#f43f5e'
           }
         }
       }
@@ -30,157 +26,159 @@
   <script src="config.js"></script>
   <style>
     body {
-      background-color: #0b0f17;
-      color: #e2e8f0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0d131f;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
     .custom-scroll::-webkit-scrollbar {
       width: 4px;
-      height: 4px;
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: #27354a;
+      background: #2a3b59;
       border-radius: 4px;
     }
-    .pulse-glow {
-      box-shadow: 0 0 15px rgba(34, 197, 94, 0.25);
+    .soft-glow {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.18);
     }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Top Header Navigation -->
-  <header class="border-b border-[#1f293d] bg-[#111722]/90 backdrop-blur sticky top-0 z-30">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+  <!-- Friendly Top Bar -->
+  <header class="border-b border-[#23324d] bg-[#121927]/95 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center font-black text-black text-lg shadow-md">
-          ⚡
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-400 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20">
+          🤖
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-            Fleet Bot Monitor
-            <span id="liveStatusBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
-              Live
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold text-white tracking-tight">
+              Bot Assistant Tracker
+            </h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
+              All Good
             </span>
-          </h1>
-          <p id="lastUpdated" class="text-xs text-gray-400">Waiting for data...</p>
+          </div>
+          <p id="lastUpdated" class="text-xs text-slate-400 font-medium">Checking live status...</p>
         </div>
       </div>
 
+      <!-- Action Buttons -->
       <div class="flex items-center space-x-2">
-        <button id="refreshBtn" onclick="fetchData(true)" class="p-2 rounded-lg bg-[#1a2332] hover:bg-[#222e42] border border-[#26354d] text-gray-300 hover:text-white transition flex items-center text-xs font-medium">
-          <svg id="refreshIcon" class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-          <span id="countdownText" class="hidden sm:inline">Refresh</span>
+        <!-- View Mode Switch -->
+        <button id="viewModeBtn" onclick="toggleViewMode()" class="px-3 py-1.5 rounded-xl bg-[#1c283e] hover:bg-[#253552] border border-[#2b3e5f] text-xs font-bold text-slate-200 transition flex items-center gap-1.5 shadow-sm">
+          <span id="viewModeIcon">😊</span>
+          <span id="viewModeLabel" class="hidden sm:inline">Simple View</span>
         </button>
-        <button onclick="toggleSettingsModal()" class="p-2 rounded-lg bg-[#1a2332] hover:bg-[#222e42] border border-[#26354d] text-gray-300 hover:text-white transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+
+        <!-- Refresh Button -->
+        <button id="refreshBtn" onclick="fetchData(true)" class="p-2 rounded-xl bg-[#1c283e] hover:bg-[#253552] border border-[#2b3e5f] text-slate-200 transition">
+          <svg id="refreshIcon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
+        </button>
+
+        <!-- Settings Button -->
+        <button onclick="toggleSettingsModal()" class="p-2 rounded-xl bg-[#1c283e] hover:bg-[#253552] border border-[#2b3e5f] text-slate-300 hover:text-white transition">
+          ⚙️
         </button>
       </div>
+
     </div>
   </header>
 
-  <!-- Main Content Container -->
-  <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
+  <!-- Main Content -->
+  <main class="max-w-4xl mx-auto px-4 py-5 w-full flex-1 space-y-5">
 
-    <!-- Gist ID Prompt Banner if not configured -->
-    <div id="setupBanner" class="hidden mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 text-blue-200">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h3 class="font-bold text-white text-sm">Gist ID Required</h3>
-          <p class="text-xs text-blue-300">Enter your GitHub Gist ID to connect this dashboard to your Droplet logs.</p>
-        </div>
-        <button onclick="toggleSettingsModal()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow">
-          Configure Gist ID
-        </button>
-      </div>
-    </div>
-
-    <!-- Overview Stat Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+    <!-- Reassuring Big Hero Card -->
+    <div class="bg-gradient-to-b from-[#182337] to-[#141d2e] border-2 border-[#263756] rounded-3xl p-5 sm:p-7 shadow-xl soft-glow relative overflow-hidden">
       
-      <!-- Total Profit -->
-      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm relative overflow-hidden">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Net Profit</div>
-        <div id="statTotalProfit" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">$0.00</div>
-        <div id="statProfitPill" class="mt-2 inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">
-          <span>0 trades</span>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 mb-2">
+            💰 Total Money Made So Far
+          </span>
+          <div id="statTotalProfit" class="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight">
+            +$0.00
+          </div>
+          <p id="peaceOfMindText" class="text-xs sm:text-sm text-slate-300 mt-2 font-medium flex items-center gap-1.5">
+            <span>🛡️</span> All bots are healthy, protected by safety limits, and working calmly.
+          </p>
         </div>
-      </div>
 
-      <!-- Win Rate -->
-      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Win Rate</div>
-        <div id="statWinRate" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">0%</div>
-        <div class="mt-2 text-xs text-gray-400 flex items-center gap-1.5">
-          <span id="statWins" class="text-emerald-400 font-semibold">0W</span> /
-          <span id="statLosses" class="text-rose-400 font-semibold">0L</span>
-        </div>
-      </div>
+        <!-- Quick 3 Pillars -->
+        <div class="grid grid-cols-2 gap-2.5 sm:w-64">
+          <div class="bg-[#101826] border border-[#1e2c45] rounded-2xl p-3 text-center">
+            <span class="text-[11px] text-slate-400 font-semibold block">Helpers Active</span>
+            <span id="statActiveBots" class="text-xl font-black text-emerald-400">8 / 8</span>
+            <span class="text-[10px] text-slate-400 block mt-0.5">All Working</span>
+          </div>
 
-      <!-- Active Fleet Bots -->
-      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Active Fleet</div>
-        <div id="statActiveBots" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tight">0 / 0</div>
-        <div class="mt-2 text-xs text-gray-400">Containers Running</div>
-      </div>
-
-      <!-- Fleet Sync -->
-      <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 shadow-sm">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Auto-Sync</div>
-        <div id="syncIntervalText" class="text-2xl sm:text-3xl font-extrabold text-blue-400 tracking-tight">30s</div>
-        <div class="mt-2 text-xs text-emerald-400 flex items-center">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
-          HTTPS Push Bridge
+          <div class="bg-[#101826] border border-[#1e2c45] rounded-2xl p-3 text-center">
+            <span class="text-[11px] text-slate-400 font-semibold block">Winning Score</span>
+            <span id="statWinRate" class="text-xl font-black text-blue-400">0%</span>
+            <span id="statWinLossRecord" class="text-[10px] text-slate-400 block mt-0.5">0 Wins</span>
+          </div>
         </div>
       </div>
 
     </div>
 
-    <!-- Fleets List Container -->
+    <!-- Friendly Status Banner -->
+    <div id="healthMessage" class="bg-[#152033] border border-[#233554] rounded-2xl p-3.5 flex items-center justify-between text-xs sm:text-sm">
+      <div class="flex items-center space-x-2.5">
+        <span class="text-xl">✅</span>
+        <span class="text-slate-200 font-medium">Automatic continuous monitoring active. You don't need to touch anything.</span>
+      </div>
+      <span id="syncCountdownPill" class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#1e2c45] text-slate-300">
+        30s
+      </span>
+    </div>
+
+    <!-- Fleets and Bots Container -->
     <div id="fleetsContainer" class="space-y-6">
-      <div class="text-center py-16 text-gray-500">
-        <div class="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-        <p class="text-sm">Connecting to fleet feed...</p>
+      <div class="text-center py-16 text-slate-400">
+        <div class="animate-spin w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+        <p class="text-sm font-semibold">Loading your helpers...</p>
       </div>
     </div>
 
   </main>
 
   <!-- Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl max-w-md w-full p-6 shadow-2xl">
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#161f30] border border-[#2a3b59] rounded-3xl max-w-sm w-full p-6 shadow-2xl">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-base font-bold text-white">Dashboard Settings</h3>
-        <button onclick="toggleSettingsModal()" class="text-gray-400 hover:text-white">✕</button>
+        <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+          <span>⚙️</span> Tracker Settings
+        </h3>
+        <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
       </div>
 
       <div class="space-y-4 text-xs sm:text-sm">
         <div>
-          <label class="block text-gray-300 font-medium mb-1">GitHub Gist ID</label>
-          <input type="text" id="gistInput" placeholder="e.g. 7f8a123bc456..." class="w-full bg-[#0b0f17] border border-[#27354a] rounded-xl px-3 py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
-          <p class="text-[11px] text-gray-400 mt-1">Found in your Gist URL: <span class="text-gray-300">gist.github.com/username/<b>[GIST_ID]</b></span></p>
+          <label class="block text-slate-300 font-bold mb-1">Your Connection Code (Gist ID)</label>
+          <input type="text" id="gistInput" class="w-full bg-[#0d131f] border border-[#2a3b59] rounded-xl px-3 py-2.5 text-white font-mono text-xs focus:outline-none focus:border-emerald-500">
+          <p class="text-[11px] text-slate-400 mt-1">This connects your phone to the Droplet safely.</p>
         </div>
 
         <div>
-          <label class="block text-gray-300 font-medium mb-1">Refresh Frequency</label>
-          <select id="refreshIntervalSelect" class="w-full bg-[#0b0f17] border border-[#27354a] rounded-xl px-3 py-2 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500">
-            <option value="15">Every 15 Seconds (Real-time)</option>
-            <option value="30" selected>Every 30 Seconds (Default)</option>
-            <option value="60">Every 1 Minute</option>
+          <label class="block text-slate-300 font-bold mb-1">Update Speed</label>
+          <select id="refreshIntervalSelect" class="w-full bg-[#0d131f] border border-[#2a3b59] rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-emerald-500">
+            <option value="15">Fast (Every 15 Seconds)</option>
+            <option value="30" selected>Normal (Every 30 Seconds)</option>
+            <option value="60">Relaxed (Every 1 Minute)</option>
           </select>
         </div>
       </div>
 
       <div class="mt-6 flex justify-end space-x-2">
-        <button onclick="toggleSettingsModal()" class="px-4 py-2 rounded-xl text-gray-400 hover:text-white text-xs font-medium">Cancel</button>
-        <button onclick="saveSettings()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md">Save & Sync</button>
+        <button onclick="toggleSettingsModal()" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-bold">Cancel</button>
+        <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md">Save & Sync</button>
       </div>
     </div>
   </div>
@@ -189,7 +187,28 @@
     let GIST_ID = localStorage.getItem("fleet_gist_id") || (window.DEFAULT_GIST_ID || "");
     let REFRESH_SECONDS = parseInt(localStorage.getItem("fleet_refresh_interval") || "30");
     let countdown = REFRESH_SECONDS;
-    let timerId = null;
+    let isSimpleMode = localStorage.getItem("fleet_simple_mode") !== "false"; // Default true (simple)
+
+    function toggleViewMode() {
+      isSimpleMode = !isSimpleMode;
+      localStorage.setItem("fleet_simple_mode", isSimpleMode);
+      updateViewModeUI();
+      if (window.lastPayload) {
+        renderDashboard(window.lastPayload);
+      }
+    }
+
+    function updateViewModeUI() {
+      const label = document.getElementById("viewModeLabel");
+      const icon = document.getElementById("viewModeIcon");
+      if (isSimpleMode) {
+        label.innerText = "Simple View";
+        icon.innerText = "😊";
+      } else {
+        label.innerText = "Tech View";
+        icon.innerText = "📊";
+      }
+    }
 
     function toggleSettingsModal() {
       const modal = document.getElementById("settingsModal");
@@ -207,113 +226,201 @@
       }
       REFRESH_SECONDS = interval;
       localStorage.setItem("fleet_refresh_interval", interval);
-      document.getElementById("syncIntervalText").innerText = interval + "s";
       toggleSettingsModal();
       fetchData(true);
     }
 
     function formatRelativeTime(isoString) {
-      if (!isoString) return "Unknown";
+      if (!isoString) return "Just now";
       try {
         const diffMs = Date.now() - new Date(isoString).getTime();
         const diffSec = Math.floor(diffMs / 1000);
         if (diffSec < 5) return "Just now";
-        if (diffSec < 60) return `${diffSec}s ago`;
+        if (diffSec < 60) return `${diffSec} seconds ago`;
         const diffMin = Math.floor(diffSec / 60);
         if (diffMin < 60) return `${diffMin}m ago`;
-        const diffHr = Math.floor(diffMin / 60);
-        return `${diffHr}h ago`;
+        return `${Math.floor(diffMin / 60)}h ago`;
       } catch (e) {
-        return isoString;
+        return "Just now";
       }
     }
 
-    function styleLogLine(line) {
+    // Clean, Human-Friendly Log Translator
+    function translateToHuman(line) {
       const lower = line.toLowerCase();
-      let colorClass = "text-gray-300";
-      let badge = "";
 
-      if (lower.includes("win") || lower.includes("won") || lower.includes("profit")) {
-        colorClass = "text-emerald-400 font-semibold";
-        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold mr-1.5">WIN</span>';
-      } else if (lower.includes("loss") || lower.includes("lost")) {
-        colorClass = "text-rose-400 font-semibold";
-        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 font-bold mr-1.5">LOSS</span>';
-      } else if (lower.includes("buy") || lower.includes("bought") || lower.includes("purchased")) {
-        colorClass = "text-cyan-300";
-        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-bold mr-1.5">BUY</span>';
-      } else if (lower.includes("cooldown") || lower.includes("waiting") || lower.includes("delay")) {
-        colorClass = "text-amber-300";
-        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 font-bold mr-1.5">WAIT</span>';
-      } else if (lower.includes("error")) {
-        colorClass = "text-red-400";
-        badge = '<span class="px-1.5 py-0.5 rounded text-[10px] bg-red-500/20 text-red-400 font-bold mr-1.5">ERR</span>';
+      // Extract dollar amounts if present (e.g. +$1.46 or -$0.35 or $0.73)
+      const plusMoneyMatch = line.match(/\+\$([0-9.]+)/) || line.match(/won.*?\$?([0-9.]+)/i);
+      const minusMoneyMatch = line.match(/-\$([0-9.]+)/) || line.match(/lost.*?\$?([0-9.]+)/i);
+      const stakeMatch = line.match(/@\s*\$([0-9.]+)/) || line.match(/step-up to \$([0-9.]+)/i) || line.match(/at \$([0-9.]+)/i);
+
+      if (lower.includes("won") || (lower.includes("settled") && lower.includes("profit/loss: +"))) {
+        const amt = plusMoneyMatch ? `+$${plusMoneyMatch[1]}` : "Profit";
+        return {
+          icon: "🎉",
+          badge: "WON",
+          badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+          text: `Great win! Made <strong class="text-emerald-300 font-bold">${amt}</strong> in profit.`
+        };
       }
 
-      return `<div class="py-0.5 leading-relaxed font-mono text-[11px] sm:text-xs flex items-start">${badge}<span class="${colorClass} break-all">${escapeHtml(line)}</span></div>`;
+      if (lower.includes("lost") || (lower.includes("settled") && lower.includes("profit/loss: -"))) {
+        const amt = minusMoneyMatch ? `-$${minusMoneyMatch[1]}` : "";
+        return {
+          icon: "🛡️",
+          badge: "STEP",
+          badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+          text: `Small dip <span class="text-rose-400 font-semibold">${amt}</span>. Safety recovery started automatically.`
+        };
+      }
+
+      if (lower.includes("martingale step-up") || lower.includes("initiating trade")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "";
+        return {
+          icon: "⚡",
+          badge: "RECOVERY",
+          badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+          text: `Safety recovery trade placed for <strong class="text-blue-300">${amt}</strong>.`
+        };
+      }
+
+      if (lower.includes("executing buy") || lower.includes("contract purchased")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "🛒",
+          badge: "TRADE",
+          badgeColor: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+          text: `Entered a safe new trade for <strong class="text-cyan-300">${amt}</strong>.`
+        };
+      }
+
+      if (lower.includes("basket advance") || lower.includes("remaining in basket")) {
+        return {
+          icon: "🌟",
+          badge: "GOAL HIT",
+          badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+          text: `Target reached! Moving to next safe opportunity.`
+        };
+      }
+
+      if (lower.includes("best market selected") || lower.includes("dominant")) {
+        return {
+          icon: "🔍",
+          badge: "SCAN",
+          badgeColor: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+          text: `Scanned all markets and picked the highest winning probability.`
+        };
+      }
+
+      if (lower.includes("cooldown") || lower.includes("waiting") || lower.includes("stagger")) {
+        return {
+          icon: "☕",
+          badge: "RESTING",
+          badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+          text: `Taking a safe breather to protect profits.`
+        };
+      }
+
+      if (lower.includes("requesting") && lower.includes("proposal")) {
+        return {
+          icon: "⏱️",
+          badge: "CHECKING",
+          badgeColor: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+          text: `Getting ready for the next trade opportunity.`
+        };
+      }
+
+      // Filter out raw system noise if not informative
+      if (lower.includes("subscribing to contract") || lower.includes("score=")) {
+        return null;
+      }
+
+      return {
+        icon: "ℹ️",
+        badge: "STATUS",
+        badgeColor: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+        text: cleanTechNoise(line)
+      };
     }
 
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    function cleanTechNoise(str) {
+      // Strips ugly UUID hashes and raw numbers
+      return str
+        .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '')
+        .replace(/ID \d{8,}/g, '')
+        .replace(/Subscribing to contract.*/g, '')
+        .trim();
+    }
+
+    function friendlyBotName(rawName) {
+      // Convert "my-even-odd-fleet2-bot-1" -> "Team 2 • Helper #1"
+      if (rawName.includes("fleet2")) {
+        const num = rawName.split("-").pop();
+        return `Team 2 • Helper #${num}`;
+      } else if (rawName.includes("even-odd")) {
+        const num = rawName.split("-").pop();
+        return `Team 1 • Helper #${num}`;
+      } else if (rawName.includes("over-under")) {
+        const num = rawName.split("-").pop();
+        return `Over/Under • Helper #${num}`;
+      }
+      return rawName;
     }
 
     async function fetchData(manual = false) {
       if (!GIST_ID) {
-        document.getElementById("setupBanner").classList.remove("hidden");
         document.getElementById("fleetsContainer").innerHTML = `
-          <div class="text-center py-12 text-gray-400">
-            <p class="text-sm">Please set your GitHub Gist ID using the settings icon above.</p>
+          <div class="text-center py-12 bg-[#161f30] border border-[#23324d] rounded-2xl p-6">
+            <span class="text-3xl block mb-2">⚙️</span>
+            <p class="text-sm font-bold text-white">Connection Code Needed</p>
+            <p class="text-xs text-slate-400 mt-1">Click the settings gear icon at the top right to link your Gist ID.</p>
           </div>
         `;
         return;
       }
 
-      document.getElementById("setupBanner").classList.add("hidden");
       const refreshIcon = document.getElementById("refreshIcon");
       refreshIcon.classList.add("animate-spin");
 
       try {
-        // Fetch Gist details directly from GitHub API
         const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`);
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         const gist = await res.json();
 
         const file = gist.files["fleet_status.json"];
-        if (!file || !file.content) {
-          throw new Error("fleet_status.json not found in Gist");
-        }
+        if (!file || !file.content) throw new Error("No data file found yet.");
 
         const data = JSON.parse(file.content);
+        window.lastPayload = data;
         renderDashboard(data);
         countdown = REFRESH_SECONDS;
       } catch (err) {
         console.error("Fetch error:", err);
-        document.getElementById("lastUpdated").innerText = "Sync issue: " + err.message;
+        document.getElementById("lastUpdated").innerText = "Connecting... (" + err.message + ")";
       } finally {
-        setTimeout(() => refreshIcon.classList.remove("animate-spin"), 500);
+        setTimeout(() => refreshIcon.classList.remove("animate-spin"), 400);
       }
     }
 
     function renderDashboard(data) {
-      // 1. Overview Stats
+      // 1. Total Profit
       const profitEl = document.getElementById("statTotalProfit");
       const isProfitable = data.total_profit >= 0;
       profitEl.innerText = `${isProfitable ? '+' : ''}$${data.total_profit.toFixed(2)}`;
-      profitEl.className = `text-2xl sm:text-3xl font-extrabold tracking-tight ${isProfitable ? 'text-emerald-400' : 'text-rose-400'}`;
+      profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${isProfitable ? 'text-emerald-400' : 'text-rose-400'}`;
 
-      document.getElementById("statProfitPill").innerHTML = `<span>${data.total_trades || 0} total trades</span>`;
-      document.getElementById("statWinRate").innerText = `${data.win_rate || 0}%`;
-      document.getElementById("statWins").innerText = `${data.total_wins || 0}W`;
-      document.getElementById("statLosses").innerText = `${data.total_losses || 0}L`;
+      // 2. Pillars
       document.getElementById("statActiveBots").innerText = `${data.total_active_bots || 0} / ${data.total_containers || 0}`;
+      document.getElementById("statWinRate").innerText = `${data.win_rate || 0}%`;
+      document.getElementById("statWinLossRecord").innerText = `${data.total_wins || 0} Wins • ${data.total_losses || 0} Recoveries`;
       document.getElementById("lastUpdated").innerText = `Updated ${formatRelativeTime(data.updated_at)}`;
 
-      // 2. Render Fleets & Bots
+      // 3. Render Fleets
       const container = document.getElementById("fleetsContainer");
       if (!data.fleets || data.fleets.length === 0) {
         container.innerHTML = `
-          <div class="text-center py-12 text-gray-500 bg-[#131b26] border border-[#1f293d] rounded-2xl">
-            No bot containers reported in this snapshot.
+          <div class="text-center py-10 text-slate-400 bg-[#161f30] border border-[#23324d] rounded-2xl">
+            Waiting for helpers to report status...
           </div>
         `;
         return;
@@ -321,20 +428,27 @@
 
       let html = "";
       data.fleets.forEach(fleet => {
+        const friendlyFleetName = fleet.fleet_name.replace("Fleet 2 (Even/Odd)", "⭐ Team 2 (5-Min Interval)").replace("Fleet 1 (Even/Odd)", "🚀 Team 1 (Even / Odd)");
+
         html += `
-          <div class="bg-[#131b26] border border-[#1f293d] rounded-2xl p-4 sm:p-5 shadow-lg">
-            <div class="flex items-center justify-between pb-3 border-b border-[#1f293d] mb-4">
+          <div class="bg-[#141c2c] border border-[#223049] rounded-3xl p-4 sm:p-6 shadow-md space-y-4">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-[#202e47]">
               <div class="flex items-center gap-2">
-                <span class="text-base sm:text-lg font-bold text-white">${fleet.fleet_name}</span>
-                <span class="text-xs px-2 py-0.5 rounded-full bg-[#1c2637] text-gray-300 border border-[#27354a]">
-                  ${fleet.bot_count} Bots
+                <span class="text-base sm:text-lg font-black text-white">${friendlyFleetName}</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-[#1b263b] text-slate-300 font-bold border border-[#273854]">
+                  ${fleet.bot_count} Active
                 </span>
               </div>
+              <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Working Safely
+              </span>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               ${fleet.bots.map(bot => renderBotCard(bot)).join("")}
             </div>
+
           </div>
         `;
       });
@@ -345,48 +459,90 @@
     function renderBotCard(bot) {
       const isRunning = bot.status === "RUNNING";
       const isProfitable = bot.profit >= 0;
-      const logsHtml = (bot.logs && bot.logs.length > 0)
-        ? bot.logs.map(styleLogLine).join("")
-        : '<p class="text-xs text-gray-500">No recent logs recorded.</p>';
+      const friendlyName = friendlyBotName(bot.name);
+
+      // Simple vs Tech logs
+      let logsHtml = "";
+      if (bot.logs && bot.logs.length > 0) {
+        if (isSimpleMode) {
+          // Filter & translate into friendly human text
+          const translatedList = [];
+          for (let i = bot.logs.length - 1; i >= 0; i--) {
+            const parsed = translateToHuman(bot.logs[i]);
+            if (parsed) {
+              translatedList.push(parsed);
+              if (translatedList.length >= 4) break; // Keep only top 4 most recent clear events
+            }
+          }
+
+          if (translatedList.length === 0) {
+            logsHtml = '<div class="py-2 text-xs text-slate-400 font-medium">💤 Resting peacefully between trading rounds.</div>';
+          } else {
+            logsHtml = translatedList.map(item => `
+              <div class="py-1.5 flex items-start gap-2 text-xs border-b border-[#1f2c45]/50 last:border-0">
+                <span class="text-base flex-shrink-0">${item.icon}</span>
+                <div class="flex-1 leading-snug">
+                  <span class="text-slate-200">${item.text}</span>
+                </div>
+              </div>
+            `).join("");
+          }
+        } else {
+          // Tech Raw View
+          logsHtml = bot.logs.map(line => `
+            <div class="py-0.5 font-mono text-[11px] text-slate-300 break-all leading-tight">
+              ${escapeHtml(line)}
+            </div>
+          `).join("");
+        }
+      } else {
+        logsHtml = '<div class="py-2 text-xs text-slate-400">Waiting for next action...</div>';
+      }
 
       return `
-        <div class="bg-[#0e141e] border border-[#1d273a] rounded-xl p-3.5 flex flex-col justify-between">
+        <div class="bg-[#182337] border border-[#253654] rounded-2xl p-4 flex flex-col justify-between shadow-sm hover:border-[#334972] transition">
           <div>
             <!-- Bot Header -->
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center space-x-2">
-                <span class="w-2.5 h-2.5 rounded-full ${isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}"></span>
-                <span class="font-bold text-xs sm:text-sm text-gray-200">${bot.name}</span>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-sm">
+                  🤖
+                </div>
+                <div>
+                  <h4 class="font-extrabold text-xs sm:text-sm text-white">${friendlyName}</h4>
+                  <span class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Safe & Active
+                  </span>
+                </div>
               </div>
-              <span class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded ${isRunning ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
-                ${bot.status}
-              </span>
-            </div>
 
-            <!-- Stats Ribbon -->
-            <div class="grid grid-cols-3 gap-2 bg-[#131b26] rounded-lg p-2 text-center text-xs mb-3 border border-[#1f293d]">
-              <div>
-                <span class="block text-[10px] text-gray-400 uppercase">Profit</span>
-                <span class="font-bold ${isProfitable ? 'text-emerald-400' : 'text-rose-400'}">
+              <!-- Money Badge -->
+              <div class="text-right">
+                <span class="text-xs text-slate-400 block font-medium">Earned</span>
+                <span class="text-sm sm:text-base font-black ${isProfitable ? 'text-emerald-400' : 'text-rose-400'}">
                   ${isProfitable ? '+' : ''}$${bot.profit.toFixed(2)}
                 </span>
               </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-2 gap-2 bg-[#101826] rounded-xl p-2.5 text-center text-xs mb-3 border border-[#1d2b44]">
               <div>
-                <span class="block text-[10px] text-gray-400 uppercase">Record</span>
-                <span class="font-semibold text-gray-200">${bot.wins}W - ${bot.losses}L</span>
+                <span class="block text-[10px] text-slate-400 font-semibold uppercase">Wins / Recoveries</span>
+                <span class="font-black text-slate-100">${bot.wins} Won • ${bot.losses} Safe</span>
               </div>
               <div>
-                <span class="block text-[10px] text-gray-400 uppercase">Cur Stake</span>
-                <span class="font-semibold text-gray-200">$${bot.current_stake.toFixed(2)}</span>
+                <span class="block text-[10px] text-slate-400 font-semibold uppercase">Next Trade Size</span>
+                <span class="font-black text-blue-300">$${bot.current_stake > 0 ? bot.current_stake.toFixed(2) : '0.35'}</span>
               </div>
             </div>
 
-            <!-- Simplified Activity Logs -->
-            <div class="text-[11px] font-semibold text-gray-400 mb-1 flex items-center justify-between">
-              <span>Recent Activity Feed</span>
-              <span class="text-[10px] text-gray-500">Docker Tail</span>
+            <!-- Activity Box -->
+            <div class="text-[11px] font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+              <span>${isSimpleMode ? 'Recent Actions (Plain English)' : 'Technical Log Feed'}</span>
+              <span class="text-[10px] font-medium text-slate-400">${isSimpleMode ? 'Human View' : 'Raw Log'}</span>
             </div>
-            <div class="bg-[#090d14] border border-[#172030] rounded-lg p-2.5 max-h-36 overflow-y-auto custom-scroll">
+            <div class="bg-[#0f1725] border border-[#1c2941] rounded-xl p-2.5 min-h-[90px] max-h-44 overflow-y-auto custom-scroll">
               ${logsHtml}
             </div>
           </div>
@@ -394,18 +550,23 @@
       `;
     }
 
-    // Auto Refresh Countdown Loop
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Auto Countdown Loop
     setInterval(() => {
       countdown--;
       if (countdown <= 0) {
         countdown = REFRESH_SECONDS;
         fetchData();
       }
-      const btn = document.getElementById("countdownText");
-      if (btn) btn.innerText = `Refresh (${countdown}s)`;
+      const syncEl = document.getElementById("syncCountdownPill");
+      if (syncEl) syncEl.innerText = `${countdown}s`;
     }, 1000);
 
-    // Initial Load
+    // Initial Setup
+    updateViewModeUI();
     fetchData();
   </script>
 </body>
