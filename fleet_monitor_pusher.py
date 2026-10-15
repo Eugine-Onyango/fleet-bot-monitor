@@ -45,7 +45,7 @@ def get_simplified_logs(container_name, lines=25):
     keep_keywords = [
         "win", "loss", "profit", "stake", "contract", "bought", "purchased",
         "proposal", "balance", "cycle", "cooldown", "payout", "error", "starting",
-        "waiting", "stagger", "delay", "even", "odd", "over", "under"
+        "waiting", "stagger", "delay", "even", "odd", "over", "under", "call", "put", "rise", "fall", "trend"
     ]
     
     for line in raw_logs.splitlines():
