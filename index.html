@@ -143,18 +143,24 @@
           </p>
         </div>
 
-        <!-- 2 Simple Pill Counters -->
-        <div class="grid grid-cols-2 gap-3 sm:w-60">
-          <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-sm">
+        <!-- 3 Simple Pill Counters -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:w-auto">
+          <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 text-center shadow-sm">
             <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Bots Working</span>
             <span id="statActiveBots" class="text-xl font-black text-emerald-600 dark:text-emerald-400">8 / 8</span>
             <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">● Healthy</span>
           </div>
 
-          <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-sm">
+          <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 text-center shadow-sm">
             <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Winning Rate</span>
             <span id="statWinRate" class="text-xl font-black text-sky-600 dark:text-sky-400">0%</span>
             <span id="statWinLossRecord" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">0 Wins</span>
+          </div>
+
+          <div class="bg-white dark:bg-[#0f172a] border border-amber-200/80 dark:border-amber-800/60 rounded-2xl p-2.5 text-center shadow-sm col-span-2 sm:col-span-1">
+            <span class="text-[11px] text-amber-700 dark:text-amber-400 font-bold block">Peak Stake</span>
+            <span id="statOverallPeak" class="text-xl font-black text-amber-600 dark:text-amber-300">$0.35</span>
+            <span id="statOverallPeakMarket" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">All Markets</span>
           </div>
         </div>
       </div>
@@ -461,14 +467,62 @@
       // 1. Total Profit
       const profitEl = document.getElementById("statTotalProfit");
       const isProfitable = data.total_profit >= 0;
+    function extractPeakAndMarket(bot) {
+      let maxStake = bot.max_stake || 0.35;
+      let maxMarket = bot.max_stake_market || "";
+      let curMarket = bot.current_market || "";
+
+      if (bot.logs && bot.logs.length > 0) {
+        bot.logs.forEach(line => {
+          // Check for step-up to $XX.XX ... on MARKET
+          const m1 = line.match(/step-up to \$([0-9.]+).*?on\s*([A-Za-z0-9]+)/i);
+          if (m1) {
+            const val = parseFloat(m1[1]);
+            if (val > maxStake) {
+              maxStake = val;
+              maxMarket = m1[2];
+            }
+          }
+          // Check for on MARKET @ $XX.XX
+          const m2 = line.match(/on\s*([A-Za-z0-9]+).*?@\s*\$([0-9.]+)/i);
+          if (m2) {
+            const val = parseFloat(m2[2]);
+            if (val > maxStake) {
+              maxStake = val;
+              maxMarket = m2[1];
+            }
+            if (!curMarket) curMarket = m2[1];
+          }
+          // Check for best market selected
+          const m3 = line.match(/best market selected.*?#?([A-Za-z0-9]+)/i);
+          if (m3 && !curMarket) {
+            curMarket = m3[1];
+          }
+        });
+      }
+
+      return {
+        peakStake: maxStake,
+        peakMarket: maxMarket || curMarket || "",
+        currentMarket: curMarket || "Auto Scan"
+      };
+    }
+
+    function renderDashboard(data) {
+      // 1. Total Profit
+      const profitEl = document.getElementById("statTotalProfit");
+      const isProfitable = data.total_profit >= 0;
       profitEl.innerText = `${isProfitable ? '+' : ''}$${data.total_profit.toFixed(2)}`;
       profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
 
-      // 2. Pillars
+      // 2. Pillars & Overall Peak Calculation
       document.getElementById("statActiveBots").innerText = `${data.total_active_bots || 0} / ${data.total_containers || 0}`;
       document.getElementById("statWinRate").innerText = `${data.win_rate || 0}%`;
       document.getElementById("statWinLossRecord").innerText = `${data.total_wins || 0} Wins • ${data.total_losses || 0} Safe`;
       document.getElementById("lastUpdated").innerText = `Updated ${formatRelativeTime(data.updated_at)}`;
+
+      let overallPeak = data.overall_peak_stake || 0.35;
+      let overallMarket = data.overall_peak_market || "";
 
       // 3. Fleets
       const container = document.getElementById("fleetsContainer");
@@ -487,19 +541,44 @@
           .replace("Fleet 2 (Even/Odd)", "⭐ Team 2 (5-Minute Strategy)")
           .replace("Fleet 1 (Even/Odd)", "🚀 Team 1 (Even / Odd)");
 
+        // Calculate fleet peak stake across bots
+        let fleetPeak = fleet.fleet_peak_stake || 0.35;
+        let fleetMarket = fleet.fleet_peak_market || "";
+
+        fleet.bots.forEach(b => {
+          const info = extractPeakAndMarket(b);
+          if (info.peakStake > fleetPeak) {
+            fleetPeak = info.peakStake;
+            fleetMarket = info.peakMarket;
+          }
+          if (info.peakStake > overallPeak) {
+            overallPeak = info.peakStake;
+            overallMarket = info.peakMarket;
+          }
+        });
+
+        const fleetPeakBadge = fleetPeak > 0.35
+          ? `$${fleetPeak.toFixed(2)} ${fleetMarket ? '(' + fleetMarket + ')' : ''}`
+          : '$0.35';
+
         html += `
           <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 card-shadow space-y-4">
             
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
               <div class="flex items-center gap-2">
                 <span class="text-base sm:text-lg font-black text-slate-900 dark:text-white">${friendlyFleetName}</span>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700">
                   ${fleet.bot_count} Active
                 </span>
               </div>
-              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Working Safely
-              </span>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800">
+                  🏔️ Fleet Peak: ${fleetPeakBadge}
+                </span>
+                <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Safe
+                </span>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -510,6 +589,10 @@
         `;
       });
 
+      // Update Overall Hero Peak
+      document.getElementById("statOverallPeak").innerText = `$${overallPeak.toFixed(2)}`;
+      document.getElementById("statOverallPeakMarket").innerText = overallMarket ? `on ${overallMarket}` : "All Markets";
+
       container.innerHTML = html;
     }
 
@@ -517,6 +600,7 @@
       const isRunning = bot.status === "RUNNING";
       const isProfitable = bot.profit >= 0;
       const friendlyName = friendlyBotName(bot.name);
+      const peakInfo = extractPeakAndMarket(bot);
 
       let logsHtml = "";
       if (bot.logs && bot.logs.length > 0) {
@@ -579,15 +663,23 @@
               </div>
             </div>
 
-            <!-- Stats Ribbon -->
-            <div class="grid grid-cols-2 gap-2 bg-white dark:bg-[#1e293b] rounded-xl p-2.5 text-center text-xs mb-3 border border-slate-200 dark:border-slate-800">
+            <!-- Stats Ribbon (4 Cards) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white dark:bg-[#1e293b] rounded-xl p-2.5 text-center text-xs mb-3 border border-slate-200 dark:border-slate-800">
               <div>
                 <span class="block text-[10px] text-slate-400 font-bold uppercase">Record</span>
-                <span class="font-black text-slate-800 dark:text-slate-100">${bot.wins} Won • ${bot.losses} Safe</span>
+                <span class="font-black text-slate-800 dark:text-slate-100">${bot.wins}W • ${bot.losses}L</span>
               </div>
               <div>
                 <span class="block text-[10px] text-slate-400 font-bold uppercase">Next Trade</span>
                 <span class="font-black text-sky-600 dark:text-sky-400">$${bot.current_stake > 0 ? bot.current_stake.toFixed(2) : '0.35'}</span>
+              </div>
+              <div>
+                <span class="block text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase">Peak Stake</span>
+                <span class="font-black text-amber-700 dark:text-amber-300">$${peakInfo.peakStake.toFixed(2)}</span>
+              </div>
+              <div>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase">Market</span>
+                <span class="font-black text-slate-700 dark:text-slate-200 truncate block">${peakInfo.peakMarket || peakInfo.currentMarket || '1HZ'}</span>
               </div>
             </div>
 

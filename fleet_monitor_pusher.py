@@ -109,6 +109,9 @@ def build_payload():
         losses = 0
         current_stake = 0.0
         consecutive_losses = 0
+        max_stake = 0.35
+        max_stake_market = ""
+        current_market = ""
 
         if state_data:
             bot_profit = float(state_data.get("total_profit", state_data.get("profit", 0.0)))
@@ -116,6 +119,9 @@ def build_payload():
             losses = int(state_data.get("losses", 0))
             current_stake = float(state_data.get("current_stake", state_data.get("stake", 0.0)))
             consecutive_losses = int(state_data.get("consecutive_losses", 0))
+            max_stake = float(state_data.get("max_stake", state_data.get("peak_stake", 0.35)))
+            max_stake_market = state_data.get("max_stake_market", "")
+            current_market = state_data.get("current_market", "")
 
         total_profit += bot_profit
         total_wins += wins
@@ -130,6 +136,9 @@ def build_payload():
             "losses": losses,
             "current_stake": round(current_stake, 2),
             "consecutive_losses": consecutive_losses,
+            "max_stake": round(max_stake, 2),
+            "max_stake_market": max_stake_market,
+            "current_market": current_market,
             "logs": logs
         }
 
@@ -143,13 +152,29 @@ def build_payload():
         else:
             fleets_dict["Other Bots"].append(bot_info)
 
-    # Convert to list of populated fleets
+    # Convert to list of populated fleets & calculate fleet peak stakes
     fleet_list = []
+    overall_peak_stake = 0.0
+    overall_peak_market = ""
+
     for f_name, bots in fleets_dict.items():
         if bots:
+            fleet_peak = 0.0
+            fleet_market = ""
+            for b in bots:
+                bstake = b.get("max_stake", 0.0)
+                if bstake > fleet_peak:
+                    fleet_peak = bstake
+                    fleet_market = b.get("max_stake_market", "")
+                if bstake > overall_peak_stake:
+                    overall_peak_stake = bstake
+                    overall_peak_market = b.get("max_stake_market", "")
+
             fleet_list.append({
                 "fleet_name": f_name,
                 "bot_count": len(bots),
+                "fleet_peak_stake": round(fleet_peak, 2),
+                "fleet_peak_market": fleet_market,
                 "bots": sorted(bots, key=lambda x: x["name"])
             })
 
@@ -165,6 +190,8 @@ def build_payload():
         "total_losses": total_losses,
         "total_trades": total_trades,
         "win_rate": win_rate,
+        "overall_peak_stake": round(overall_peak_stake, 2),
+        "overall_peak_market": overall_peak_market,
         "fleets": fleet_list
     }
 
