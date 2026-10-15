@@ -125,15 +125,29 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-3xl mx-auto px-4 py-5 w-full flex-1 space-y-5">
+  <main class="max-w-3xl mx-auto px-4 py-5 w-full flex-1 space-y-4">
+
+    <!-- Dedicated System Switcher (Even/Odd vs Over/Under) -->
+    <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm flex items-center gap-1.5">
+      <button onclick="switchSystem('eo')" id="sysBtn-eo" class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
+        <span class="text-base">🎲</span>
+        <span class="truncate">Even / Odd System</span>
+        <span id="sysCount-eo" class="px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">8 Bots</span>
+      </button>
+      <button onclick="switchSystem('ou')" id="sysBtn-ou" class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
+        <span class="text-base">🎯</span>
+        <span class="truncate">Over / Under Fleet</span>
+        <span id="sysCount-ou" class="px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">4 Bots</span>
+      </button>
+    </div>
 
     <!-- Piggy Bank Hero Card -->
-    <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all">
+    <div id="heroCardContainer" class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all">
       
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
         <div>
-          <span class="inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5">
-            💰 Money Made In Total
+          <span id="heroCardTag" class="inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5">
+            💰 Even / Odd System Money Made
           </span>
           <div id="statTotalProfit" class="text-4xl sm:text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
             +$0.00
@@ -171,7 +185,7 @@
     <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-amber-900 dark:text-amber-200 shadow-sm gap-2">
       <div class="flex items-center space-x-2.5">
         <span class="text-xl">☀️</span>
-        <span class="font-medium">Relax! Your helpers take care of everything automatically.</span>
+        <span id="comfortingNotice" class="font-medium">Relax! Your helpers take care of everything automatically.</span>
       </div>
       <div class="flex items-center gap-2 self-end sm:self-auto">
         <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
@@ -183,20 +197,9 @@
       </div>
     </div>
 
-    <!-- Friendly Navigation Tabs -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-1 custom-scroll pt-1" id="fleetTabsBar">
-      <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
-        <span>🌟</span> All Fleets <span id="tabCount-all" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">0</span>
-      </button>
-      <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300">
-        <span>⭐</span> Team 2 (Even/Odd) <span id="tabCount-fleet2" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">0</span>
-      </button>
-      <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300">
-        <span>🚀</span> Team 1 (Even/Odd) <span id="tabCount-fleet1" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">0</span>
-      </button>
-      <button onclick="switchFleetTab('over_under')" id="tab-over_under" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300">
-        <span>🎯</span> Over/Under (50/50 Fib) <span id="tabCount-over_under" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">0</span>
-      </button>
+    <!-- Sub Navigation Tabs Bar -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 custom-scroll pt-0.5" id="fleetTabsBar">
+      <!-- Generated dynamically based on selected system -->
     </div>
 
     <!-- Fleets and Bots Container -->
@@ -249,6 +252,9 @@
     let countdown = REFRESH_SECONDS;
     let isSimpleMode = localStorage.getItem("fleet_simple_mode") !== "false"; // Default simple
     let currentTheme = localStorage.getItem("fleet_theme") || "light"; // Default cheerful light mode
+    let currentSystem = (window.location.hash.includes("over-under") || window.location.hash.includes("ou")) 
+      ? "ou" 
+      : (localStorage.getItem("fleet_active_system") || "eo");
     let currentFleetTab = localStorage.getItem("active_fleet_tab") || "all";
 
     function applyTheme() {
@@ -280,26 +286,99 @@
       }
     }
 
-    function switchFleetTab(tab) {
-      currentFleetTab = tab;
-      localStorage.setItem("active_fleet_tab", tab);
-      updateTabsUI();
+    function switchSystem(sys) {
+      currentSystem = sys;
+      localStorage.setItem("fleet_active_system", sys);
+      if (history.pushState) {
+        history.pushState(null, null, sys === "ou" ? "#over-under" : "#even-odd");
+      } else {
+        window.location.hash = sys === "ou" ? "over-under" : "even-odd";
+      }
+      currentFleetTab = "all";
+      updateSystemSwitcherUI();
       if (window.lastPayload) {
         renderDashboard(window.lastPayload);
       }
     }
 
-    function updateTabsUI() {
-      const tabs = ["all", "fleet2", "fleet1", "over_under"];
-      tabs.forEach(t => {
-        const btn = document.getElementById(`tab-${t}`);
-        if (!btn) return;
-        if (t === currentFleetTab) {
-          btn.className = "tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-emerald-500 text-white shadow-md shadow-emerald-500/20 border-transparent";
-        } else {
-          btn.className = "tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300";
+    function updateSystemSwitcherUI() {
+      const btnEO = document.getElementById("sysBtn-eo");
+      const btnOU = document.getElementById("sysBtn-ou");
+      const countEO = document.getElementById("sysCount-eo");
+      const countOU = document.getElementById("sysCount-ou");
+
+      if (currentSystem === "ou") {
+        if (btnOU) btnOU.className = "flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-md shadow-indigo-500/20";
+        if (btnEO) btnEO.className = "flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60";
+        if (countOU) countOU.className = "px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold";
+        if (countEO) countEO.className = "px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold";
+      } else {
+        if (btnEO) btnEO.className = "flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 bg-emerald-500 text-white shadow-md shadow-emerald-500/20";
+        if (btnOU) btnOU.className = "flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60";
+        if (countEO) countEO.className = "px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold";
+        if (countOU) countOU.className = "px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold";
+      }
+    }
+
+    function calculateSystemMetrics(data, system) {
+      let targetBots = [];
+      (data.fleets || []).forEach(f => {
+        const isOU = f.fleet_name.toLowerCase().includes("over-under") || f.fleet_name.toLowerCase().includes("over/under");
+        if (system === "ou" && isOU) {
+          targetBots = targetBots.concat(f.bots || []);
+        } else if (system === "eo" && !isOU) {
+          targetBots = targetBots.concat(f.bots || []);
         }
       });
+
+      let totalProfit = 0.0;
+      let totalWins = 0;
+      let totalLosses = 0;
+      let activeCount = 0;
+      let peakStake = 0.35;
+      let peakMarket = "";
+      let longestUptimeSec = 0;
+
+      targetBots.forEach(b => {
+        totalProfit += (b.profit || 0.0);
+        totalWins += (b.wins || 0);
+        totalLosses += (b.losses || 0);
+        if (b.status === "RUNNING") activeCount++;
+        
+        const info = extractPeakAndMarket(b);
+        if (info.peakStake > peakStake) {
+          peakStake = info.peakStake;
+          peakMarket = info.peakMarket;
+        }
+        const sec = b.uptime_seconds || parseToSeconds(b.uptime || b.raw_status || "");
+        if (sec > longestUptimeSec) {
+          longestUptimeSec = sec;
+        }
+      });
+
+      const totalTrades = totalWins + totalLosses;
+      const winRate = totalTrades > 0 ? ((totalWins / totalTrades) * 100).toFixed(1) : "0.0";
+
+      return {
+        totalProfit: Math.round(totalProfit * 100) / 100,
+        totalWins,
+        totalLosses,
+        totalTrades,
+        winRate,
+        activeCount,
+        totalBots: targetBots.length,
+        peakStake,
+        peakMarket,
+        longestUptimeSec
+      };
+    }
+
+    function switchFleetTab(tab) {
+      currentFleetTab = tab;
+      localStorage.setItem("active_fleet_tab", tab);
+      if (window.lastPayload) {
+        renderDashboard(window.lastPayload);
+      }
     }
 
     function updateViewModeUI() {
@@ -720,48 +799,102 @@
     }
 
     function renderDashboard(data) {
-      // 1. Total Profit
-      const profitEl = document.getElementById("statTotalProfit");
-      const isProfitable = data.total_profit >= 0;
-      profitEl.innerText = `${isProfitable ? '+' : ''}$${data.total_profit.toFixed(2)}`;
-      profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+      // 1. Calculate isolated metrics for each system
+      const eoMetrics = calculateSystemMetrics(data, "eo");
+      const ouMetrics = calculateSystemMetrics(data, "ou");
 
-      // 2. Pillars & Overall Peak Calculation
-      document.getElementById("statActiveBots").innerText = `${data.total_active_bots || 0} / ${data.total_containers || 0}`;
-      document.getElementById("statWinRate").innerText = `${data.win_rate || 0}%`;
-      document.getElementById("statWinLossRecord").innerText = `${data.total_wins || 0} Wins • ${data.total_losses || 0} Safe`;
+      const sysCountEO = document.getElementById("sysCount-eo");
+      const sysCountOU = document.getElementById("sysCount-ou");
+      if (sysCountEO) sysCountEO.innerText = `${eoMetrics.totalBots} Bots`;
+      if (sysCountOU) sysCountOU.innerText = `${ouMetrics.totalBots} Bots`;
+      updateSystemSwitcherUI();
+
+      // 2. Select metrics for active system
+      const activeMetrics = (currentSystem === "ou") ? ouMetrics : eoMetrics;
+
+      // 3. Update Hero Card
+      const profitEl = document.getElementById("statTotalProfit");
+      const isProfitable = activeMetrics.totalProfit >= 0;
+      profitEl.innerText = `${isProfitable ? '+' : ''}$${activeMetrics.totalProfit.toFixed(2)}`;
+      profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${
+        currentSystem === "ou" 
+          ? (isProfitable ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400')
+          : (isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
+      }`;
+
+      const heroTag = document.getElementById("heroCardTag");
+      const peaceText = document.getElementById("peaceOfMindText");
+      const heroContainer = document.getElementById("heroCardContainer");
+      const comfortingNotice = document.getElementById("comfortingNotice");
+
+      if (currentSystem === "ou") {
+        if (heroTag) {
+          heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 mb-2.5";
+          heroTag.innerHTML = "🎯 Over / Under Fleet Profit";
+        }
+        if (peaceText) {
+          peaceText.innerHTML = '<span class="text-base">🛡️</span> Independent 50/50 Under 5 / Over 4 trading with Fibonacci recovery.';
+        }
+        if (comfortingNotice) {
+          comfortingNotice.innerText = "Over/Under Fleet is operating independently with Fibonacci recovery.";
+        }
+        if (heroContainer) {
+          heroContainer.className = "bg-gradient-to-br from-white via-indigo-50/50 to-purple-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#1a1c36] border-2 border-indigo-200 dark:border-indigo-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
+        }
+      } else {
+        if (heroTag) {
+          heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5";
+          heroTag.innerHTML = "💰 Even / Odd System Profit";
+        }
+        if (peaceText) {
+          peaceText.innerHTML = '<span class="text-base">🛡️</span> Team 1 & Team 2 working together in automated rotation.';
+        }
+        if (comfortingNotice) {
+          comfortingNotice.innerText = "Relax! Your Even/Odd helpers take care of everything automatically.";
+        }
+        if (heroContainer) {
+          heroContainer.className = "bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all";
+        }
+      }
+
+      // Pillars
+      document.getElementById("statActiveBots").innerText = `${activeMetrics.activeCount} / ${activeMetrics.totalBots}`;
+      document.getElementById("statWinRate").innerText = `${activeMetrics.winRate}%`;
+      document.getElementById("statWinLossRecord").innerText = `${activeMetrics.totalWins} Wins • ${activeMetrics.totalLosses} Safe`;
+      document.getElementById("statOverallPeak").innerText = `$${activeMetrics.peakStake.toFixed(2)}`;
+      document.getElementById("statOverallPeakMarket").innerText = activeMetrics.peakMarket ? `on ${activeMetrics.peakMarket}` : "All Markets";
       document.getElementById("lastUpdated").innerText = `Updated ${formatRelativeTime(data.updated_at)}`;
 
-      let overallPeak = data.overall_peak_stake || 0.35;
-      let overallMarket = data.overall_peak_market || "";
-      let overallLongestSec = parseToSeconds(data.longest_uptime || 0);
+      const uptimeValEl = document.getElementById("fleetUptimeVal");
+      if (uptimeValEl) {
+        uptimeValEl.innerText = formatFriendlyUptime(activeMetrics.longestUptimeSec);
+      }
 
-      // 3. Update Tab Counters
-      let countAll = 0;
-      let countFleet2 = 0;
-      let countFleet1 = 0;
-      let countOU = 0;
+      // 4. Sub-tabs bar rendering
+      const tabsBar = document.getElementById("fleetTabsBar");
+      if (tabsBar) {
+        if (currentSystem === "ou") {
+          tabsBar.innerHTML = `
+            <button class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
+              <span>🎯</span> Over/Under 50/50 Fibonacci Helpers <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
+            </button>
+          `;
+        } else {
+          tabsBar.innerHTML = `
+            <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'all' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
+              <span>🌟</span> All Even/Odd <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${eoMetrics.totalBots}</span>
+            </button>
+            <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
+              <span>⭐</span> Team 2 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
+            </button>
+            <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet1' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
+              <span>🚀</span> Team 1 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
+            </button>
+          `;
+        }
+      }
 
-      (data.fleets || []).forEach(f => {
-        const lower = f.fleet_name.toLowerCase();
-        const cnt = f.bot_count || (f.bots ? f.bots.length : 0);
-        countAll += cnt;
-        if (lower.includes("fleet 2")) countFleet2 += cnt;
-        else if (lower.includes("fleet 1")) countFleet1 += cnt;
-        else if (lower.includes("over-under") || lower.includes("over/under")) countOU += cnt;
-      });
-
-      const tabCountAllEl = document.getElementById("tabCount-all");
-      const tabCountF2El = document.getElementById("tabCount-fleet2");
-      const tabCountF1El = document.getElementById("tabCount-fleet1");
-      const tabCountOUEl = document.getElementById("tabCount-over_under");
-      if (tabCountAllEl) tabCountAllEl.innerText = countAll;
-      if (tabCountF2El) tabCountF2El.innerText = countFleet2;
-      if (tabCountF1El) tabCountF1El.innerText = countFleet1;
-      if (tabCountOUEl) tabCountOUEl.innerText = countOU;
-      updateTabsUI();
-
-      // 4. Fleets Container
+      // 5. Fleets Container
       const container = document.getElementById("fleetsContainer");
       if (!data.fleets || data.fleets.length === 0) {
         container.innerHTML = `
@@ -772,34 +905,27 @@
         return;
       }
 
-      // Filter by active tab
-      let fleetsToRender = data.fleets || [];
-      if (currentFleetTab === "fleet2") {
-        fleetsToRender = fleetsToRender.filter(f => f.fleet_name.toLowerCase().includes("fleet 2"));
-      } else if (currentFleetTab === "fleet1") {
-        fleetsToRender = fleetsToRender.filter(f => f.fleet_name.toLowerCase().includes("fleet 1"));
-      } else if (currentFleetTab === "over_under") {
-        fleetsToRender = fleetsToRender.filter(f => f.fleet_name.toLowerCase().includes("over-under") || f.fleet_name.toLowerCase().includes("over/under"));
+      // Filter fleets based on active system and sub-tab
+      let fleetsToRender = [];
+      if (currentSystem === "ou") {
+        fleetsToRender = (data.fleets || []).filter(f => f.fleet_name.toLowerCase().includes("over-under") || f.fleet_name.toLowerCase().includes("over/under"));
+      } else {
+        const eoFleets = (data.fleets || []).filter(f => !f.fleet_name.toLowerCase().includes("over-under") && !f.fleet_name.toLowerCase().includes("over/under"));
+        if (currentFleetTab === "fleet2") {
+          fleetsToRender = eoFleets.filter(f => f.fleet_name.includes("Fleet 2"));
+        } else if (currentFleetTab === "fleet1") {
+          fleetsToRender = eoFleets.filter(f => f.fleet_name.includes("Fleet 1"));
+        } else {
+          fleetsToRender = eoFleets;
+        }
       }
 
       if (fleetsToRender.length === 0) {
-        if (currentFleetTab === "over_under") {
-          container.innerHTML = `
-            <div class="text-center py-12 bg-white dark:bg-[#1e293b] border-2 border-dashed border-emerald-300 dark:border-emerald-800/60 rounded-3xl p-6 shadow-sm space-y-3">
-              <span class="text-4xl block">🎯</span>
-              <h3 class="text-base font-black text-slate-800 dark:text-white">Over/Under Fleet (50/50 Fibonacci)</h3>
-              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-                Ready to be started! Once launched on your server console, all 4 helper bots will appear here live with 50/50 Under 5 / Over 4 trading, Fibonacci step-back recovery, and 20-minute rest cooldowns.
-              </p>
-            </div>
-          `;
-        } else {
-          container.innerHTML = `
-            <div class="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl">
-              No bots currently active in this fleet tab.
-            </div>
-          `;
-        }
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl">
+            No bots currently reporting in this view.
+          </div>
+        `;
         return;
       }
 
@@ -1014,6 +1140,17 @@
     // Initial Setup
     applyTheme();
     updateViewModeUI();
+    updateSystemSwitcherUI();
+    window.addEventListener("hashchange", () => {
+      const isOU = window.location.hash.includes("over-under") || window.location.hash.includes("ou");
+      currentSystem = isOU ? "ou" : "eo";
+      localStorage.setItem("fleet_active_system", currentSystem);
+      currentFleetTab = "all";
+      updateSystemSwitcherUI();
+      if (window.lastPayload) {
+        renderDashboard(window.lastPayload);
+      }
+    });
     fetchData();
   </script>
 </body>
