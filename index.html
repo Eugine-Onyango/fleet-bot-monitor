@@ -166,19 +166,27 @@
           <span id="heroCardTag" class="inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5">
             💰 Even / Odd System Money Made
           </span>
-          <div id="statTotalProfit" class="text-4xl sm:text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
-            +$0.00
+          <div class="flex flex-wrap items-baseline gap-3">
+            <div id="statTotalProfit" class="text-4xl sm:text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+              +$0.00
+            </div>
+            <span id="peakBadge" class="inline-flex items-center text-xs font-black px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+              🏆 Peak: +$0.00
+            </span>
           </div>
-          <p id="peaceOfMindText" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 font-medium flex items-center gap-2">
+          <div id="drawdownNotice" class="text-xs font-bold text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1.5 hidden">
+            <span>🔻</span> Currently <span id="drawdownAmount" class="font-black text-rose-600 dark:text-rose-400">-$0.00</span> from all-time peak (<span id="peakRef">+$0.00</span>)
+          </div>
+          <p id="peaceOfMindText" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 font-medium flex items-center gap-2">
             <span class="text-base">🛡️</span> Everything is running safely and automatically.
           </p>
         </div>
 
-        <!-- 3 Simple Pill Counters -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:w-auto">
+        <!-- 4 Pill Counters (Bots, Win Rate, Peak Profit, Peak Stake) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:w-auto">
           <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 text-center shadow-sm">
             <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Bots Working</span>
-            <span id="statActiveBots" class="text-xl font-black text-emerald-600 dark:text-emerald-400">8 / 8</span>
+            <span id="statActiveBots" class="text-xl font-black text-emerald-600 dark:text-emerald-400">12 / 12</span>
             <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">● Healthy</span>
           </div>
 
@@ -188,7 +196,13 @@
             <span id="statWinLossRecord" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">0 Wins</span>
           </div>
 
-          <div class="bg-white dark:bg-[#0f172a] border border-amber-200/80 dark:border-amber-800/60 rounded-2xl p-2.5 text-center shadow-sm col-span-2 sm:col-span-1">
+          <div class="bg-white dark:bg-[#0f172a] border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl p-2.5 text-center shadow-sm">
+            <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold block">Peak Profit</span>
+            <span id="statPeakProfit" class="text-xl font-black text-emerald-600 dark:text-emerald-400">+$0.00</span>
+            <span id="statPeakProfitDiff" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-0.5">Max Reached</span>
+          </div>
+
+          <div class="bg-white dark:bg-[#0f172a] border border-amber-200/80 dark:border-amber-800/60 rounded-2xl p-2.5 text-center shadow-sm">
             <span class="text-[11px] text-amber-700 dark:text-amber-400 font-bold block">Peak Stake</span>
             <span id="statOverallPeak" class="text-xl font-black text-amber-600 dark:text-amber-300">$0.35</span>
             <span id="statOverallPeakMarket" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">All Markets</span>
@@ -395,8 +409,26 @@
       const totalTrades = totalWins + totalLosses;
       const winRate = totalTrades > 0 ? ((totalWins / totalTrades) * 100).toFixed(1) : "0.0";
 
+      const roundedProfit = Math.round(totalProfit * 100) / 100;
+      const peakKey = `fleet_peak_profit_${system}`;
+      let storedPeak = parseFloat(localStorage.getItem(peakKey) || "-999999");
+      let serverPeak = (data.system_peak_profits && data.system_peak_profits[system] !== undefined)
+        ? parseFloat(data.system_peak_profits[system])
+        : -999999;
+
+      let peakProfit = Math.max(roundedProfit, storedPeak, serverPeak);
+      if (peakProfit !== -999999 && !isNaN(peakProfit)) {
+        localStorage.setItem(peakKey, peakProfit.toString());
+      } else {
+        peakProfit = roundedProfit;
+      }
+
+      const profitDrawdown = Math.max(0, Math.round((peakProfit - roundedProfit) * 100) / 100);
+
       return {
-        totalProfit: Math.round(totalProfit * 100) / 100,
+        totalProfit: roundedProfit,
+        peakProfit,
+        profitDrawdown,
         totalWins,
         totalLosses,
         totalTrades,
@@ -925,6 +957,42 @@
       document.getElementById("statOverallPeakMarket").innerText = activeMetrics.peakMarket ? `on ${activeMetrics.peakMarket}` : "All Markets";
       document.getElementById("lastUpdated").innerText = `Updated ${formatRelativeTime(data.updated_at)}`;
 
+      // Peak Profit Pill and Drawdown Indicator
+      const peakBadge = document.getElementById("peakBadge");
+      const drawdownNotice = document.getElementById("drawdownNotice");
+      const drawdownAmount = document.getElementById("drawdownAmount");
+      const peakRef = document.getElementById("peakRef");
+      const statPeakProfit = document.getElementById("statPeakProfit");
+      const statPeakProfitDiff = document.getElementById("statPeakProfitDiff");
+
+      if (peakBadge) {
+        peakBadge.innerText = `🏆 Peak: +$${activeMetrics.peakProfit.toFixed(2)}`;
+      }
+
+      if (statPeakProfit) {
+        statPeakProfit.innerText = `+$${activeMetrics.peakProfit.toFixed(2)}`;
+      }
+
+      if (activeMetrics.profitDrawdown > 0) {
+        if (drawdownNotice) {
+          drawdownNotice.classList.remove("hidden");
+          if (drawdownAmount) drawdownAmount.innerText = `-$${activeMetrics.profitDrawdown.toFixed(2)}`;
+          if (peakRef) peakRef.innerText = `+$${activeMetrics.peakProfit.toFixed(2)}`;
+        }
+        if (statPeakProfitDiff) {
+          statPeakProfitDiff.innerText = `-$${activeMetrics.profitDrawdown.toFixed(2)} from Peak`;
+          statPeakProfitDiff.className = "text-[10px] text-rose-600 dark:text-rose-400 font-bold block mt-0.5";
+        }
+      } else {
+        if (drawdownNotice) {
+          drawdownNotice.classList.add("hidden");
+        }
+        if (statPeakProfitDiff) {
+          statPeakProfitDiff.innerText = "● Max Reached";
+          statPeakProfitDiff.className = "text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5";
+        }
+      }
+
       const uptimeValEl = document.getElementById("fleetUptimeVal");
       if (uptimeValEl) {
         uptimeValEl.innerText = formatFriendlyUptime(activeMetrics.longestUptimeSec);
@@ -1065,6 +1133,21 @@
 
         const fleetUptimeDisplay = formatFriendlyUptime(fleetMaxSec);
 
+        // Calculate fleet profit, peak profit & drawdown
+        let fleetProfit = (fleet.bots || []).reduce((sum, b) => sum + (b.profit || 0), 0);
+        fleetProfit = Math.round(fleetProfit * 100) / 100;
+
+        const fleetPeakKey = `fleet_peak_${fleet.fleet_name}`;
+        let storedFPeak = parseFloat(localStorage.getItem(fleetPeakKey) || "-999999");
+        let serverFPeak = fleet.fleet_peak_profit !== undefined ? parseFloat(fleet.fleet_peak_profit) : -999999;
+        let fleetPeakProfit = Math.max(fleetProfit, storedFPeak, serverFPeak);
+        if (fleetPeakProfit !== -999999 && !isNaN(fleetPeakProfit)) {
+          localStorage.setItem(fleetPeakKey, fleetPeakProfit.toString());
+        } else {
+          fleetPeakProfit = fleetProfit;
+        }
+        const fleetDrawdown = Math.max(0, Math.round((fleetPeakProfit - fleetProfit) * 100) / 100);
+
         html += `
           <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 card-shadow space-y-4">
             
@@ -1082,8 +1165,11 @@
                 <span class="font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-1">
                   ⏱️ ${fleetUptimeDisplay}
                 </span>
+                <span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                  🏆 Peak: +$${fleetPeakProfit.toFixed(2)}${fleetDrawdown > 0 ? ` <span class="text-rose-600 dark:text-rose-400 font-black">(-$${fleetDrawdown.toFixed(2)})</span>` : ''}
+                </span>
                 <span class="font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800">
-                  🏔️ Fleet Peak: ${fleetPeakBadge}
+                  🏔️ Max Stake: ${fleetPeakBadge}
                 </span>
                 <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                   <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Safe
@@ -1108,6 +1194,18 @@
       const friendlyName = friendlyBotName(bot.name);
       const peakInfo = extractPeakAndMarket(bot);
       const botUptime = extractUptime(bot);
+
+      // Bot Peak Profit and Drawdown
+      const botPeakKey = `bot_peak_${bot.name}`;
+      let storedBPeak = parseFloat(localStorage.getItem(botPeakKey) || "-999999");
+      let serverBPeak = bot.peak_profit !== undefined ? parseFloat(bot.peak_profit) : -999999;
+      let botPeakProfit = Math.max(bot.profit || 0, storedBPeak, serverBPeak);
+      if (botPeakProfit !== -999999 && !isNaN(botPeakProfit)) {
+        localStorage.setItem(botPeakKey, botPeakProfit.toString());
+      } else {
+        botPeakProfit = bot.profit || 0;
+      }
+      const botDrawdown = Math.max(0, Math.round((botPeakProfit - (bot.profit || 0)) * 100) / 100);
 
       let logsHtml = "";
       if (bot.logs && bot.logs.length > 0) {
@@ -1166,6 +1264,9 @@
                 <span class="text-[10px] text-slate-400 uppercase font-bold block">Earned</span>
                 <span class="text-sm sm:text-base font-black ${isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
                   ${isProfitable ? '+' : ''}$${bot.profit.toFixed(2)}
+                </span>
+                <span class="text-[10px] font-bold block mt-0.5 ${botDrawdown > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">
+                  🏆 Max: +$${botPeakProfit.toFixed(2)}${botDrawdown > 0 ? ` <span class="text-rose-500 font-bold">(-$${botDrawdown.toFixed(2)})</span>` : ''}
                 </span>
               </div>
             </div>

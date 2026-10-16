@@ -15,6 +15,24 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "YOUR_GITHUB_TOKEN_HERE")
 UPDATE_INTERVAL_SECONDS = 30  # Update every 30 seconds
 # =================================================
 
+PEAK_FILE = os.getenv("PEAK_FILE", "/root/fleet_peak_profits.json" if os.name != "nt" else "fleet_peak_profits.json")
+
+def load_peaks():
+    if os.path.exists(PEAK_FILE):
+        try:
+            with open(PEAK_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"overall": 0.0, "systems": {"eo": 0.0, "ou": 0.0, "cp": 0.0}, "fleets": {}, "bots": {}}
+
+def save_peaks(peaks):
+    try:
+        with open(PEAK_FILE, "w", encoding="utf-8") as f:
+            json.dump(peaks, f, indent=2)
+    except Exception:
+        pass
+
 def run_cmd(cmd):
     try:
         res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
@@ -119,6 +137,13 @@ def get_container_uptime(container_name):
 
 def build_payload():
     containers = get_containers()
+    peaks = load_peaks()
+    if "systems" not in peaks:
+        peaks["systems"] = {"eo": 0.0, "ou": 0.0, "cp": 0.0}
+    if "fleets" not in peaks:
+        peaks["fleets"] = {}
+    if "bots" not in peaks:
+        peaks["bots"] = {}
     
     fleets_dict = {
         "Fleet 1 (Even/Odd)": [],
@@ -164,6 +189,11 @@ def build_payload():
             max_stake_market = state_data.get("max_stake_market", "")
             current_market = state_data.get("current_market", "")
 
+        bot_profit_val = round(bot_profit, 2)
+        b_peak = max(peaks["bots"].get(name, 0.0), bot_profit_val)
+        peaks["bots"][name] = b_peak
+        b_drawdown = max(0.0, round(b_peak - bot_profit_val, 2))
+
         total_profit += bot_profit
         total_wins += wins
         total_losses += losses
@@ -174,7 +204,9 @@ def build_payload():
             "raw_status": c["status"],
             "uptime": uptime_str,
             "uptime_seconds": uptime_sec,
-            "profit": round(bot_profit, 2),
+            "profit": bot_profit_val,
+            "peak_profit": b_peak,
+            "profit_drawdown": b_drawdown,
             "wins": wins,
             "losses": losses,
             "current_stake": round(current_stake, 2),
@@ -239,14 +271,39 @@ def build_payload():
                     overall_max_uptime_sec = bsec
                     overall_max_uptime_str = b.get("uptime", "0m")
 
+            fleet_profit_val = round(sum(b["profit"] for b in bots), 2)
+            f_peak = max(peaks["fleets"].get(f_name, 0.0), fleet_profit_val)
+            peaks["fleets"][f_name] = f_peak
+            f_drawdown = max(0.0, round(f_peak - fleet_profit_val, 2))
+
             fleet_list.append({
                 "fleet_name": f_name,
                 "bot_count": len(bots),
+                "fleet_profit": fleet_profit_val,
+                "fleet_peak_profit": f_peak,
+                "fleet_profit_drawdown": f_drawdown,
                 "fleet_peak_stake": round(fleet_peak, 2),
                 "fleet_peak_market": fleet_market,
                 "fleet_uptime": fleet_uptime_str,
                 "bots": sorted(bots, key=lambda x: x["name"])
             })
+
+    # System totals and peaks
+    eo_bots = fleets_dict.get("Fleet 1 (Even/Odd)", []) + fleets_dict.get("Fleet 2 (Even/Odd)", [])
+    ou_bots = fleets_dict.get("Fleet 1 (Over/Under)", []) + fleets_dict.get("Fleet 2 (Over/Under)", [])
+    cp_bots = fleets_dict.get("Fleet 1 (Call/Put)", []) + fleets_dict.get("Fleet 2 (Call/Put)", [])
+
+    eo_profit = round(sum(b["profit"] for b in eo_bots), 2)
+    ou_profit = round(sum(b["profit"] for b in ou_bots), 2)
+    cp_profit = round(sum(b["profit"] for b in cp_bots), 2)
+
+    peaks["systems"]["eo"] = max(peaks["systems"].get("eo", 0.0), eo_profit)
+    peaks["systems"]["ou"] = max(peaks["systems"].get("ou", 0.0), ou_profit)
+    peaks["systems"]["cp"] = max(peaks["systems"].get("cp", 0.0), cp_profit)
+
+    overall_peak = max(peaks.get("overall", 0.0), round(total_profit, 2))
+    peaks["overall"] = overall_peak
+    save_peaks(peaks)
 
     total_trades = total_wins + total_losses
     win_rate = round((total_wins / total_trades * 100), 1) if total_trades > 0 else 0.0
@@ -256,6 +313,18 @@ def build_payload():
         "total_active_bots": total_active_bots,
         "total_containers": len(containers),
         "total_profit": round(total_profit, 2),
+        "overall_peak_profit": overall_peak,
+        "overall_profit_drawdown": max(0.0, round(overall_peak - round(total_profit, 2), 2)),
+        "system_peak_profits": {
+            "eo": peaks["systems"]["eo"],
+            "ou": peaks["systems"]["ou"],
+            "cp": peaks["systems"]["cp"]
+        },
+        "system_profit_drawdowns": {
+            "eo": max(0.0, round(peaks["systems"]["eo"] - eo_profit, 2)),
+            "ou": max(0.0, round(peaks["systems"]["ou"] - ou_profit, 2)),
+            "cp": max(0.0, round(peaks["systems"]["cp"] - cp_profit, 2))
+        },
         "total_wins": total_wins,
         "total_losses": total_losses,
         "total_trades": total_trades,
