@@ -144,17 +144,17 @@
       <button onclick="switchSystem('eo')" id="sysBtn-eo" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
         <span class="text-base">🎲</span>
         <span class="truncate">Even / Odd</span>
-        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">8</span>
+        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">12</span>
       </button>
       <button onclick="switchSystem('ou')" id="sysBtn-ou" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base">🎯</span>
         <span class="truncate">Over / Under</span>
-        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">4</span>
+        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
       </button>
       <button onclick="switchSystem('cp')" id="sysBtn-cp" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base">📈</span>
         <span class="truncate">Call / Put</span>
-        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">6</span>
+        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
       </button>
     </div>
 
@@ -951,10 +951,10 @@
               <span>🌟</span> All Over/Under <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
             </button>
             <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet1' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>🎯</span> Team 1 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
+              <span>🎯</span> Team 1 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
             <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>✨</span> Team 2 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
+              <span>✨</span> Team 2 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
           `;
         } else {
@@ -963,10 +963,10 @@
               <span>🌟</span> All Even/Odd <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${eoMetrics.totalBots}</span>
             </button>
             <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet1' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
-              <span>🚀</span> Team 1 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
+              <span>🚀</span> Team 1 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
             <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
-              <span>⭐</span> Team 2 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
+              <span>⭐</span> Team 2 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
           `;
         }
@@ -1014,19 +1014,25 @@
       let html = "";
       fleetsToRender.forEach(fleet => {
         let friendlyFleetName = fleet.fleet_name;
-        let fleetSubtitle = "Even / Odd Digits Strategy • 20m Safe Rest";
+        let fleetSubtitle = "Even / Odd Digits Strategy • 30m Safe Rest";
         if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "⭐ Team 2 (Even / Odd)";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
         } else if (fleet.fleet_name.includes("Fleet 1") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "🚀 Team 1 (Even / Odd)";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
           friendlyFleetName = "✨ Team 2 (Over / Under)";
-          fleetSubtitle = "50/50 Martingale • 5m Stagger • 20m Rest";
+          fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest";
         } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
           friendlyFleetName = "🎯 Team 1 (Over / Under)";
-          fleetSubtitle = "50/50 Martingale • 5m Stagger • 20m Rest";
+          fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest";
+        } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put"))) {
+          friendlyFleetName = "🚀 Team 2 (Call / Put)";
+          fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";
+        } else if (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put")) {
+          friendlyFleetName = "📈 Team 1 (Call / Put)";
+          fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put"))) {
           friendlyFleetName = "🚀 Team 2 (Call / Put)";
           fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";

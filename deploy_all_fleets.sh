@@ -2,12 +2,12 @@
 set -e
 
 echo "============================================================"
-echo "🚀 DEPLOYING ALL 6 FLEET BOTS (FRESH START & MASTER LOCK)"
-echo "   • Fleets (6 Total):"
-echo "       1. Even/Odd Team 1     (4 Bots, 20m Rest)"
-echo "       2. Even/Odd Team 2     (4 Bots, 20m Rest)"
-echo "       3. Over/Under Team 1   (4 Bots, 20m Rest, 50/50)"
-echo "       4. Over/Under Team 2   (4 Bots, 20m Rest, 50/50)"
+echo "🚀 DEPLOYING ALL 6 FLEET BOTS (6 BOTS EACH • 30M REST)"
+echo "   • Fleets (6 Total, 36 Bots):"
+echo "       1. Even/Odd Team 1     (6 Bots, 30m Rest)"
+echo "       2. Even/Odd Team 2     (6 Bots, 30m Rest)"
+echo "       3. Over/Under Team 1   (6 Bots, 30m Rest, 50/50)"
+echo "       4. Over/Under Team 2   (6 Bots, 30m Rest, 50/50)"
 echo "       5. Call/Put Team 1     (6 Bots, 30m Rest, Rise/Fall)"
 echo "       6. Call/Put Team 2     (6 Bots, 30m Rest, Rise/Fall)"
 echo "   • Markets: 10 Even/Odd Markets (1HZ10V-100V, RDBULL, RDBEAR)"
@@ -86,8 +86,8 @@ docker build -t headless-call-put-fleet .
 # 5. Launch all 6 fleets with staggered offsets (45s fleet offset, 300s bot interval)
 echo "🚀 Launching all 6 fleets..."
 
-# Fleet 1: Even/Odd Team 1 (4 Bots) - Base Offset: 0s
-for i in 1 2 3 4; do
+# Fleet 1: Even/Odd Team 1 (6 Bots) - Base Offset: 0s
+for i in 1 2 3 4 5 6; do
   BOT_NAME="my-even-odd-bot-$i"
   BOT_DIR="/root/even_odd_millipede_bot_$i"
   DELAY=$(( 0 + (i - 1) * 300 ))
@@ -101,10 +101,10 @@ for i in 1 2 3 4; do
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
     headless-even-odd-millipede
 done
-echo "✅ Fleet 1 (Even/Odd Team 1) launched [4 bots]."
+echo "✅ Fleet 1 (Even/Odd Team 1) launched [6 bots]."
 
-# Fleet 2: Even/Odd Team 2 (4 Bots) - Base Offset: 45s
-for i in 1 2 3 4; do
+# Fleet 2: Even/Odd Team 2 (6 Bots) - Base Offset: 45s
+for i in 1 2 3 4 5 6; do
   BOT_NAME="my-even-odd-fleet2-bot-$i"
   BOT_DIR="/root/even_odd_fleet2_bot_$i"
   DELAY=$(( 45 + (i - 1) * 300 ))
@@ -118,10 +118,10 @@ for i in 1 2 3 4; do
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
     headless-even-odd-millipede
 done
-echo "✅ Fleet 2 (Even/Odd Team 2) launched [4 bots]."
+echo "✅ Fleet 2 (Even/Odd Team 2) launched [6 bots]."
 
-# Fleet 3: Over/Under Team 1 (4 Bots) - Base Offset: 90s
-for i in 1 2 3 4; do
+# Fleet 3: Over/Under Team 1 (6 Bots) - Base Offset: 90s
+for i in 1 2 3 4 5 6; do
   BOT_NAME="my-over-under-fleet-bot-$i"
   BOT_DIR="/root/over_under_fleet_bot_$i"
   DELAY=$(( 90 + (i - 1) * 300 ))
@@ -135,10 +135,10 @@ for i in 1 2 3 4; do
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
     headless-over-under-fleet
 done
-echo "✅ Fleet 3 (Over/Under Team 1) launched [4 bots]."
+echo "✅ Fleet 3 (Over/Under Team 1) launched [6 bots]."
 
-# Fleet 4: Over/Under Team 2 (4 Bots) - Base Offset: 135s
-for i in 1 2 3 4; do
+# Fleet 4: Over/Under Team 2 (6 Bots) - Base Offset: 135s
+for i in 1 2 3 4 5 6; do
   BOT_NAME="my-over-under-fleet2-bot-$i"
   BOT_DIR="/root/over_under_fleet2_bot_$i"
   DELAY=$(( 135 + (i - 1) * 300 ))
@@ -152,7 +152,7 @@ for i in 1 2 3 4; do
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
     headless-over-under-fleet
 done
-echo "✅ Fleet 4 (Over/Under Team 2) launched [4 bots]."
+echo "✅ Fleet 4 (Over/Under Team 2) launched [6 bots]."
 
 # Fleet 5: Call/Put Team 1 (6 Bots) - Base Offset: 180s
 for i in 1 2 3 4 5 6; do
@@ -201,7 +201,7 @@ fi
 echo ""
 echo "============================================================"
 echo "🎉 ALL 6 FLEETS DEPLOYED WITH FRESH CLEAN START!"
-echo "   • Total Bots: 28 Bots Active"
+echo "   • Total Bots: 36 Bots Active (6 Fleets × 6 Bots, 30m Rest)"
 echo "   • Master Trade Lock: /root/shared_master_trade_lock (0 collisions)"
 echo "   • Fleets Offset: 45s stagger gap between fleet cycles"
 echo "   • Markets: 10 Even/Odd Markets across all bots"
