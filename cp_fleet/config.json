@@ -11,11 +11,8 @@
     "1HZ75V",
     "1HZ90V",
     "1HZ100V",
-    "R_10",
-    "R_25",
-    "R_50",
-    "R_75",
-    "R_100"
+    "RDBULL",
+    "RDBEAR"
   ],
   "initial_stake": 0.35,
   "recovery_strategy": "martingale",
