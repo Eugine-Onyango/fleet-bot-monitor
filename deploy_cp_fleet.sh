@@ -7,7 +7,8 @@ echo "   • Strategy: Trend Momentum Rise/Fall (CALL / PUT)"
 echo "   • Rotation: 6 Bots Staggered Every 5 Minutes"
 echo "   • Cooldown: 30-minute Win & Recovery Rest (1 Trade / 5 Min)"
 echo "   • Recovery: 2.1 Martingale Step-Up ($0.35 Base)"
-echo "   • Lock: Isolated at /root/shared_trade_lock_cp"
+echo "   • Markets: 10 Even/Odd Markets (1HZ10V-100V, RDBULL, RDBEAR)
+   • Lock: Isolated at /root/shared_trade_lock_cp"
 echo "============================================================"
 
 # 1. Clean previous Call/Put Fleet containers (DO NOT touch Even/Odd or Over/Under!)
