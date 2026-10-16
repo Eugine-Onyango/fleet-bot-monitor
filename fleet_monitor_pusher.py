@@ -45,7 +45,7 @@ def get_simplified_logs(container_name, lines=25):
     keep_keywords = [
         "win", "loss", "profit", "stake", "contract", "bought", "purchased",
         "proposal", "balance", "cycle", "cooldown", "payout", "error", "starting",
-        "waiting", "stagger", "delay", "even", "odd", "over", "under", "call", "put", "rise", "fall", "trend"
+        "waiting", "stagger", "delay", "even", "odd", "over", "under", "call", "put", "rise", "fall", "trend", "queue", "lock"
     ]
     
     for line in raw_logs.splitlines():
@@ -76,10 +76,11 @@ def get_bot_state(name):
     num = name.split("-")[-1]
     possible_paths = [
         f"/root/call_put_fleet_bot_{num}/state.json",
+        f"/root/call_put_fleet2_bot_{num}/state.json",
         f"/root/over_under_fleet_bot_{num}/state.json",
+        f"/root/over_under_fleet2_bot_{num}/state.json",
         f"/root/even_odd_fleet2_bot_{num}/state.json",
         f"/root/even_odd_millipede_bot_{num}/state.json",
-        f"/root/over_under_millipede_bot_{num}/state.json",
         f"/root/even_odd_fleet_bot_{num}/state.json",
         f"/root/{name.replace('my-', '').replace('-', '_')}/state.json",
         f"/root/{name}/state.json"
@@ -120,10 +121,12 @@ def build_payload():
     containers = get_containers()
     
     fleets_dict = {
-        "Fleet 2 (Even/Odd)": [],
         "Fleet 1 (Even/Odd)": [],
-        "Over/Under Fleet (50/50 Martingale)": [],
-        "Call/Put Fleet (Rise/Fall 30m)": [],
+        "Fleet 2 (Even/Odd)": [],
+        "Fleet 1 (Over/Under)": [],
+        "Fleet 2 (Over/Under)": [],
+        "Fleet 1 (Call/Put)": [],
+        "Fleet 2 (Call/Put)": [],
         "Other Bots": []
     }
     
@@ -182,15 +185,22 @@ def build_payload():
             "logs": logs
         }
 
-        # Categorize
-        if "fleet2" in name:
-            fleets_dict["Fleet 2 (Even/Odd)"].append(bot_info)
-        elif "call-put" in name:
-            fleets_dict["Call/Put Fleet (Rise/Fall 30m)"].append(bot_info)
+        # Categorize into 6 distinct fleets
+        if "even-odd" in name:
+            if "fleet2" in name:
+                fleets_dict["Fleet 2 (Even/Odd)"].append(bot_info)
+            else:
+                fleets_dict["Fleet 1 (Even/Odd)"].append(bot_info)
         elif "over-under" in name:
-            fleets_dict["Over/Under Fleet (50/50 Martingale)"].append(bot_info)
-        elif "even-odd" in name:
-            fleets_dict["Fleet 1 (Even/Odd)"].append(bot_info)
+            if "fleet2" in name:
+                fleets_dict["Fleet 2 (Over/Under)"].append(bot_info)
+            else:
+                fleets_dict["Fleet 1 (Over/Under)"].append(bot_info)
+        elif "call-put" in name:
+            if "fleet2" in name:
+                fleets_dict["Fleet 2 (Call/Put)"].append(bot_info)
+            else:
+                fleets_dict["Fleet 1 (Call/Put)"].append(bot_info)
         else:
             fleets_dict["Other Bots"].append(bot_info)
 
@@ -203,6 +213,11 @@ def build_payload():
 
     for f_name, bots in fleets_dict.items():
         if bots:
+            # Sort bots numerically (bot-1, bot-2, bot-3...)
+            def bot_sort_key(b):
+                parts = b.get("name", "").split("-")
+                return int(parts[-1]) if parts[-1].isdigit() else 999
+            bots.sort(key=bot_sort_key)
             fleet_peak = 0.0
             fleet_market = ""
             fleet_max_sec = 0

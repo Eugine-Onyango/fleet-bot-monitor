@@ -441,36 +441,53 @@ def acquire_lock():
         os.makedirs(LOCK_DIR, exist_ok=True)
     except Exception:
         pass
+    last_wait_log = 0.0
     while True:
         try:
             os.mkdir(LOCK_PATH)
             with open(INFO_FILE, "w", encoding="utf-8") as f:
                 json.dump({"owner": BOT_NAME, "timestamp": time.time()}, f)
-            print(f"🔒 [LOCK] Acquired global Call/Put trade lock (Directory created by {BOT_NAME}).")
+            print(f"🔒 [LOCK] Acquired global master trade lock ({BOT_NAME}).")
             return True
         except FileExistsError:
             try:
+                owner = "Another bot"
+                timestamp = 0.0
                 if os.path.exists(INFO_FILE):
-                    with open(INFO_FILE, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                    owner = data.get("owner", "")
-                    timestamp = data.get("timestamp", 0.0)
-                    if time.time() - timestamp > 120.0:
-                        print(f"⚠️ [LOCK] Stale lock detected (Owned by {owner} for {int(time.time() - timestamp)}s). Overriding.")
-                        try:
-                            os.rmdir(LOCK_PATH)
-                        except Exception:
-                            pass
-                        continue
+                    try:
+                        with open(INFO_FILE, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                        owner = data.get("owner", "Another bot")
+                        timestamp = data.get("timestamp", 0.0)
+                    except Exception:
+                        pass
+                if timestamp > 0 and (time.time() - timestamp > 120.0):
+                    print(f"⚠️ [LOCK] Stale lock detected (Owned by {owner} for {int(time.time() - timestamp)}s). Overriding.")
+                    try:
+                        os.rmdir(LOCK_PATH)
+                    except Exception:
+                        pass
+                    continue
+                else:
+                    now = time.time()
+                    if now - last_wait_log > 8.0:
+                        print(f"⏳ [QUEUE DELAY] Active trade in progress by {owner}. {BOT_NAME} pausing and waiting in line...")
+                        last_wait_log = now
             except Exception:
                 pass
-            time.sleep(5)
+            time.sleep(random.uniform(2.0, 4.0))
 
 def release_lock():
     try:
+        if os.path.exists(INFO_FILE):
+            try:
+                os.remove(INFO_FILE)
+            except Exception:
+                pass
         if os.path.exists(LOCK_PATH):
             os.rmdir(LOCK_PATH)
-            print(f"🔓 [LOCK] Released global Call/Put trade lock (Directory removed by {BOT_NAME}).")
+            print(f"🔓 [LOCK] Released global master trade lock ({BOT_NAME}).")
+        time.sleep(2)
     except Exception as e:
         print(f"[ERROR] Failed to release lock: {e}")
 
