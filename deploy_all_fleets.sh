@@ -17,20 +17,16 @@ echo "   • Clean Start: All states & profits reset to \$0.00"
 echo "============================================================"
 
 # 1. Clean previous containers across all 6 fleets
-echo "🧹 Stopping and removing existing bot containers..."
+echo "🧹 Stopping and forcefully removing all existing bot containers..."
+docker ps -aq --filter "name=my-even-odd" --filter "name=my-over-under" --filter "name=my-call-put" | xargs -r docker rm -f 2>/dev/null || true
+
 for i in $(seq 1 10); do
-  docker stop my-even-odd-bot-$i 2>/dev/null || true
-  docker rm my-even-odd-bot-$i 2>/dev/null || true
-  docker stop my-even-odd-fleet2-bot-$i 2>/dev/null || true
-  docker rm my-even-odd-fleet2-bot-$i 2>/dev/null || true
-  docker stop my-over-under-fleet-bot-$i 2>/dev/null || true
-  docker rm my-over-under-fleet-bot-$i 2>/dev/null || true
-  docker stop my-over-under-fleet2-bot-$i 2>/dev/null || true
-  docker rm my-over-under-fleet2-bot-$i 2>/dev/null || true
-  docker stop my-call-put-fleet-bot-$i 2>/dev/null || true
-  docker rm my-call-put-fleet-bot-$i 2>/dev/null || true
-  docker stop my-call-put-fleet2-bot-$i 2>/dev/null || true
-  docker rm my-call-put-fleet2-bot-$i 2>/dev/null || true
+  docker rm -f my-even-odd-bot-$i 2>/dev/null || true
+  docker rm -f my-even-odd-fleet2-bot-$i 2>/dev/null || true
+  docker rm -f my-over-under-fleet-bot-$i 2>/dev/null || true
+  docker rm -f my-over-under-fleet2-bot-$i 2>/dev/null || true
+  docker rm -f my-call-put-fleet-bot-$i 2>/dev/null || true
+  docker rm -f my-call-put-fleet2-bot-$i 2>/dev/null || true
 done
 
 # 2. Wipe all state.json files for 100% fresh clean start
