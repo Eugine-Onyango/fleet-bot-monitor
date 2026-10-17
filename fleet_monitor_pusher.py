@@ -190,8 +190,12 @@ def build_payload():
             current_market = state_data.get("current_market", "")
 
         bot_profit_val = round(bot_profit, 2)
-        b_peak = max(peaks["bots"].get(name, 0.0), bot_profit_val)
-        peaks["bots"][name] = b_peak
+        if (wins + losses) == 0:
+            b_peak = bot_profit_val
+            peaks["bots"][name] = bot_profit_val
+        else:
+            b_peak = max(peaks["bots"].get(name, 0.0), bot_profit_val)
+            peaks["bots"][name] = b_peak
         b_drawdown = max(0.0, round(b_peak - bot_profit_val, 2))
 
         total_profit += bot_profit
@@ -271,9 +275,14 @@ def build_payload():
                     overall_max_uptime_sec = bsec
                     overall_max_uptime_str = b.get("uptime", "0m")
 
+            fleet_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in bots)
             fleet_profit_val = round(sum(b["profit"] for b in bots), 2)
-            f_peak = max(peaks["fleets"].get(f_name, 0.0), fleet_profit_val)
-            peaks["fleets"][f_name] = f_peak
+            if fleet_trades == 0:
+                f_peak = fleet_profit_val
+                peaks["fleets"][f_name] = fleet_profit_val
+            else:
+                f_peak = max(peaks["fleets"].get(f_name, 0.0), fleet_profit_val)
+                peaks["fleets"][f_name] = f_peak
             f_drawdown = max(0.0, round(f_peak - fleet_profit_val, 2))
 
             fleet_list.append({
@@ -297,19 +306,40 @@ def build_payload():
     ou_profit = round(sum(b["profit"] for b in ou_bots), 2)
     cp_profit = round(sum(b["profit"] for b in cp_bots), 2)
 
-    peaks["systems"]["eo"] = max(peaks["systems"].get("eo", 0.0), eo_profit)
-    peaks["systems"]["ou"] = max(peaks["systems"].get("ou", 0.0), ou_profit)
-    peaks["systems"]["cp"] = max(peaks["systems"].get("cp", 0.0), cp_profit)
+    eo_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in eo_bots)
+    ou_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in ou_bots)
+    cp_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in cp_bots)
 
-    overall_peak = max(peaks.get("overall", 0.0), round(total_profit, 2))
-    peaks["overall"] = overall_peak
-    save_peaks(peaks)
+    if eo_trades == 0:
+        peaks["systems"]["eo"] = 0.0
+    else:
+        peaks["systems"]["eo"] = max(peaks["systems"].get("eo", 0.0), eo_profit)
+
+    if ou_trades == 0:
+        peaks["systems"]["ou"] = 0.0
+    else:
+        peaks["systems"]["ou"] = max(peaks["systems"].get("ou", 0.0), ou_profit)
+
+    if cp_trades == 0:
+        peaks["systems"]["cp"] = 0.0
+    else:
+        peaks["systems"]["cp"] = max(peaks["systems"].get("cp", 0.0), cp_profit)
 
     total_trades = total_wins + total_losses
     win_rate = round((total_wins / total_trades * 100), 1) if total_trades > 0 else 0.0
 
+    if total_trades == 0:
+        overall_peak = 0.0
+        peaks["overall"] = 0.0
+    else:
+        overall_peak = max(peaks.get("overall", 0.0), round(total_profit, 2))
+        peaks["overall"] = overall_peak
+
+    save_peaks(peaks)
+
     return {
         "updated_at": datetime.now(timezone.utc).isoformat(),
+        "reset_at": peaks.get("reset_at", datetime.now(timezone.utc).isoformat()),
         "total_active_bots": total_active_bots,
         "total_containers": len(containers),
         "total_profit": round(total_profit, 2),

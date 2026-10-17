@@ -38,6 +38,7 @@ rm -f /root/over_under_fleet2_bot_*/state.json 2>/dev/null || true
 rm -f /root/call_put_fleet_bot_*/state.json 2>/dev/null || true
 rm -f /root/call_put_fleet2_bot_*/state.json 2>/dev/null || true
 rm -f /root/fleet_peak_profits.json 2>/dev/null || true
+echo '{"overall": 0.0, "reset_at": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'", "systems": {"eo": 0.0, "ou": 0.0, "cp": 0.0}, "fleets": {}, "bots": {}}' > /root/fleet_peak_profits.json
 
 # 3. Setup unified master trade lock directory
 MASTER_LOCK="/root/shared_master_trade_lock"
@@ -218,7 +219,7 @@ echo "🎉 ALL 6 FLEETS DEPLOYED WITH FRESH CLEAN START!"
 echo "   • Total Bots: 36 Bots Active (6 Fleets × 6 Bots, 30m Rest)"
 echo "   • Master Trade Lock: /root/shared_master_trade_lock (0 collisions)"
 echo "   • Fleets Offset: 45s stagger gap between fleet cycles"
-echo "   • Markets: 10 Even/Odd Markets across all bots"
+echo "   • Market: 1HZ10V Fast 10s Index across all 6 fleets"
 echo "   • Dashboard Live at: https://fleet-bot-monitor.vercel.app"
 echo "============================================================"
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.RunningFor}}"
