@@ -3,7 +3,9 @@
   "api_token": "pat_d858bf2ec8a6a47d45bfa2d4a7182ce7e63d993912dacfe4a5af32266af07277",
   "account_id": "DOT91203477",
   "markets": [
-    "1HZ10V",
+    "1HZ10V"
+  ],
+  "disabled_markets": [
     "1HZ15V",
     "1HZ25V",
     "1HZ30V",
@@ -12,9 +14,7 @@
     "1HZ90V",
     "1HZ100V",
     "RDBULL",
-    "RDBEAR"
-  ],
-  "disabled_markets": [
+    "RDBEAR",
     "R_10",
     "R_25",
     "R_50",

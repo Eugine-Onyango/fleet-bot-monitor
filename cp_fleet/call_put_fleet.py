@@ -91,7 +91,10 @@ def load_config(verbose=False):
         sys.exit(1)
 
 def refill_market_basket():
-    all_markets = list(CONFIG.get("markets", []))
+    disabled = set(CONFIG.get("disabled_markets", []))
+    all_markets = [m for m in CONFIG.get("markets", []) if m not in disabled]
+    if not all_markets:
+        all_markets = ["1HZ10V"]
     random.shuffle(all_markets)
     STATE["market_basket"] = all_markets
     print(f"🧺 [BASKET REFILL] Basket refilled with {len(all_markets)} Call/Put markets: {STATE['market_basket']}")
@@ -432,7 +435,10 @@ def on_open(ws):
         if not basket:
             basket = refill_market_basket()
         scanner_targets = list(basket)
-        print(f"🔍 [CALL/PUT SCANNER] Scanning last 50 ticks across {len(scanner_targets)} markets to find #1 strongest trend...")
+        if len(scanner_targets) == 1:
+            print(f"🎯 [FOCUSED MARKET] Single market active: {scanner_targets[0]}. Scanning recent ticks...")
+        else:
+            print(f"🔍 [CALL/PUT SCANNER] Scanning last 50 ticks across {len(scanner_targets)} markets to find #1 strongest trend...")
         for sym in scanner_targets:
             ws.send(json.dumps({"ticks_history": sym, "end": "latest", "count": 50, "style": "ticks"}))
 

@@ -10,9 +10,10 @@ echo "       3. Over/Under Team 1   (6 Bots, 30m Rest, 50/50)"
 echo "       4. Over/Under Team 2   (6 Bots, 30m Rest, 50/50)"
 echo "       5. Call/Put Team 1     (6 Bots, 30m Rest, Rise/Fall)"
 echo "       6. Call/Put Team 2     (6 Bots, 30m Rest, Rise/Fall)"
-echo "   • Markets: 10 Even/Odd Markets (1HZ10V-100V, RDBULL, RDBEAR)"
+echo "   • Market: 1HZ10V Only (Fast 10s Index across all 6 Fleets)"
+echo "   • Schedule: 10:00:00 AM Kenyan Time (UTC+3) Synchronized Start"
 echo "   • Coordination: Unified Master Trade Lock + 45s Offset"
-echo "   • Clean Start: All states & profits reset to $0.00"
+echo "   • Clean Start: All states & profits reset to \$0.00"
 echo "============================================================"
 
 # 1. Clean previous containers across all 6 fleets
@@ -33,13 +34,14 @@ for i in $(seq 1 10); do
 done
 
 # 2. Wipe all state.json files for 100% fresh clean start
-echo "✨ Wiping old state files for a 100% fresh clean start..."
+echo "✨ Wiping old state & peak files for a 100% fresh clean start..."
 rm -f /root/even_odd_millipede_bot_*/state.json 2>/dev/null || true
 rm -f /root/even_odd_fleet2_bot_*/state.json 2>/dev/null || true
 rm -f /root/over_under_fleet_bot_*/state.json 2>/dev/null || true
 rm -f /root/over_under_fleet2_bot_*/state.json 2>/dev/null || true
 rm -f /root/call_put_fleet_bot_*/state.json 2>/dev/null || true
 rm -f /root/call_put_fleet2_bot_*/state.json 2>/dev/null || true
+rm -f /root/fleet_peak_profits.json 2>/dev/null || true
 
 # 3. Setup unified master trade lock directory
 MASTER_LOCK="/root/shared_master_trade_lock"
@@ -83,14 +85,30 @@ curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/requirements.txt" > "$C
 cd "$CP_BUILD"
 docker build -t headless-call-put-fleet .
 
-# 5. Launch all 6 fleets with staggered offsets (45s fleet offset, 300s bot interval)
+# 5. Calculate synchronization to 10:00:00 AM Kenyan Time (07:00:00 UTC)
+NOW_EPOCH=$(date -u +%s)
+TARGET_DATE=$(date -u +%Y-%m-%d)
+TARGET_EPOCH=$(date -u -d "$TARGET_DATE 07:00:00" +%s 2>/dev/null || python3 -c "import datetime; now=datetime.datetime.now(datetime.timezone.utc); target=datetime.datetime(now.year, now.month, now.day, 7, 0, 0, tzinfo=datetime.timezone.utc); print(int(target.timestamp()))")
+
+WAIT_SECS=$(( TARGET_EPOCH - NOW_EPOCH ))
+if [ $WAIT_SECS -lt 0 ]; then
+  WAIT_SECS=0
+fi
+
+MINS_REMAINING=$(( WAIT_SECS / 60 ))
+SECS_REMAINING=$(( WAIT_SECS % 60 ))
+echo "============================================================"
+echo "⏰ Synchronizing to 10:00:00 AM Kenyan Time (07:00:00 UTC)"
+echo "⏳ First trade executes in: ${MINS_REMAINING}m ${SECS_REMAINING}s ($WAIT_SECS seconds)"
+echo "============================================================"
+
 echo "🚀 Launching all 6 fleets..."
 
 # Fleet 1: Even/Odd Team 1 (6 Bots) - Base Offset: 0s
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-even-odd-bot-$i"
   BOT_DIR="/root/even_odd_millipede_bot_$i"
-  DELAY=$(( 0 + (i - 1) * 300 ))
+  DELAY=$(( WAIT_SECS + 0 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
   cp "$EO_BUILD/config.json" "$BOT_DIR/config.json"
   cp "$EO_BUILD/even_odd_millipede.py" "$BOT_DIR/even_odd_millipede.py"
@@ -107,7 +125,7 @@ echo "✅ Fleet 1 (Even/Odd Team 1) launched [6 bots]."
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-even-odd-fleet2-bot-$i"
   BOT_DIR="/root/even_odd_fleet2_bot_$i"
-  DELAY=$(( 45 + (i - 1) * 300 ))
+  DELAY=$(( WAIT_SECS + 45 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
   cp "$EO_BUILD/config.json" "$BOT_DIR/config.json"
   cp "$EO_BUILD/even_odd_millipede.py" "$BOT_DIR/even_odd_millipede.py"
@@ -124,7 +142,7 @@ echo "✅ Fleet 2 (Even/Odd Team 2) launched [6 bots]."
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-over-under-fleet-bot-$i"
   BOT_DIR="/root/over_under_fleet_bot_$i"
-  DELAY=$(( 90 + (i - 1) * 300 ))
+  DELAY=$(( WAIT_SECS + 90 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
   cp "$OU_BUILD/config.json" "$BOT_DIR/config.json"
   cp "$OU_BUILD/over_under_fleet.py" "$BOT_DIR/over_under_fleet.py"
@@ -141,7 +159,7 @@ echo "✅ Fleet 3 (Over/Under Team 1) launched [6 bots]."
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-over-under-fleet2-bot-$i"
   BOT_DIR="/root/over_under_fleet2_bot_$i"
-  DELAY=$(( 135 + (i - 1) * 300 ))
+  DELAY=$(( WAIT_SECS + 135 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
   cp "$OU_BUILD/config.json" "$BOT_DIR/config.json"
   cp "$OU_BUILD/over_under_fleet.py" "$BOT_DIR/over_under_fleet.py"
@@ -158,7 +176,7 @@ echo "✅ Fleet 4 (Over/Under Team 2) launched [6 bots]."
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-call-put-fleet-bot-$i"
   BOT_DIR="/root/call_put_fleet_bot_$i"
-  DELAY=$(( 180 + (i - 1) * 300 ))
+  DELAY=$(( WAIT_SECS + 180 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
   cp "$CP_BUILD/config.json" "$BOT_DIR/config.json"
   cp "$CP_BUILD/call_put_fleet.py" "$BOT_DIR/call_put_fleet.py"
@@ -175,7 +193,7 @@ echo "✅ Fleet 5 (Call/Put Team 1) launched [6 bots]."
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-call-put-fleet2-bot-$i"
   BOT_DIR="/root/call_put_fleet2_bot_$i"
-  DELAY=$(( 225 + (i - 1) * 300 ))
+  DELAY=$(( WAIT_SECS + 225 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
   cp "$CP_BUILD/config.json" "$BOT_DIR/config.json"
   cp "$CP_BUILD/call_put_fleet.py" "$BOT_DIR/call_put_fleet.py"
