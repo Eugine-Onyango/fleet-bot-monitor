@@ -150,17 +150,17 @@
       <button onclick="switchSystem('eo')" id="sysBtn-eo" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
         <span class="text-base">🎲</span>
         <span class="truncate">Even / Odd</span>
-        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">12</span>
+        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">18</span>
       </button>
       <button onclick="switchSystem('ou')" id="sysBtn-ou" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base">🎯</span>
         <span class="truncate">Over / Under</span>
-        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
+        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">18</span>
       </button>
       <button onclick="switchSystem('cp')" id="sysBtn-cp" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base">📈</span>
         <span class="truncate">Call / Put</span>
-        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
+        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">0</span>
       </button>
     </div>
 
@@ -660,7 +660,13 @@
     }
 
     function friendlyBotName(rawName) {
-      if (rawName.includes("fleet2")) {
+      if (rawName.includes("even-odd-fleet3")) {
+        const num = rawName.split("-").pop();
+        return `Team 3 • Helper #${num}`;
+      } else if (rawName.includes("over-under-fleet3")) {
+        const num = rawName.split("-").pop();
+        return `Team 3 • Helper #${num}`;
+      } else if (rawName.includes("fleet2")) {
         const num = rawName.split("-").pop();
         return `Team 2 • Helper #${num}`;
       } else if (rawName.includes("call-put")) {
@@ -668,7 +674,7 @@
         return `Call/Put • Helper #${num}`;
       } else if (rawName.includes("over-under")) {
         const num = rawName.split("-").pop();
-        return `Over/Under • Helper #${num}`;
+        return `Team 1 • Helper #${num}`;
       } else if (rawName.includes("even-odd")) {
         const num = rawName.split("-").pop();
         return `Team 1 • Helper #${num}`;
@@ -912,7 +918,7 @@
       const sysCountCP = document.getElementById("sysCount-cp");
       if (sysCountEO) sysCountEO.innerText = `${eoMetrics.totalBots}`;
       if (sysCountOU) sysCountOU.innerText = `${ouMetrics.totalBots}`;
-      if (sysCountCP) sysCountCP.innerText = `${cpMetrics.totalBots}`;
+      if (sysCountCP) sysCountCP.innerText = cpMetrics.totalBots > 0 ? `${cpMetrics.totalBots}` : "Dormant";
       updateSystemSwitcherUI();
 
       // 2. Select metrics for active system
@@ -1038,12 +1044,6 @@
             <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'all' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
               <span>🌟</span> All Call/Put <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${cpMetrics.totalBots}</span>
             </button>
-            <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet1' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
-              <span>📈</span> Team 1 (Call/Put) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
-            </button>
-            <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
-              <span>🚀</span> Team 2 (Call/Put) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
-            </button>
           `;
         } else if (currentSystem === "ou") {
           tabsBar.innerHTML = `
@@ -1056,6 +1056,9 @@
             <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
               <span>✨</span> Team 2 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
+            <button onclick="switchFleetTab('fleet3')" id="tab-fleet3" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet3' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
+              <span>💎</span> Team 3 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+            </button>
           `;
         } else {
           tabsBar.innerHTML = `
@@ -1067,6 +1070,9 @@
             </button>
             <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
               <span>⭐</span> Team 2 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+            </button>
+            <button onclick="switchFleetTab('fleet3')" id="tab-fleet3" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet3' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
+              <span>🔥</span> Team 3 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
           `;
         }
@@ -1098,11 +1104,25 @@
         fleetsToRender = sysFleets.filter(f => f.fleet_name.includes("Fleet 1"));
       } else if (currentFleetTab === "fleet2") {
         fleetsToRender = sysFleets.filter(f => f.fleet_name.includes("Fleet 2"));
+      } else if (currentFleetTab === "fleet3") {
+        fleetsToRender = sysFleets.filter(f => f.fleet_name.includes("Fleet 3"));
       } else {
         fleetsToRender = sysFleets;
       }
 
       if (fleetsToRender.length === 0) {
+        if (currentSystem === "cp") {
+          container.innerHTML = `
+            <div class="text-center py-12 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-3">
+              <span class="text-4xl block">📈</span>
+              <h3 class="text-base font-black text-slate-800 dark:text-white">Call / Put Fleet is Currently Dormant</h3>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                All 12 Call/Put bot slots were safely re-allocated to <strong>Over/Under Team 3</strong> and <strong>Even/Odd Team 3</strong>. All Call/Put configurations are fully preserved and ready to revert anytime!
+              </p>
+            </div>
+          `;
+          return;
+        }
         container.innerHTML = `
           <div class="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl">
             No bots currently reporting in this view.
@@ -1115,24 +1135,24 @@
       fleetsToRender.forEach(fleet => {
         let friendlyFleetName = fleet.fleet_name;
         let fleetSubtitle = "Even / Odd Digits Strategy • 30m Safe Rest";
-        if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
+        if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
+          friendlyFleetName = "🔥 Team 3 (Even / Odd)";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
+        } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "⭐ Team 2 (Even / Odd)";
           fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
         } else if (fleet.fleet_name.includes("Fleet 1") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "🚀 Team 1 (Even / Odd)";
           fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
+        } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
+          friendlyFleetName = "💎 Team 3 (Over / Under)";
+          fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
           friendlyFleetName = "✨ Team 2 (Over / Under)";
           fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest";
         } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
           friendlyFleetName = "🎯 Team 1 (Over / Under)";
           fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest";
-        } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put"))) {
-          friendlyFleetName = "🚀 Team 2 (Call / Put)";
-          fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";
-        } else if (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put")) {
-          friendlyFleetName = "📈 Team 1 (Call / Put)";
-          fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put"))) {
           friendlyFleetName = "🚀 Team 2 (Call / Put)";
           fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";

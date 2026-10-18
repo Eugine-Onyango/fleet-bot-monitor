@@ -93,6 +93,8 @@ def get_bot_state(name):
     # Method 2: Fallback to all standard paths
     num = name.split("-")[-1]
     possible_paths = [
+        f"/root/even_odd_fleet3_bot_{num}/state.json",
+        f"/root/over_under_fleet3_bot_{num}/state.json",
         f"/root/call_put_fleet_bot_{num}/state.json",
         f"/root/call_put_fleet2_bot_{num}/state.json",
         f"/root/over_under_fleet_bot_{num}/state.json",
@@ -148,8 +150,10 @@ def build_payload():
     fleets_dict = {
         "Fleet 1 (Even/Odd)": [],
         "Fleet 2 (Even/Odd)": [],
+        "Fleet 3 (Even/Odd)": [],
         "Fleet 1 (Over/Under)": [],
         "Fleet 2 (Over/Under)": [],
+        "Fleet 3 (Over/Under)": [],
         "Fleet 1 (Call/Put)": [],
         "Fleet 2 (Call/Put)": [],
         "Other Bots": []
@@ -221,14 +225,18 @@ def build_payload():
             "logs": logs
         }
 
-        # Categorize into 6 distinct fleets
+        # Categorize into distinct fleets
         if "even-odd" in name:
-            if "fleet2" in name:
+            if "fleet3" in name:
+                fleets_dict["Fleet 3 (Even/Odd)"].append(bot_info)
+            elif "fleet2" in name:
                 fleets_dict["Fleet 2 (Even/Odd)"].append(bot_info)
             else:
                 fleets_dict["Fleet 1 (Even/Odd)"].append(bot_info)
         elif "over-under" in name:
-            if "fleet2" in name:
+            if "fleet3" in name:
+                fleets_dict["Fleet 3 (Over/Under)"].append(bot_info)
+            elif "fleet2" in name:
                 fleets_dict["Fleet 2 (Over/Under)"].append(bot_info)
             else:
                 fleets_dict["Fleet 1 (Over/Under)"].append(bot_info)
@@ -298,8 +306,8 @@ def build_payload():
             })
 
     # System totals and peaks
-    eo_bots = fleets_dict.get("Fleet 1 (Even/Odd)", []) + fleets_dict.get("Fleet 2 (Even/Odd)", [])
-    ou_bots = fleets_dict.get("Fleet 1 (Over/Under)", []) + fleets_dict.get("Fleet 2 (Over/Under)", [])
+    eo_bots = fleets_dict.get("Fleet 1 (Even/Odd)", []) + fleets_dict.get("Fleet 2 (Even/Odd)", []) + fleets_dict.get("Fleet 3 (Even/Odd)", [])
+    ou_bots = fleets_dict.get("Fleet 1 (Over/Under)", []) + fleets_dict.get("Fleet 2 (Over/Under)", []) + fleets_dict.get("Fleet 3 (Over/Under)", [])
     cp_bots = fleets_dict.get("Fleet 1 (Call/Put)", []) + fleets_dict.get("Fleet 2 (Call/Put)", [])
 
     eo_profit = round(sum(b["profit"] for b in eo_bots), 2)

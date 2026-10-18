@@ -2,29 +2,31 @@
 set -e
 
 echo "============================================================"
-echo "🚀 DEPLOYING ALL 6 FLEET BOTS (6 BOTS EACH • 30M REST)"
+echo "🚀 DEPLOYING ALL 6 FLEET BOTS (3 E/O & 3 O/U • 36 BOTS TOTAL)"
 echo "   • Fleets (6 Total, 36 Bots):"
 echo "       1. Even/Odd Team 1     (6 Bots, 30m Rest)"
 echo "       2. Even/Odd Team 2     (6 Bots, 30m Rest)"
 echo "       3. Over/Under Team 1   (6 Bots, 30m Rest, 50/50)"
 echo "       4. Over/Under Team 2   (6 Bots, 30m Rest, 50/50)"
-echo "       5. Call/Put Team 1     (6 Bots, 30m Rest, Rise/Fall)"
-echo "       6. Call/Put Team 2     (6 Bots, 30m Rest, Rise/Fall)"
+echo "       5. Over/Under Team 3   (6 Bots, 30m Rest, 50/50 - Reallocated from C/P)"
+echo "       6. Even/Odd Team 3     (6 Bots, 30m Rest - Reallocated from C/P)"
+echo "   • Call/Put: Safely preserved & dormant (Ready to revert anytime)"
 echo "   • Markets: 10 Multi-Markets (1HZ10V-100V, RDBULL, RDBEAR)"
-echo "   • Schedule: 08:00:00 AM Kenyan Time (UTC+3) Synchronized Start"
-echo "   • Coordination: Unified Master Trade Lock + 45s Offset"
+echo "   • Schedule: Synchronized Start (Unified Master Lock + 45s Offset)"
 echo "   • Clean Start: All states & profits reset to \$0.00"
 echo "============================================================"
 
-# 1. Clean previous containers across all 6 fleets
+# 1. Clean previous containers across all fleets
 echo "🧹 Stopping and forcefully removing all existing bot containers..."
 docker ps -aq --filter "name=my-even-odd" --filter "name=my-over-under" --filter "name=my-call-put" | xargs -r docker rm -f 2>/dev/null || true
 
 for i in $(seq 1 10); do
   docker rm -f my-even-odd-bot-$i 2>/dev/null || true
   docker rm -f my-even-odd-fleet2-bot-$i 2>/dev/null || true
+  docker rm -f my-even-odd-fleet3-bot-$i 2>/dev/null || true
   docker rm -f my-over-under-fleet-bot-$i 2>/dev/null || true
   docker rm -f my-over-under-fleet2-bot-$i 2>/dev/null || true
+  docker rm -f my-over-under-fleet3-bot-$i 2>/dev/null || true
   docker rm -f my-call-put-fleet-bot-$i 2>/dev/null || true
   docker rm -f my-call-put-fleet2-bot-$i 2>/dev/null || true
 done
@@ -33,8 +35,10 @@ done
 echo "✨ Wiping old state & peak files for a 100% fresh clean start..."
 rm -f /root/even_odd_millipede_bot_*/state.json 2>/dev/null || true
 rm -f /root/even_odd_fleet2_bot_*/state.json 2>/dev/null || true
+rm -f /root/even_odd_fleet3_bot_*/state.json 2>/dev/null || true
 rm -f /root/over_under_fleet_bot_*/state.json 2>/dev/null || true
 rm -f /root/over_under_fleet2_bot_*/state.json 2>/dev/null || true
+rm -f /root/over_under_fleet3_bot_*/state.json 2>/dev/null || true
 rm -f /root/call_put_fleet_bot_*/state.json 2>/dev/null || true
 rm -f /root/call_put_fleet2_bot_*/state.json 2>/dev/null || true
 rm -f /root/fleet_peak_profits.json 2>/dev/null || true
@@ -70,17 +74,6 @@ curl -s -H "Cache-Control: no-cache" "$REPO_RAW/ou_fleet/Dockerfile" > "$OU_BUIL
 curl -s -H "Cache-Control: no-cache" "$REPO_RAW/ou_fleet/requirements.txt" > "$OU_BUILD/requirements.txt"
 cd "$OU_BUILD"
 docker build -t headless-over-under-fleet .
-
-# C. Call/Put Image
-echo "🔨 Building image: headless-call-put-fleet..."
-CP_BUILD="/root/cp_fleet_build"
-mkdir -p "$CP_BUILD"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/call_put_fleet.py" > "$CP_BUILD/call_put_fleet.py"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/config.json" > "$CP_BUILD/config.json"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/Dockerfile" > "$CP_BUILD/Dockerfile"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/requirements.txt" > "$CP_BUILD/requirements.txt"
-cd "$CP_BUILD"
-docker build -t headless-call-put-fleet .
 
 # 5. Calculate synchronization to 08:00:00 AM Kenyan Time (05:00:00 UTC)
 NOW_EPOCH=$(date -u +%s)
@@ -169,39 +162,39 @@ for i in 1 2 3 4 5 6; do
 done
 echo "✅ Fleet 4 (Over/Under Team 2) launched [6 bots]."
 
-# Fleet 5: Call/Put Team 1 (6 Bots) - Base Offset: 180s
+# Fleet 5: Over/Under Team 3 (6 Bots - Reallocated from C/P) - Base Offset: 180s
 for i in 1 2 3 4 5 6; do
-  BOT_NAME="my-call-put-fleet-bot-$i"
-  BOT_DIR="/root/call_put_fleet_bot_$i"
+  BOT_NAME="my-over-under-fleet3-bot-$i"
+  BOT_DIR="/root/over_under_fleet3_bot_$i"
   DELAY=$(( WAIT_SECS + 180 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
-  cp "$CP_BUILD/config.json" "$BOT_DIR/config.json"
-  cp "$CP_BUILD/call_put_fleet.py" "$BOT_DIR/call_put_fleet.py"
+  cp "$OU_BUILD/config.json" "$BOT_DIR/config.json"
+  cp "$OU_BUILD/over_under_fleet.py" "$BOT_DIR/over_under_fleet.py"
   rm -f "$BOT_DIR/state.json"
   docker run -d --restart always --name "$BOT_NAME" \
     -e BOT_NAME="$BOT_NAME" \
     -e INITIAL_DELAY_SECONDS="$DELAY" \
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
-    headless-call-put-fleet
+    headless-over-under-fleet
 done
-echo "✅ Fleet 5 (Call/Put Team 1) launched [6 bots]."
+echo "✅ Fleet 5 (Over/Under Team 3) launched [6 bots]."
 
-# Fleet 6: Call/Put Team 2 (6 Bots) - Base Offset: 225s
+# Fleet 6: Even/Odd Team 3 (6 Bots - Reallocated from C/P) - Base Offset: 225s
 for i in 1 2 3 4 5 6; do
-  BOT_NAME="my-call-put-fleet2-bot-$i"
-  BOT_DIR="/root/call_put_fleet2_bot_$i"
+  BOT_NAME="my-even-odd-fleet3-bot-$i"
+  BOT_DIR="/root/even_odd_fleet3_bot_$i"
   DELAY=$(( WAIT_SECS + 225 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
-  cp "$CP_BUILD/config.json" "$BOT_DIR/config.json"
-  cp "$CP_BUILD/call_put_fleet.py" "$BOT_DIR/call_put_fleet.py"
+  cp "$EO_BUILD/config.json" "$BOT_DIR/config.json"
+  cp "$EO_BUILD/even_odd_millipede.py" "$BOT_DIR/even_odd_millipede.py"
   rm -f "$BOT_DIR/state.json"
   docker run -d --restart always --name "$BOT_NAME" \
     -e BOT_NAME="$BOT_NAME" \
     -e INITIAL_DELAY_SECONDS="$DELAY" \
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
-    headless-call-put-fleet
+    headless-even-odd-millipede
 done
-echo "✅ Fleet 6 (Call/Put Team 2) launched [6 bots]."
+echo "✅ Fleet 6 (Even/Odd Team 3) launched [6 bots]."
 
 # 6. Update and restart the live pusher script
 echo "🔄 Updating and restarting live monitor pusher..."
@@ -216,7 +209,9 @@ fi
 echo ""
 echo "============================================================"
 echo "🎉 ALL 6 FLEETS DEPLOYED WITH FRESH CLEAN START!"
-echo "   • Total Bots: 36 Bots Active (6 Fleets × 6 Bots, 30m Rest)"
+echo "   • Even/Odd Fleets: 3 Teams (18 Bots Total, 30m Rest)"
+echo "   • Over/Under Fleets: 3 Teams (18 Bots Total, 30m Rest)"
+echo "   • Call/Put: Dormant & safely preserved (Ready to revert anytime)"
 echo "   • Master Trade Lock: /root/shared_master_trade_lock (0 collisions)"
 echo "   • Fleets Offset: 45s stagger gap between fleet cycles"
 echo "   • Markets: 10 Multi-Markets across all bots"
