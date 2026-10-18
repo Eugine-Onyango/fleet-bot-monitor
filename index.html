@@ -203,7 +203,7 @@
       </button>
       <button onclick="switchSystem('ou')" id="sysBtn-ou" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base">🎯</span>
-        <span class="truncate">Over / Under</span>
+        <span class="truncate">Over / Under (Converted)</span>
         <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
       </button>
       <button onclick="switchSystem('cp')" id="sysBtn-cp" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
@@ -886,20 +886,17 @@
     function friendlyBotName(rawName) {
       if (rawName.includes("even-odd-fleet3")) {
         const num = rawName.split("-").pop();
-        return `EO Team 3 • Helper #${num}`;
+        return `Team 4 • Helper #${num}`;
       } else if (rawName.includes("over-under-fleet3")) {
         const num = rawName.split("-").pop();
-        return `OU Team 3 • Helper #${num}`;
+        return `Team 3 • Helper #${num}`;
       } else if (rawName.includes("fleet2")) {
         const num = rawName.split("-").pop();
         return `Team 2 • Helper #${num}`;
       } else if (rawName.includes("call-put")) {
         const num = rawName.split("-").pop();
         return `Call/Put • Helper #${num}`;
-      } else if (rawName.includes("over-under")) {
-        const num = rawName.split("-").pop();
-        return `Team 1 • Helper #${num}`;
-      } else if (rawName.includes("even-odd")) {
+      } else if (rawName.includes("over-under") || rawName.includes("even-odd")) {
         const num = rawName.split("-").pop();
         return `Team 1 • Helper #${num}`;
       }
@@ -1183,17 +1180,17 @@
       if (currentSystem === "cp") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 mb-2.5";
-          heroTag.innerHTML = isKidsMode ? "🍭 Converted Robots Playground" : (isTechMode ? "⚡ CP CONVERTED TELEMETRY" : "⚡ Call / Put (Converted) Fleet Profit");
+          heroTag.innerHTML = isKidsMode ? "🍭 Call / Put (Converted) Playground" : (isTechMode ? "⚡ CALL / PUT (CONVERTED) TELEMETRY" : "⚡ Call / Put (Converted) Fleet Profit");
         }
         if (peaceText) {
           peaceText.innerHTML = isKidsMode
-            ? '<span class="text-base">🎈</span> Converted Team 3 robots are having fun and taking turns safely!'
-            : '<span class="text-base">🛡️</span> Converted from C/P into Over/Under Team 3 & Even/Odd Team 3 (12 bots total).';
+            ? '<span class="text-base">🎈</span> Converted to Even / Odd trading and taking turns safely!'
+            : '<span class="text-base">🛡️</span> Converted from C/P into Even / Odd strategy (12 bots total).';
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = isKidsMode
             ? "12 friendly helper robots are playing together nicely!"
-            : "Active Converted Fleets: Team 3 Over/Under & Team 3 Even/Odd (12 bots total).";
+            : "Active Converted Fleets: Team 3 & Team 4 Even/Odd (12 bots total).";
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1203,17 +1200,17 @@
       } else if (currentSystem === "ou") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 mb-2.5";
-          heroTag.innerHTML = isKidsMode ? "🎯 Over / Under Toy Box" : (isTechMode ? "🎯 OVER / UNDER TELEMETRY" : "🎯 Over / Under Fleet Profit");
+          heroTag.innerHTML = isKidsMode ? "🎯 Over / Under (Converted) Toy Box" : (isTechMode ? "🎯 OVER / UNDER (CONVERTED) TELEMETRY" : "🎯 Over / Under (Converted) Fleet Profit");
         }
         if (peaceText) {
           peaceText.innerHTML = isKidsMode
-            ? '<span class="text-base">🎈</span> 50/50 Under 5 & Over 4 games with friendly bounce-back shield!'
-            : '<span class="text-base">🛡️</span> Independent 50/50 Under 5 / Over 4 trading with 2.1 Martingale recovery.';
+            ? '<span class="text-base">🎈</span> Converted to Even / Odd trading with friendly bounce-back shield!'
+            : '<span class="text-base">🛡️</span> Converted to Even / Odd strategy with 30m automated rotation.';
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = isKidsMode
-            ? "Your Over / Under robots are taking great care of the toys!"
-            : "Over/Under Fleet is operating independently with 2.1 Martingale recovery.";
+            ? "Your converted Over / Under robots are trading Even / Odd happily!"
+            : "Over/Under Fleets converted to Even/Odd strategy (12 bots total).";
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1302,22 +1299,22 @@
               <span>🌟</span> All Converted (C/P) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${cpMetrics.totalBots}</span>
             </button>
             <button onclick="switchFleetTab('ou3')" id="tab-ou3" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'ou3' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
-              <span>💎</span> Team 3 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>💎</span> Team 3 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
             <button onclick="switchFleetTab('eo3')" id="tab-eo3" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'eo3' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
-              <span>🔥</span> Team 3 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>🔥</span> Team 4 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
           `;
         } else if (currentSystem === "ou") {
           tabsBar.innerHTML = `
             <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'all' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>🌟</span> All Over/Under <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
+              <span>🌟</span> All Converted (O/U) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
             </button>
             <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet1' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>🎯</span> Team 1 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>🎯</span> Team 1 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
             <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>✨</span> Team 2 (Over/Under) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>✨</span> Team 2 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
             </button>
           `;
         } else {
@@ -1392,8 +1389,8 @@
         let friendlyFleetName = fleet.fleet_name;
         let fleetSubtitle = "Even / Odd Digits Strategy • 30m Safe Rest";
         if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
-          friendlyFleetName = "🔥 Team 3 (Even / Odd) • Converted C/P";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Reallocated from C/P";
+          friendlyFleetName = "🔥 Team 4 (Converted) • Even / Odd";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from C/P";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "⭐ Team 2 (Even / Odd)";
           fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
@@ -1401,14 +1398,14 @@
           friendlyFleetName = "🚀 Team 1 (Even / Odd)";
           fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
         } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
-          friendlyFleetName = "💎 Team 3 (Over / Under) • Converted C/P";
-          fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest • Reallocated from C/P";
+          friendlyFleetName = "💎 Team 3 (Converted) • Even / Odd";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from C/P";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
-          friendlyFleetName = "✨ Team 2 (Over / Under)";
-          fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest";
+          friendlyFleetName = "✨ Team 2 (Converted) • Even / Odd";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from O/U";
         } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
-          friendlyFleetName = "🎯 Team 1 (Over / Under)";
-          fleetSubtitle = "50/50 Martingale • 5m Stagger • 30m Rest";
+          friendlyFleetName = "🎯 Team 1 (Converted) • Even / Odd";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from O/U";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put"))) {
           friendlyFleetName = "🚀 Team 2 (Call / Put)";
           fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";

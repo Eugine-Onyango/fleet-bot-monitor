@@ -2,17 +2,17 @@
 set -e
 
 echo "============================================================"
-echo "🚀 DEPLOYING ALL 6 FLEET BOTS (3 E/O & 3 O/U • 36 BOTS TOTAL)"
+echo "🚀 DEPLOYING ALL 6 FLEET BOTS (ALL 6 FLEETS EVEN/ODD • 36 BOTS TOTAL)"
 echo "   • Fleets (6 Total, 36 Bots):"
-echo "       1. Even/Odd Team 1     (6 Bots, 30m Rest)"
-echo "       2. Even/Odd Team 2     (6 Bots, 30m Rest)"
-echo "       3. Over/Under Team 1   (6 Bots, 30m Rest, 50/50)"
-echo "       4. Over/Under Team 2   (6 Bots, 30m Rest, 50/50)"
-echo "       5. Over/Under Team 3   (6 Bots, 30m Rest, 50/50 - Reallocated from C/P)"
-echo "       6. Even/Odd Team 3     (6 Bots, 30m Rest - Reallocated from C/P)"
-echo "   • Call/Put: Safely preserved & dormant (Ready to revert anytime)"
+echo "       1. Even/Odd Team 1               (6 Bots, Even/Odd, 30m Rest)"
+echo "       2. Even/Odd Team 2               (6 Bots, Even/Odd, 30m Rest)"
+echo "       3. Over/Under (Converted) Team 1 (6 Bots, Even/Odd, 30m Rest)"
+echo "       4. Over/Under (Converted) Team 2 (6 Bots, Even/Odd, 30m Rest)"
+echo "       5. Call/Put (Converted) Team 1   (6 Bots, Even/Odd, 30m Rest)"
+echo "       6. Call/Put (Converted) Team 2   (6 Bots, Even/Odd, 30m Rest)"
+echo "   • Strategy: 100% Even / Odd Digits Strategy across all 36 bots"
 echo "   • Markets: 10 Multi-Markets (1HZ10V-100V, RDBULL, RDBEAR)"
-echo "   • Schedule: Synchronized Start (Unified Master Lock + 45s Offset)"
+echo "   • Coordination: Unified Master Trade Lock + 45s Offset"
 echo "   • Clean Start: All states & profits reset to \$0.00"
 echo "============================================================"
 
@@ -50,10 +50,10 @@ mkdir -p "$MASTER_LOCK"
 rm -rf "$MASTER_LOCK/trade_lock" "$MASTER_LOCK/lock_info.json"
 echo "🔒 Unified Master Trade Lock initialized at $MASTER_LOCK"
 
-# 4. Fetch and build Docker images
+# 4. Fetch and build Docker image
 REPO_RAW="https://raw.githubusercontent.com/Eugine-Onyango/fleet-bot-monitor/main"
 
-# A. Even/Odd Image
+# Even/Odd Image (Used by ALL 6 Fleets)
 echo "🔨 Building image: headless-even-odd-millipede..."
 EO_BUILD="/root/eo_fleet_build"
 mkdir -p "$EO_BUILD"
@@ -64,32 +64,12 @@ curl -s -H "Cache-Control: no-cache" "$REPO_RAW/eo_fleet/requirements.txt" > "$E
 cd "$EO_BUILD"
 docker build -t headless-even-odd-millipede .
 
-# B. Over/Under Image
-echo "🔨 Building image: headless-over-under-fleet..."
-OU_BUILD="/root/ou_fleet_build"
-mkdir -p "$OU_BUILD"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/ou_fleet/over_under_fleet.py" > "$OU_BUILD/over_under_fleet.py"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/ou_fleet/config.json" > "$OU_BUILD/config.json"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/ou_fleet/Dockerfile" > "$OU_BUILD/Dockerfile"
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/ou_fleet/requirements.txt" > "$OU_BUILD/requirements.txt"
-cd "$OU_BUILD"
-docker build -t headless-over-under-fleet .
+# 5. Synchronization (Immediate Fresh Start with 45s Offset Stagger)
+WAIT_SECS=0
 
-# 5. Calculate synchronization to 08:00:00 AM Kenyan Time (05:00:00 UTC)
-NOW_EPOCH=$(date -u +%s)
-TARGET_DATE=$(date -u +%Y-%m-%d)
-TARGET_EPOCH=$(date -u -d "$TARGET_DATE 05:00:00" +%s 2>/dev/null || python3 -c "import datetime; now=datetime.datetime.now(datetime.timezone.utc); target=datetime.datetime(now.year, now.month, now.day, 5, 0, 0, tzinfo=datetime.timezone.utc); print(int(target.timestamp()))")
-
-WAIT_SECS=$(( TARGET_EPOCH - NOW_EPOCH ))
-if [ $WAIT_SECS -lt 0 ]; then
-  WAIT_SECS=0
-fi
-
-MINS_REMAINING=$(( WAIT_SECS / 60 ))
-SECS_REMAINING=$(( WAIT_SECS % 60 ))
 echo "============================================================"
-echo "⏰ Synchronizing to 08:00:00 AM Kenyan Time (05:00:00 UTC)"
-echo "⏳ First trade executes in: ${MINS_REMAINING}m ${SECS_REMAINING}s ($WAIT_SECS seconds)"
+echo "⏰ Starting all 36 bots immediately with 45s staggered offsets across fleets"
+echo "⏳ Fresh start initiated at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo "============================================================"
 
 echo "🚀 Launching all 6 fleets..."
@@ -128,58 +108,58 @@ for i in 1 2 3 4 5 6; do
 done
 echo "✅ Fleet 2 (Even/Odd Team 2) launched [6 bots]."
 
-# Fleet 3: Over/Under Team 1 (6 Bots) - Base Offset: 90s
+# Fleet 3: Over/Under Team 1 (Converted to Even/Odd, 6 Bots) - Base Offset: 90s
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-over-under-fleet-bot-$i"
   BOT_DIR="/root/over_under_fleet_bot_$i"
   DELAY=$(( WAIT_SECS + 90 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
-  cp "$OU_BUILD/config.json" "$BOT_DIR/config.json"
-  cp "$OU_BUILD/over_under_fleet.py" "$BOT_DIR/over_under_fleet.py"
+  cp "$EO_BUILD/config.json" "$BOT_DIR/config.json"
+  cp "$EO_BUILD/even_odd_millipede.py" "$BOT_DIR/even_odd_millipede.py"
   rm -f "$BOT_DIR/state.json"
   docker run -d --restart always --name "$BOT_NAME" \
     -e BOT_NAME="$BOT_NAME" \
     -e INITIAL_DELAY_SECONDS="$DELAY" \
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
-    headless-over-under-fleet
+    headless-even-odd-millipede
 done
-echo "✅ Fleet 3 (Over/Under Team 1) launched [6 bots]."
+echo "✅ Fleet 3 (Over/Under Team 1 Converted to Even/Odd) launched [6 bots]."
 
-# Fleet 4: Over/Under Team 2 (6 Bots) - Base Offset: 135s
+# Fleet 4: Over/Under Team 2 (Converted to Even/Odd, 6 Bots) - Base Offset: 135s
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-over-under-fleet2-bot-$i"
   BOT_DIR="/root/over_under_fleet2_bot_$i"
   DELAY=$(( WAIT_SECS + 135 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
-  cp "$OU_BUILD/config.json" "$BOT_DIR/config.json"
-  cp "$OU_BUILD/over_under_fleet.py" "$BOT_DIR/over_under_fleet.py"
+  cp "$EO_BUILD/config.json" "$BOT_DIR/config.json"
+  cp "$EO_BUILD/even_odd_millipede.py" "$BOT_DIR/even_odd_millipede.py"
   rm -f "$BOT_DIR/state.json"
   docker run -d --restart always --name "$BOT_NAME" \
     -e BOT_NAME="$BOT_NAME" \
     -e INITIAL_DELAY_SECONDS="$DELAY" \
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
-    headless-over-under-fleet
+    headless-even-odd-millipede
 done
-echo "✅ Fleet 4 (Over/Under Team 2) launched [6 bots]."
+echo "✅ Fleet 4 (Over/Under Team 2 Converted to Even/Odd) launched [6 bots]."
 
-# Fleet 5: Over/Under Team 3 (6 Bots - Reallocated from C/P) - Base Offset: 180s
+# Fleet 5: Call/Put Converted Team 1 (6 Bots, Even/Odd) - Base Offset: 180s
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-over-under-fleet3-bot-$i"
   BOT_DIR="/root/over_under_fleet3_bot_$i"
   DELAY=$(( WAIT_SECS + 180 + (i - 1) * 300 ))
   mkdir -p "$BOT_DIR"
-  cp "$OU_BUILD/config.json" "$BOT_DIR/config.json"
-  cp "$OU_BUILD/over_under_fleet.py" "$BOT_DIR/over_under_fleet.py"
+  cp "$EO_BUILD/config.json" "$BOT_DIR/config.json"
+  cp "$EO_BUILD/even_odd_millipede.py" "$BOT_DIR/even_odd_millipede.py"
   rm -f "$BOT_DIR/state.json"
   docker run -d --restart always --name "$BOT_NAME" \
     -e BOT_NAME="$BOT_NAME" \
     -e INITIAL_DELAY_SECONDS="$DELAY" \
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
-    headless-over-under-fleet
+    headless-even-odd-millipede
 done
-echo "✅ Fleet 5 (Over/Under Team 3) launched [6 bots]."
+echo "✅ Fleet 5 (Call/Put Converted Team 1 Even/Odd) launched [6 bots]."
 
-# Fleet 6: Even/Odd Team 3 (6 Bots - Reallocated from C/P) - Base Offset: 225s
+# Fleet 6: Call/Put Converted Team 2 (6 Bots, Even/Odd) - Base Offset: 225s
 for i in 1 2 3 4 5 6; do
   BOT_NAME="my-even-odd-fleet3-bot-$i"
   BOT_DIR="/root/even_odd_fleet3_bot_$i"
@@ -194,7 +174,7 @@ for i in 1 2 3 4 5 6; do
     -v "$BOT_DIR:/app" -v "$MASTER_LOCK:/app/lock" \
     headless-even-odd-millipede
 done
-echo "✅ Fleet 6 (Even/Odd Team 3) launched [6 bots]."
+echo "✅ Fleet 6 (Call/Put Converted Team 2 Even/Odd) launched [6 bots]."
 
 # 6. Update and restart the live pusher script
 echo "🔄 Updating and restarting live monitor pusher..."
@@ -209,9 +189,11 @@ fi
 echo ""
 echo "============================================================"
 echo "🎉 ALL 6 FLEETS DEPLOYED WITH FRESH CLEAN START!"
-echo "   • Even/Odd Fleets: 3 Teams (18 Bots Total, 30m Rest)"
-echo "   • Over/Under Fleets: 3 Teams (18 Bots Total, 30m Rest)"
-echo "   • Call/Put: Dormant & safely preserved (Ready to revert anytime)"
+echo "   • Strategy: 100% Even / Odd Digits across all 36 bots"
+echo "   • Fleets (6 Total, 36 Bots):"
+echo "       - Tab 1: Even / Odd              (Team 1 & Team 2 - 12 bots)"
+echo "       - Tab 2: Over / Under (Converted) (Team 1 & Team 2 - 12 bots)"
+echo "       - Tab 3: Call / Put (Converted)   (Team 3 & Team 4 - 12 bots)"
 echo "   • Master Trade Lock: /root/shared_master_trade_lock (0 collisions)"
 echo "   • Fleets Offset: 45s stagger gap between fleet cycles"
 echo "   • Markets: 10 Multi-Markets across all bots"
