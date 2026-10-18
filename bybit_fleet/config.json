@@ -1,0 +1,26 @@
+{
+  "mode": "demo",
+  "api_key": "PASTE_YOUR_BYBIT_API_KEY_HERE",
+  "api_secret": "PASTE_YOUR_BYBIT_API_SECRET_HERE",
+  "markets": [
+    "DOGEUSDT",
+    "XRPUSDT",
+    "SOLUSDT",
+    "ADAUSDT",
+    "TRXUSDT",
+    "LINKUSDT",
+    "AVAXUSDT",
+    "DOTUSDT",
+    "LTCUSDT",
+    "SUIUSDT"
+  ],
+  "leverage": 10,
+  "initial_stake": 15.0,
+  "martingale_multiplier": 2.1,
+  "tp_percent": 0.25,
+  "sl_percent": 0.25,
+  "daily_tp_target": 50.0,
+  "win_cooldown_minutes": 20,
+  "loss_cooldown_seconds": 1200,
+  "max_trade_wait_seconds": 180
+}
