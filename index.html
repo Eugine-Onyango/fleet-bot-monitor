@@ -129,13 +129,21 @@
     .animate-bounce-slow {
       animation: bounce-slow 2.5s infinite ease-in-out;
     }
+    /* Clean horizontal scroll without visible scrollbars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-[#0f172a] dark:text-slate-100 min-h-screen flex flex-col antialiased">
 
   <!-- Friendly Top Bar -->
   <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#1e293b]/95 backdrop-blur sticky top-0 z-30 transition-colors">
-    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
       
       <!-- Logo & App Name -->
       <div class="flex items-center space-x-3">
@@ -192,29 +200,29 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-3xl mx-auto px-4 py-5 w-full flex-1 space-y-4">
+  <main class="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-5 w-full flex-1 space-y-4">
 
     <!-- Dedicated System Switcher (Even/Odd vs Over/Under vs Call/Put vs Bybit) -->
-    <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 sm:flex items-center gap-1.5">
-      <button onclick="switchSystem('eo')" id="sysBtn-eo" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
-        <span class="text-base">🎲</span>
+    <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 md:grid-cols-4 items-center gap-1.5">
+      <button onclick="switchSystem('eo')" id="sysBtn-eo" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
+        <span class="text-base flex-shrink-0">🎲</span>
         <span class="truncate">Even / Odd</span>
-        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">12</span>
+        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold flex-shrink-0">12</span>
       </button>
-      <button onclick="switchSystem('ou')" id="sysBtn-ou" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
-        <span class="text-base">🎯</span>
-        <span class="truncate">Over / Under (Converted)</span>
-        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
+      <button onclick="switchSystem('ou')" id="sysBtn-ou" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
+        <span class="text-base flex-shrink-0">🎯</span>
+        <span class="truncate"><span class="md:hidden lg:inline">Over / Under (Conv)</span><span class="hidden md:inline lg:hidden">O/U (Conv)</span></span>
+        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">12</span>
       </button>
-      <button onclick="switchSystem('cp')" id="sysBtn-cp" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
-        <span class="text-base">⚡</span>
-        <span class="truncate">Call / Put (Converted)</span>
-        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
+      <button onclick="switchSystem('cp')" id="sysBtn-cp" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
+        <span class="text-base flex-shrink-0">⚡</span>
+        <span class="truncate"><span class="md:hidden lg:inline">Call / Put (Conv)</span><span class="hidden md:inline lg:hidden">C/P (Conv)</span></span>
+        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">12</span>
       </button>
-      <button onclick="switchSystem('bybit')" id="sysBtn-bybit" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
-        <span class="text-base">🚀</span>
+      <button onclick="switchSystem('bybit')" id="sysBtn-bybit" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
+        <span class="text-base flex-shrink-0">🚀</span>
         <span class="truncate">Bybit Fleet</span>
-        <span id="sysCount-bybit" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">4</span>
+        <span id="sysCount-bybit" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">4</span>
       </button>
     </div>
 
@@ -278,11 +286,11 @@
         <span class="text-xl">☀️</span>
         <span id="comfortingNotice" class="font-medium">Relax! Your helpers take care of everything automatically.</span>
       </div>
-      <div class="flex items-center gap-2 self-end sm:self-auto">
-        <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+      <div class="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+        <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1 whitespace-nowrap flex-shrink-0">
           ⏱️ Active: <span id="fleetUptimeVal">Checking...</span>
         </span>
-        <span id="syncCountdownPill" class="text-xs font-black px-2.5 py-1 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
+        <span id="syncCountdownPill" class="text-xs font-black px-2.5 py-1 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 whitespace-nowrap flex-shrink-0">
           30s
         </span>
       </div>
@@ -449,9 +457,9 @@
       const countCP = document.getElementById("sysCount-cp");
       const countBybit = document.getElementById("sysCount-bybit");
 
-      const inactiveBtn = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60";
-      const inactiveBadge = "px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold";
-      const activeBadge = "px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold";
+      const inactiveBtn = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60";
+      const inactiveBadge = "px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0";
+      const activeBadge = "px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold flex-shrink-0";
 
       if (btnEO) btnEO.className = inactiveBtn;
       if (btnOU) btnOU.className = inactiveBtn;
@@ -463,16 +471,16 @@
       if (countBybit) countBybit.className = inactiveBadge;
 
       if (currentSystem === "bybit") {
-        if (btnBybit) btnBybit.className = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-sky-600 text-white shadow-md shadow-sky-500/20";
+        if (btnBybit) btnBybit.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-sky-600 text-white shadow-md shadow-sky-500/20";
         if (countBybit) countBybit.className = activeBadge;
       } else if (currentSystem === "cp") {
-        if (btnCP) btnCP.className = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-amber-600 text-white shadow-md shadow-amber-500/20";
+        if (btnCP) btnCP.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-amber-600 text-white shadow-md shadow-amber-500/20";
         if (countCP) countCP.className = activeBadge;
       } else if (currentSystem === "ou") {
-        if (btnOU) btnOU.className = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-md shadow-indigo-500/20";
+        if (btnOU) btnOU.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-md shadow-indigo-500/20";
         if (countOU) countOU.className = activeBadge;
       } else {
-        if (btnEO) btnEO.className = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20";
+        if (btnEO) btnEO.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20";
         if (countEO) countEO.className = activeBadge;
       }
     }
