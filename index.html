@@ -1422,7 +1422,9 @@
         });
       }
 
-      if (currentFleetTab === "fleet1") {
+      if (currentSystem === "bybit") {
+        fleetsToRender = sysFleets;
+      } else if (currentFleetTab === "fleet1") {
         fleetsToRender = sysFleets.filter(f => f.fleet_name.includes("Fleet 1"));
       } else if (currentFleetTab === "fleet2") {
         fleetsToRender = sysFleets.filter(f => f.fleet_name.includes("Fleet 2"));
