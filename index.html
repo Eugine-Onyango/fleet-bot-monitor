@@ -57,6 +57,11 @@
     }
   </script>
   <script src="config.js"></script>
+  <!-- Google Fonts for Kids Mode -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
     /* Warm, gentle font rendering */
     body {
@@ -79,6 +84,50 @@
     }
     .card-shadow {
       box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 🍭 Kids / Playful GUI Mode */
+    body.gui-kids {
+      font-family: 'Fredoka', 'Comic Neue', cursive, sans-serif !important;
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 25%, #ecfdf5 50%, #f0fdf4 75%, #fdf2f8 100%) !important;
+      letter-spacing: 0.02em;
+    }
+    body.gui-kids.dark {
+      background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 50%, #0f172a 100%) !important;
+    }
+    body.gui-kids header {
+      border-bottom: 4px solid #fde047 !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 0 8px 20px -4px rgba(250, 204, 21, 0.3) !important;
+    }
+    body.gui-kids.dark header {
+      background: rgba(30, 27, 75, 0.95) !important;
+      border-bottom: 4px solid #818cf8 !important;
+    }
+    body.gui-kids .card-shadow,
+    body.gui-kids .cheerful-shadow {
+      border-radius: 2rem !important;
+      border-width: 3px !important;
+      box-shadow: 0 14px 28px -4px rgba(245, 158, 11, 0.22), 0 8px 16px -4px rgba(236, 72, 153, 0.15) !important;
+    }
+    body.gui-kids button {
+      font-weight: 700 !important;
+      border-radius: 9999px !important;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+    body.gui-kids button:active {
+      transform: scale(0.94) !important;
+    }
+    body.gui-kids .tab-btn {
+      border-radius: 9999px !important;
+      border-width: 2.5px !important;
+    }
+    @keyframes bounce-slow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .animate-bounce-slow {
+      animation: bounce-slow 2.5s infinite ease-in-out;
     }
   </style>
 </head>
@@ -114,8 +163,8 @@
           ☀️
         </button>
 
-        <!-- View Mode Switch -->
-        <button id="viewModeBtn" onclick="toggleViewMode()" class="px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-emerald-200 dark:border-slate-700 text-xs font-bold text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5">
+        <!-- GUI Mode Switcher (Friendly Simple / Tech / Kids) -->
+        <button id="viewModeBtn" onclick="cycleViewMode()" class="px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-emerald-200 dark:border-slate-700 text-xs font-black text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5 shadow-sm" title="Change GUI Display Mode (Simple • Tech • Kids)">
           <span id="viewModeIcon">😊</span>
           <span id="viewModeLabel" class="hidden sm:inline">Simple</span>
         </button>
@@ -191,25 +240,25 @@
         <!-- 4 Pill Counters (Bots, Win Rate, Peak Profit, Peak Stake) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:w-auto">
           <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 text-center shadow-sm">
-            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Bots Working</span>
+            <span id="lblActiveBots" class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Bots Working</span>
             <span id="statActiveBots" class="text-xl font-black text-emerald-600 dark:text-emerald-400">12 / 12</span>
             <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">● Healthy</span>
           </div>
 
           <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 text-center shadow-sm">
-            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Winning Rate</span>
+            <span id="lblWinRate" class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Winning Rate</span>
             <span id="statWinRate" class="text-xl font-black text-sky-600 dark:text-sky-400">0%</span>
             <span id="statWinLossRecord" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">0 Wins</span>
           </div>
 
           <div class="bg-white dark:bg-[#0f172a] border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl p-2.5 text-center shadow-sm">
-            <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold block">Peak Profit</span>
+            <span id="lblPeakProfit" class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold block">Peak Profit</span>
             <span id="statPeakProfit" class="text-xl font-black text-emerald-600 dark:text-emerald-400">+$0.00</span>
             <span id="statPeakProfitDiff" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-0.5">Max Reached</span>
           </div>
 
           <div class="bg-white dark:bg-[#0f172a] border border-amber-200/80 dark:border-amber-800/60 rounded-2xl p-2.5 text-center shadow-sm">
-            <span class="text-[11px] text-amber-700 dark:text-amber-400 font-bold block">Peak Stake</span>
+            <span id="lblPeakStake" class="text-[11px] text-amber-700 dark:text-amber-400 font-bold block">Peak Stake</span>
             <span id="statOverallPeak" class="text-xl font-black text-amber-600 dark:text-amber-300">$0.35</span>
             <span id="statOverallPeakMarket" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">All Markets</span>
           </div>
@@ -287,7 +336,8 @@
     let GIST_ID = localStorage.getItem("fleet_gist_id") || (window.DEFAULT_GIST_ID || "");
     let REFRESH_SECONDS = parseInt(localStorage.getItem("fleet_refresh_interval") || "30");
     let countdown = REFRESH_SECONDS;
-    let isSimpleMode = localStorage.getItem("fleet_simple_mode") !== "false"; // Default simple
+    let guiMode = localStorage.getItem("fleet_gui_mode") || (localStorage.getItem("fleet_simple_mode") === "false" ? "tech" : "simple");
+    let isSimpleMode = guiMode !== "tech";
     let currentTheme = localStorage.getItem("fleet_theme") || "light"; // Default cheerful light mode
     let currentSystem = (window.location.hash.includes("call-put") || window.location.hash.includes("cp"))
       ? "cp"
@@ -317,11 +367,52 @@
     }
 
     function toggleViewMode() {
-      isSimpleMode = !isSimpleMode;
+      cycleViewMode();
+    }
+
+    function cycleViewMode() {
+      if (guiMode === "simple") {
+        guiMode = "tech";
+      } else if (guiMode === "tech") {
+        guiMode = "kids";
+      } else {
+        guiMode = "simple";
+      }
+      isSimpleMode = guiMode !== "tech";
+      localStorage.setItem("fleet_gui_mode", guiMode);
       localStorage.setItem("fleet_simple_mode", isSimpleMode);
-      updateViewModeUI();
+      applyGuiMode();
       if (window.lastPayload) {
         renderDashboard(window.lastPayload);
+      }
+    }
+
+    function applyGuiMode() {
+      const label = document.getElementById("viewModeLabel");
+      const icon = document.getElementById("viewModeIcon");
+      const btn = document.getElementById("viewModeBtn");
+
+      document.body.classList.toggle("gui-kids", guiMode === "kids");
+      document.body.classList.toggle("gui-tech", guiMode === "tech");
+
+      if (guiMode === "kids") {
+        if (label) label.innerText = "Kids";
+        if (icon) icon.innerText = "🍭";
+        if (btn) {
+          btn.className = "px-3 py-1.5 rounded-2xl bg-pink-100 hover:bg-pink-200 dark:bg-pink-950 dark:hover:bg-pink-900 border-2 border-pink-300 dark:border-pink-700 text-xs font-black text-pink-700 dark:text-pink-300 transition flex items-center gap-1.5 shadow-sm";
+        }
+      } else if (guiMode === "tech") {
+        if (label) label.innerText = "Tech";
+        if (icon) icon.innerText = "📊";
+        if (btn) {
+          btn.className = "px-3 py-1.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-indigo-200 dark:border-slate-700 text-xs font-black text-indigo-800 dark:text-indigo-300 transition flex items-center gap-1.5 shadow-sm";
+        }
+      } else {
+        if (label) label.innerText = "Simple";
+        if (icon) icon.innerText = "😊";
+        if (btn) {
+          btn.className = "px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-emerald-200 dark:border-slate-700 text-xs font-black text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5 shadow-sm";
+        }
       }
     }
 
@@ -481,15 +572,7 @@
     }
 
     function updateViewModeUI() {
-      const label = document.getElementById("viewModeLabel");
-      const icon = document.getElementById("viewModeIcon");
-      if (isSimpleMode) {
-        label.innerText = "Simple";
-        icon.innerText = "😊";
-      } else {
-        label.innerText = "Tech";
-        icon.innerText = "📊";
-      }
+      applyGuiMode();
     }
 
     function toggleSettingsModal() {
@@ -656,6 +739,138 @@
       return {
         icon: "ℹ️",
         color: "text-slate-600 dark:text-slate-400",
+        text: cleanTechNoise(line)
+      };
+    }
+
+    // Playful Kids Story Translator
+    function translateToKids(line) {
+      const lower = line.toLowerCase();
+      const plusMoneyMatch = line.match(/\+\$([0-9.]+)/) || line.match(/won.*?\$?([0-9.]+)/i);
+      const minusMoneyMatch = line.match(/-\$([0-9.]+)/) || line.match(/lost.*?\$?([0-9.]+)/i);
+      const stakeMatch = line.match(/@\s*\$([0-9.]+)/) || line.match(/step-up to \$([0-9.]+)/i) || line.match(/at \$([0-9.]+)/i);
+
+      if (lower.includes("fibonacci recovery complete") || (lower.includes("cycle result: win") && lower.includes("fibonacci"))) {
+        return {
+          icon: "🎈",
+          color: "text-emerald-700 dark:text-emerald-300 font-bold",
+          text: "Woohoo! Mission accomplished! Resetting safely back to Level 1! ✨"
+        };
+      }
+
+      if (lower.includes("win step-back") || lower.includes("stepped back from fib")) {
+        const m = line.match(/won\s*\+?\$([0-9.]+)/i);
+        const amt = m ? `+$${m[1]}` : "Coins";
+        return {
+          icon: "🍭",
+          color: "text-emerald-700 dark:text-emerald-300 font-bold",
+          text: `Yaaay! Won ${amt} candy coins! Stepping back down to safe play! 🛡️`
+        };
+      }
+
+      if (lower.includes("locked for fibonacci recovery") || lower.includes("stepped forward to fib")) {
+        const m = line.match(/fib\s*(\d+).*?\$([0-9.]+)/i);
+        const lvl = m ? `Level ${m[1]}` : "Next Level";
+        return {
+          icon: "🛡️",
+          color: "text-amber-800 dark:text-amber-300 font-bold",
+          text: `Super shield activated! Stepping forward to ${lvl} for gentle recovery! 🚀`
+        };
+      }
+
+      if (lower.includes("won") || (lower.includes("settled") && lower.includes("profit/loss: +"))) {
+        const amt = plusMoneyMatch ? `+$${plusMoneyMatch[1]}` : "Coins";
+        return {
+          icon: "🎉",
+          color: "text-emerald-700 dark:text-emerald-300 font-bold",
+          text: `Woohoo! Won <strong class="text-emerald-600 dark:text-emerald-400 font-black">${amt}</strong> shiny coins for the piggy bank! 🐷`
+        };
+      }
+
+      if (lower.includes("lost") || (lower.includes("settled") && lower.includes("profit/loss: -"))) {
+        const amt = minusMoneyMatch ? `-$${minusMoneyMatch[1]}` : "";
+        return {
+          icon: "💪",
+          color: "text-amber-800 dark:text-amber-300 font-bold",
+          text: `Small bump (${amt})! Friendly robot dusting off and protecting profits! 🛡️`
+        };
+      }
+
+      if (lower.includes("under 5") || lower.includes("digitunder")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "🎲",
+          color: "text-indigo-700 dark:text-indigo-300 font-bold",
+          text: `Fun turn: Guessing <strong class="text-indigo-600 dark:text-indigo-400 font-black">Under 5</strong> with ${amt}! 🎈`
+        };
+      }
+
+      if (lower.includes("over 4") || lower.includes("digitover")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "🎲",
+          color: "text-indigo-700 dark:text-indigo-300 font-bold",
+          text: `Fun turn: Guessing <strong class="text-indigo-600 dark:text-indigo-400 font-black">Over 4</strong> with ${amt}! 🎈`
+        };
+      }
+
+      if (lower.includes("martingale step-up") || lower.includes("initiating trade")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "";
+        return {
+          icon: "⚡",
+          color: "text-sky-700 dark:text-sky-300 font-bold",
+          text: `Powering up to <strong class="text-sky-600 dark:text-sky-400 font-black">${amt}</strong> to bounce right back! 🚀`
+        };
+      }
+
+      if (lower.includes("executing buy") || lower.includes("contract purchased")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "🌟",
+          color: "text-indigo-700 dark:text-indigo-300 font-bold",
+          text: `Placed friendly turn for <strong class="text-indigo-600 dark:text-indigo-400 font-black">${amt}</strong>! ✨`
+        };
+      }
+
+      if (lower.includes("basket advance") || lower.includes("remaining in basket")) {
+        return {
+          icon: "🏆",
+          color: "text-purple-700 dark:text-purple-300 font-bold",
+          text: "Star goal reached! Moving to the next exciting level! 🚀"
+        };
+      }
+
+      if (lower.includes("best market selected") || lower.includes("dominant")) {
+        return {
+          icon: "🔍",
+          color: "text-slate-600 dark:text-slate-400 font-bold",
+          text: "Found the happiest playground to play in today! 🎪"
+        };
+      }
+
+      if (lower.includes("cooldown") || lower.includes("waiting") || lower.includes("stagger")) {
+        return {
+          icon: "😴",
+          color: "text-amber-700 dark:text-amber-300 font-bold",
+          text: "Taking a cozy nap to keep our treasure safe! 💤"
+        };
+      }
+
+      if (lower.includes("requesting") && lower.includes("proposal")) {
+        return {
+          icon: "👀",
+          color: "text-slate-600 dark:text-slate-400 font-bold",
+          text: "Looking around for fun toys and games... 🎈"
+        };
+      }
+
+      if (lower.includes("subscribing to contract") || lower.includes("score=")) {
+        return null;
+      }
+
+      return {
+        icon: "🤖",
+        color: "text-slate-600 dark:text-slate-400 font-bold",
         text: cleanTechNoise(line)
       };
     }
@@ -947,52 +1162,83 @@
             : (isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
       }`;
 
+      const isKidsMode = guiMode === "kids";
+      const isTechMode = guiMode === "tech";
+
       const heroTag = document.getElementById("heroCardTag");
       const peaceText = document.getElementById("peaceOfMindText");
       const heroContainer = document.getElementById("heroCardContainer");
       const comfortingNotice = document.getElementById("comfortingNotice");
 
+      const lblActiveBots = document.getElementById("lblActiveBots");
+      const lblWinRate = document.getElementById("lblWinRate");
+      const lblPeakProfit = document.getElementById("lblPeakProfit");
+      const lblPeakStake = document.getElementById("lblPeakStake");
+
+      if (lblActiveBots) lblActiveBots.innerText = isKidsMode ? "Friendly Robots 🤖" : (isTechMode ? "ACTIVE THREADS" : "Bots Working");
+      if (lblWinRate) lblWinRate.innerText = isKidsMode ? "Star Score ⭐" : (isTechMode ? "WIN / LOSS RATIO" : "Winning Rate");
+      if (lblPeakProfit) lblPeakProfit.innerText = isKidsMode ? "Gold Trophy 🏆" : (isTechMode ? "PEAK PROFIT" : "Peak Profit");
+      if (lblPeakStake) lblPeakStake.innerText = isKidsMode ? "Super Power ⚡" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
+
       if (currentSystem === "cp") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 mb-2.5";
-          heroTag.innerHTML = "⚡ Call / Put (Converted) Fleet Profit";
+          heroTag.innerHTML = isKidsMode ? "🍭 Converted Robots Playground" : (isTechMode ? "⚡ CP CONVERTED TELEMETRY" : "⚡ Call / Put (Converted) Fleet Profit");
         }
         if (peaceText) {
-          peaceText.innerHTML = '<span class="text-base">🛡️</span> Converted from C/P into Over/Under Team 3 & Even/Odd Team 3 (12 bots total).';
+          peaceText.innerHTML = isKidsMode
+            ? '<span class="text-base">🎈</span> Converted Team 3 robots are having fun and taking turns safely!'
+            : '<span class="text-base">🛡️</span> Converted from C/P into Over/Under Team 3 & Even/Odd Team 3 (12 bots total).';
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = "Active Converted Fleets: Team 3 Over/Under & Team 3 Even/Odd (12 bots total).";
+          comfortingNotice.innerText = isKidsMode
+            ? "12 friendly helper robots are playing together nicely!"
+            : "Active Converted Fleets: Team 3 Over/Under & Team 3 Even/Odd (12 bots total).";
         }
         if (heroContainer) {
-          heroContainer.className = "bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#2e1d10] border-2 border-amber-200 dark:border-amber-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
+          heroContainer.className = isKidsMode
+            ? "bg-gradient-to-br from-amber-50 via-orange-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1d10] dark:to-[#1e293b] border-4 border-amber-300 dark:border-amber-700 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all"
+            : "bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#2e1d10] border-2 border-amber-200 dark:border-amber-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
         }
       } else if (currentSystem === "ou") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 mb-2.5";
-          heroTag.innerHTML = "🎯 Over / Under Fleet Profit";
+          heroTag.innerHTML = isKidsMode ? "🎯 Over / Under Toy Box" : (isTechMode ? "🎯 OVER / UNDER TELEMETRY" : "🎯 Over / Under Fleet Profit");
         }
         if (peaceText) {
-          peaceText.innerHTML = '<span class="text-base">🛡️</span> Independent 50/50 Under 5 / Over 4 trading with 2.1 Martingale recovery.';
+          peaceText.innerHTML = isKidsMode
+            ? '<span class="text-base">🎈</span> 50/50 Under 5 & Over 4 games with friendly bounce-back shield!'
+            : '<span class="text-base">🛡️</span> Independent 50/50 Under 5 / Over 4 trading with 2.1 Martingale recovery.';
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = "Over/Under Fleet is operating independently with 2.1 Martingale recovery.";
+          comfortingNotice.innerText = isKidsMode
+            ? "Your Over / Under robots are taking great care of the toys!"
+            : "Over/Under Fleet is operating independently with 2.1 Martingale recovery.";
         }
         if (heroContainer) {
-          heroContainer.className = "bg-gradient-to-br from-white via-indigo-50/50 to-purple-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#1a1c36] border-2 border-indigo-200 dark:border-indigo-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
+          heroContainer.className = isKidsMode
+            ? "bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#1a1c36] dark:to-[#1e293b] border-4 border-indigo-300 dark:border-indigo-700 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all"
+            : "bg-gradient-to-br from-white via-indigo-50/50 to-purple-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#1a1c36] border-2 border-indigo-200 dark:border-indigo-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
         }
       } else {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5";
-          heroTag.innerHTML = "💰 Even / Odd System Profit";
+          heroTag.innerHTML = isKidsMode ? "🍬 Even / Odd Treasure Chest" : (isTechMode ? "🎲 EVEN / ODD TELEMETRY" : "💰 Even / Odd System Profit");
         }
         if (peaceText) {
-          peaceText.innerHTML = '<span class="text-base">🛡️</span> Team 1 & Team 2 working together in automated rotation.';
+          peaceText.innerHTML = isKidsMode
+            ? '<span class="text-base">🎈</span> Friendly robots taking turns in rotation and guarding the piggy bank!'
+            : '<span class="text-base">🛡️</span> Team 1 & Team 2 working together in automated rotation.';
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = "Relax! Your Even/Odd helpers take care of everything automatically.";
+          comfortingNotice.innerText = isKidsMode
+            ? "Yay! All friendly robots are happy, healthy, and playing safely!"
+            : "Relax! Your Even/Odd helpers take care of everything automatically.";
         }
         if (heroContainer) {
-          heroContainer.className = "bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all";
+          heroContainer.className = isKidsMode
+            ? "bg-gradient-to-br from-emerald-50 via-teal-50 to-yellow-50 dark:from-[#1e1b4b] dark:via-[#162032] dark:to-[#1e293b] border-4 border-emerald-300 dark:border-emerald-700 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all"
+            : "bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all";
         }
       }
 
@@ -1013,7 +1259,9 @@
       const statPeakProfitDiff = document.getElementById("statPeakProfitDiff");
 
       if (peakBadge) {
-        peakBadge.innerText = `🏆 Peak: +$${activeMetrics.peakProfit.toFixed(2)}`;
+        peakBadge.innerText = isKidsMode 
+          ? `🏆 Best Treasure: +$${activeMetrics.peakProfit.toFixed(2)}`
+          : (isTechMode ? `PEAK: +$${activeMetrics.peakProfit.toFixed(2)}` : `🏆 Peak: +$${activeMetrics.peakProfit.toFixed(2)}`);
       }
 
       if (statPeakProfit) {
@@ -1261,6 +1509,10 @@
       const peakInfo = extractPeakAndMarket(bot);
       const botUptime = extractUptime(bot);
 
+      const isKidsMode = guiMode === "kids";
+      const isTechMode = guiMode === "tech";
+      const isSimpleMode = guiMode === "simple";
+
       // Bot Peak Profit and Drawdown
       const botTrades = (bot.wins || 0) + (bot.losses || 0);
       const botPeakKey = `bot_peak_${bot.name}`;
@@ -1281,7 +1533,29 @@
 
       let logsHtml = "";
       if (bot.logs && bot.logs.length > 0) {
-        if (isSimpleMode) {
+        if (isKidsMode) {
+          const translatedList = [];
+          for (let i = bot.logs.length - 1; i >= 0; i--) {
+            const parsed = translateToKids(bot.logs[i]);
+            if (parsed) {
+              translatedList.push(parsed);
+              if (translatedList.length >= 3) break;
+            }
+          }
+
+          if (translatedList.length === 0) {
+            logsHtml = '<div class="py-2 text-xs text-slate-500 dark:text-slate-400 font-bold">💤 Sleeping soundly in the cozy robot bed... 🌙</div>';
+          } else {
+            logsHtml = translatedList.map(item => `
+              <div class="py-1.5 flex items-start gap-2 text-xs border-b border-pink-100 dark:border-slate-800/80 last:border-0">
+                <span class="text-base flex-shrink-0">${item.icon}</span>
+                <div class="flex-1 leading-snug">
+                  <span class="${item.color}">${item.text}</span>
+                </div>
+              </div>
+            `).join("");
+          }
+        } else if (isSimpleMode) {
           const translatedList = [];
           for (let i = bot.logs.length - 1; i >= 0; i--) {
             const parsed = translateToHuman(bot.logs[i]);
@@ -1311,34 +1585,59 @@
           `).join("");
         }
       } else {
-        logsHtml = '<div class="py-2 text-xs text-slate-400">Waiting for next action...</div>';
+        logsHtml = isKidsMode
+          ? '<div class="py-2 text-xs text-slate-400 font-bold">Waiting for the next fun game... 🎈</div>'
+          : '<div class="py-2 text-xs text-slate-400">Waiting for next action...</div>';
       }
 
+      const cardAvatar = isKidsMode ? "🧸" : "🤖";
+      const cardHeaderTitle = isKidsMode ? friendlyName.replace("Helper", "Buddy") : friendlyName;
+      const cardStatus = isKidsMode
+        ? `<span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span> Playing • ${botUptime}`
+        : `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Running • ${botUptime}`;
+
+      const earnedTitle = isKidsMode ? "🍬 Piggy Bank" : (isTechMode ? "NET PNL" : "Earned");
+      const peakTitle = isKidsMode ? "🏆 Best" : (isTechMode ? "MAX PEAK" : "🏆 Max");
+
+      const col1Title = isKidsMode ? "⭐ Stars" : (isTechMode ? "RECORD" : "Record");
+      const col1Val = isKidsMode ? `${bot.wins}W • ${bot.losses}L` : `${bot.wins}W • ${bot.losses}L`;
+
+      const col2Title = isKidsMode ? "🎯 Next Play" : (isTechMode ? "NEXT STAKE" : "Next Trade");
+      const col3Title = isKidsMode ? "⚡ Super Power" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
+      const col4Title = isKidsMode ? "🎪 Playground" : (isTechMode ? "MARKET" : "Market");
+
+      const activityTitle = isKidsMode ? "🎮 Robot Adventure Diary" : (isSimpleMode ? "Recent Actions (Plain English)" : "Technical Log");
+      const activityTag = isKidsMode ? "Kids Story ✨" : (isSimpleMode ? "Human View" : "Raw");
+
+      const cardClasses = isKidsMode
+        ? "bg-white/95 dark:bg-[#1a1b35] border-2 border-amber-200/90 dark:border-indigo-700/80 rounded-3xl p-4 flex flex-col justify-between transition hover:border-pink-300 dark:hover:border-indigo-500 shadow-md"
+        : "bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between transition hover:border-emerald-300 dark:hover:border-slate-700";
+
       return `
-        <div class="bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between transition hover:border-emerald-300 dark:hover:border-slate-700">
+        <div class="${cardClasses}">
           <div>
             <!-- Bot Header -->
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-2xl bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-base">
-                  🤖
+                <div class="w-9 h-9 rounded-2xl ${isKidsMode ? 'bg-pink-100 dark:bg-pink-950 border-2 border-pink-300 dark:border-pink-700 text-lg' : 'bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 text-base'} flex items-center justify-center">
+                  ${cardAvatar}
                 </div>
                 <div>
-                  <h4 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white">${friendlyName}</h4>
-                  <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Running • ${botUptime}
+                  <h4 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white">${cardHeaderTitle}</h4>
+                  <span class="text-[10px] ${isKidsMode ? 'text-pink-600 dark:text-pink-400' : 'text-emerald-600 dark:text-emerald-400'} font-bold flex items-center gap-1">
+                    ${cardStatus}
                   </span>
                 </div>
               </div>
 
               <!-- Money Badge -->
               <div class="text-right">
-                <span class="text-[10px] text-slate-400 uppercase font-bold block">Earned</span>
-                <span class="text-sm sm:text-base font-black ${isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                <span class="text-[10px] text-slate-400 uppercase font-bold block">${earnedTitle}</span>
+                <span class="text-sm sm:text-base font-black ${isProfitable ? (isKidsMode ? 'text-pink-600 dark:text-pink-400' : 'text-emerald-600 dark:text-emerald-400') : 'text-rose-600 dark:text-rose-400'}">
                   ${isProfitable ? '+' : ''}$${bot.profit.toFixed(2)}
                 </span>
-                <span class="text-[10px] font-bold block mt-0.5 ${botDrawdown > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}">
-                  🏆 Max: +$${botPeakProfit.toFixed(2)}${botDrawdown > 0 ? ` <span class="text-rose-500 font-bold">(-$${botDrawdown.toFixed(2)})</span>` : ''}
+                <span class="text-[10px] font-bold block mt-0.5 ${botDrawdown > 0 ? 'text-amber-600 dark:text-amber-400' : (isKidsMode ? 'text-pink-600 dark:text-pink-400' : 'text-emerald-600 dark:text-emerald-400')}">
+                  ${peakTitle}: +$${botPeakProfit.toFixed(2)}${botDrawdown > 0 ? ` <span class="text-rose-500 font-bold">(-$${botDrawdown.toFixed(2)})</span>` : ''}
                 </span>
               </div>
             </div>
@@ -1346,27 +1645,27 @@
             <!-- Stats Ribbon (4 Cards) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white dark:bg-[#1e293b] rounded-xl p-2.5 text-center text-xs mb-3 border border-slate-200 dark:border-slate-800">
               <div>
-                <span class="block text-[10px] text-slate-400 font-bold uppercase">Record</span>
-                <span class="font-black text-slate-800 dark:text-slate-100">${bot.wins}W • ${bot.losses}L</span>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase">${col1Title}</span>
+                <span class="font-black text-slate-800 dark:text-slate-100">${col1Val}</span>
               </div>
               <div>
-                <span class="block text-[10px] text-slate-400 font-bold uppercase">Next Trade</span>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase">${col2Title}</span>
                 <span class="font-black text-sky-600 dark:text-sky-400">$${bot.current_stake > 0 ? bot.current_stake.toFixed(2) : '0.35'}</span>
               </div>
               <div>
-                <span class="block text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase">Peak Stake</span>
+                <span class="block text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase">${col3Title}</span>
                 <span class="font-black text-amber-700 dark:text-amber-300">$${peakInfo.peakStake.toFixed(2)}</span>
               </div>
               <div>
-                <span class="block text-[10px] text-slate-400 font-bold uppercase">Market</span>
+                <span class="block text-[10px] text-slate-400 font-bold uppercase">${col4Title}</span>
                 <span class="font-black text-slate-700 dark:text-slate-200 truncate block">${peakInfo.peakMarket || peakInfo.currentMarket || '1HZ'}</span>
               </div>
             </div>
 
             <!-- Activity Box -->
             <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
-              <span>${isSimpleMode ? 'Recent Actions (Plain English)' : 'Technical Log'}</span>
-              <span class="text-[10px] text-slate-400">${isSimpleMode ? 'Human View' : 'Raw'}</span>
+              <span>${activityTitle}</span>
+              <span class="text-[10px] text-slate-400">${activityTag}</span>
             </div>
             <div class="bg-white dark:bg-[#162032] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 min-h-[85px] max-h-40 overflow-y-auto custom-scroll">
               ${logsHtml}
@@ -1396,8 +1695,12 @@
     updateViewModeUI();
     updateSystemSwitcherUI();
     window.addEventListener("hashchange", () => {
-      const isOU = window.location.hash.includes("over-under") || window.location.hash.includes("ou");
-      currentSystem = isOU ? "ou" : "eo";
+      const hash = window.location.hash.toLowerCase();
+      currentSystem = (hash.includes("call-put") || hash.includes("cp"))
+        ? "cp"
+        : (hash.includes("over-under") || hash.includes("ou"))
+          ? "ou"
+          : "eo";
       localStorage.setItem("fleet_active_system", currentSystem);
       currentFleetTab = "all";
       updateSystemSwitcherUI();
