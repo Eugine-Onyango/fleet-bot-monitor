@@ -207,17 +207,17 @@
       <button onclick="switchSystem('eo')" id="sysBtn-eo" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
         <span class="text-base flex-shrink-0">🎲</span>
         <span class="truncate">Even / Odd</span>
-        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold flex-shrink-0">12</span>
+        <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold flex-shrink-0">8</span>
       </button>
       <button onclick="switchSystem('ou')" id="sysBtn-ou" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base flex-shrink-0">🎯</span>
         <span class="truncate"><span class="md:hidden lg:inline">Over / Under (Conv)</span><span class="hidden md:inline lg:hidden">O/U (Conv)</span></span>
-        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">12</span>
+        <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">8</span>
       </button>
       <button onclick="switchSystem('cp')" id="sysBtn-cp" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base flex-shrink-0">⚡</span>
         <span class="truncate"><span class="md:hidden lg:inline">Call / Put (Conv)</span><span class="hidden md:inline lg:hidden">C/P (Conv)</span></span>
-        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">12</span>
+        <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">8</span>
       </button>
       <button onclick="switchSystem('bybit')" id="sysBtn-bybit" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base flex-shrink-0">🚀</span>
@@ -254,7 +254,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:w-auto">
           <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 text-center shadow-sm">
             <span id="lblActiveBots" class="text-[11px] text-slate-500 dark:text-slate-400 font-bold block">Bots Working</span>
-            <span id="statActiveBots" class="text-xl font-black text-emerald-600 dark:text-emerald-400">12 / 12</span>
+            <span id="statActiveBots" class="text-xl font-black text-emerald-600 dark:text-emerald-400">8 / 8</span>
             <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">● Healthy</span>
           </div>
 
@@ -1241,12 +1241,12 @@
         if (peaceText) {
           peaceText.innerHTML = isKidsMode
             ? '<span class="text-base">🎈</span> Converted to Even / Odd trading and taking turns safely!'
-            : '<span class="text-base">🛡️</span> Converted from C/P into Even / Odd strategy (12 bots total).';
+            : '<span class="text-base">🛡️</span> Converted from C/P into Even / Odd strategy (8 bots total • 20m rest).';
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = isKidsMode
-            ? "12 friendly helper robots are playing together nicely!"
-            : "Active Converted Fleets: Team 3 & Team 4 Even/Odd (12 bots total).";
+            ? "8 friendly helper robots are playing together nicely!"
+            : "Active Converted Fleets: Team 3 & Team 4 Even/Odd (8 bots total • 20m rest).";
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1261,12 +1261,12 @@
         if (peaceText) {
           peaceText.innerHTML = isKidsMode
             ? '<span class="text-base">🎈</span> Converted to Even / Odd trading with friendly bounce-back shield!'
-            : '<span class="text-base">🛡️</span> Converted to Even / Odd strategy with 30m automated rotation.';
+            : '<span class="text-base">🛡️</span> Converted to Even / Odd strategy with 20m automated rotation.';
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = isKidsMode
             ? "Your converted Over / Under robots are trading Even / Odd happily!"
-            : "Over/Under Fleets converted to Even/Odd strategy (12 bots total).";
+            : "Over/Under Fleets converted to Even/Odd strategy (8 bots total • 20m rest).";
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1456,28 +1456,28 @@
       let html = "";
       fleetsToRender.forEach(fleet => {
         let friendlyFleetName = fleet.fleet_name;
-        let fleetSubtitle = "Even / Odd Digits Strategy • 30m Safe Rest";
+        let fleetSubtitle = "Even / Odd Digits Strategy • 20m Safe Rest";
         if (fleet.fleet_name.toLowerCase().includes("bybit")) {
           friendlyFleetName = "🚀 Team 1 (Bybit Long / Short)";
           fleetSubtitle = "Long/Short 2-Step Switch • 4 Bots • 5m Stagger • 20m Rest • $50 Daily Target";
         } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "🔥 Team 4 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from C/P";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from C/P";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "⭐ Team 2 (Even / Odd)";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
         } else if (fleet.fleet_name.includes("Fleet 1") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "🚀 Team 1 (Even / Odd)";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
         } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
           friendlyFleetName = "💎 Team 3 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from C/P";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from C/P";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
           friendlyFleetName = "✨ Team 2 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from O/U";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from O/U";
         } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
           friendlyFleetName = "🎯 Team 1 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from O/U";
+          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from O/U";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put"))) {
           friendlyFleetName = "🚀 Team 2 (Call / Put)";
           fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";
