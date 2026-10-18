@@ -305,10 +305,13 @@ def build_payload():
                 "bots": sorted(bots, key=lambda x: x["name"])
             })
 
-    # System totals and peaks
-    eo_bots = fleets_dict.get("Fleet 1 (Even/Odd)", []) + fleets_dict.get("Fleet 2 (Even/Odd)", []) + fleets_dict.get("Fleet 3 (Even/Odd)", [])
-    ou_bots = fleets_dict.get("Fleet 1 (Over/Under)", []) + fleets_dict.get("Fleet 2 (Over/Under)", []) + fleets_dict.get("Fleet 3 (Over/Under)", [])
-    cp_bots = fleets_dict.get("Fleet 1 (Call/Put)", []) + fleets_dict.get("Fleet 2 (Call/Put)", [])
+    # System totals and peaks (12 bots each)
+    eo_bots = fleets_dict.get("Fleet 1 (Even/Odd)", []) + fleets_dict.get("Fleet 2 (Even/Odd)", [])
+    ou_bots = fleets_dict.get("Fleet 1 (Over/Under)", []) + fleets_dict.get("Fleet 2 (Over/Under)", [])
+    # Converted Call/Put system holds Over/Under Team 3 & Even/Odd Team 3 (or native C/P if reverted)
+    cp_bots = fleets_dict.get("Fleet 3 (Over/Under)", []) + fleets_dict.get("Fleet 3 (Even/Odd)", [])
+    if not cp_bots:
+        cp_bots = fleets_dict.get("Fleet 1 (Call/Put)", []) + fleets_dict.get("Fleet 2 (Call/Put)", [])
 
     eo_profit = round(sum(b["profit"] for b in eo_bots), 2)
     ou_profit = round(sum(b["profit"] for b in ou_bots), 2)
