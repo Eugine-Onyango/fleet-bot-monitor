@@ -10,8 +10,8 @@ echo "       3. Over/Under Team 1   (6 Bots, 30m Rest, 50/50)"
 echo "       4. Over/Under Team 2   (6 Bots, 30m Rest, 50/50)"
 echo "       5. Call/Put Team 1     (6 Bots, 30m Rest, Rise/Fall)"
 echo "       6. Call/Put Team 2     (6 Bots, 30m Rest, Rise/Fall)"
-echo "   • Market: 1HZ10V Only (Fast 10s Index across all 6 Fleets)"
-echo "   • Schedule: 10:00:00 AM Kenyan Time (UTC+3) Synchronized Start"
+echo "   • Markets: 10 Multi-Markets (1HZ10V-100V, RDBULL, RDBEAR)"
+echo "   • Schedule: 08:00:00 AM Kenyan Time (UTC+3) Synchronized Start"
 echo "   • Coordination: Unified Master Trade Lock + 45s Offset"
 echo "   • Clean Start: All states & profits reset to \$0.00"
 echo "============================================================"
@@ -82,10 +82,10 @@ curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/requirements.txt" > "$C
 cd "$CP_BUILD"
 docker build -t headless-call-put-fleet .
 
-# 5. Calculate synchronization to 10:00:00 AM Kenyan Time (07:00:00 UTC)
+# 5. Calculate synchronization to 08:00:00 AM Kenyan Time (05:00:00 UTC)
 NOW_EPOCH=$(date -u +%s)
 TARGET_DATE=$(date -u +%Y-%m-%d)
-TARGET_EPOCH=$(date -u -d "$TARGET_DATE 07:00:00" +%s 2>/dev/null || python3 -c "import datetime; now=datetime.datetime.now(datetime.timezone.utc); target=datetime.datetime(now.year, now.month, now.day, 7, 0, 0, tzinfo=datetime.timezone.utc); print(int(target.timestamp()))")
+TARGET_EPOCH=$(date -u -d "$TARGET_DATE 05:00:00" +%s 2>/dev/null || python3 -c "import datetime; now=datetime.datetime.now(datetime.timezone.utc); target=datetime.datetime(now.year, now.month, now.day, 5, 0, 0, tzinfo=datetime.timezone.utc); print(int(target.timestamp()))")
 
 WAIT_SECS=$(( TARGET_EPOCH - NOW_EPOCH ))
 if [ $WAIT_SECS -lt 0 ]; then
@@ -95,7 +95,7 @@ fi
 MINS_REMAINING=$(( WAIT_SECS / 60 ))
 SECS_REMAINING=$(( WAIT_SECS % 60 ))
 echo "============================================================"
-echo "⏰ Synchronizing to 10:00:00 AM Kenyan Time (07:00:00 UTC)"
+echo "⏰ Synchronizing to 08:00:00 AM Kenyan Time (05:00:00 UTC)"
 echo "⏳ First trade executes in: ${MINS_REMAINING}m ${SECS_REMAINING}s ($WAIT_SECS seconds)"
 echo "============================================================"
 
@@ -219,7 +219,7 @@ echo "🎉 ALL 6 FLEETS DEPLOYED WITH FRESH CLEAN START!"
 echo "   • Total Bots: 36 Bots Active (6 Fleets × 6 Bots, 30m Rest)"
 echo "   • Master Trade Lock: /root/shared_master_trade_lock (0 collisions)"
 echo "   • Fleets Offset: 45s stagger gap between fleet cycles"
-echo "   • Market: 1HZ10V Fast 10s Index across all 6 fleets"
+echo "   • Markets: 10 Multi-Markets across all bots"
 echo "   • Dashboard Live at: https://fleet-bot-monitor.vercel.app"
 echo "============================================================"
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.RunningFor}}"
