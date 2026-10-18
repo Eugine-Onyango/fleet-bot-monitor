@@ -51,7 +51,7 @@ def get_containers():
         if len(parts) >= 3:
             name, status_str, state = parts[0], parts[1], parts[2]
             # Match our bot prefixes
-            if any(k in name for k in ["even-odd", "over-under", "call-put", "millipede"]):
+            if any(k in name for k in ["even-odd", "over-under", "call-put", "millipede", "bybit"]):
                 containers.append({"name": name, "status": status_str, "state": state})
     return containers
 
@@ -63,7 +63,8 @@ def get_simplified_logs(container_name, lines=25):
     keep_keywords = [
         "win", "loss", "profit", "stake", "contract", "bought", "purchased",
         "proposal", "balance", "cycle", "cooldown", "payout", "error", "starting",
-        "waiting", "stagger", "delay", "even", "odd", "over", "under", "call", "put", "rise", "fall", "trend", "queue", "lock"
+        "waiting", "stagger", "delay", "even", "odd", "over", "under", "call", "put",
+        "rise", "fall", "trend", "queue", "lock", "long", "short", "bybit", "placing", "settled", "pnl"
     ]
     
     for line in raw_logs.splitlines():
@@ -93,6 +94,7 @@ def get_bot_state(name):
     # Method 2: Fallback to all standard paths
     num = name.split("-")[-1]
     possible_paths = [
+        f"/root/bybit_fleet_bot_{num}/state.json",
         f"/root/even_odd_fleet3_bot_{num}/state.json",
         f"/root/over_under_fleet3_bot_{num}/state.json",
         f"/root/call_put_fleet_bot_{num}/state.json",
@@ -141,7 +143,7 @@ def build_payload():
     containers = get_containers()
     peaks = load_peaks()
     if "systems" not in peaks:
-        peaks["systems"] = {"eo": 0.0, "ou": 0.0, "cp": 0.0}
+        peaks["systems"] = {"eo": 0.0, "ou": 0.0, "cp": 0.0, "bybit": 0.0}
     if "fleets" not in peaks:
         peaks["fleets"] = {}
     if "bots" not in peaks:
@@ -156,6 +158,7 @@ def build_payload():
         "Fleet 3 (Over/Under)": [],
         "Fleet 1 (Call/Put)": [],
         "Fleet 2 (Call/Put)": [],
+        "Fleet 1 (Bybit)": [],
         "Other Bots": []
     }
     
@@ -174,12 +177,13 @@ def build_payload():
         logs = get_simplified_logs(name)
         uptime_str, uptime_sec = get_container_uptime(name)
 
+        default_stake = 15.0 if "bybit" in name else 0.35
         bot_profit = 0.0
         wins = 0
         losses = 0
-        current_stake = 0.0
+        current_stake = default_stake
         consecutive_losses = 0
-        max_stake = 0.35
+        max_stake = default_stake
         max_stake_market = ""
         current_market = ""
 
@@ -187,11 +191,11 @@ def build_payload():
             bot_profit = float(state_data.get("total_profit", state_data.get("profit", 0.0)))
             wins = int(state_data.get("wins", 0))
             losses = int(state_data.get("losses", 0))
-            current_stake = float(state_data.get("current_stake", state_data.get("stake", 0.0)))
-            consecutive_losses = int(state_data.get("consecutive_losses", 0))
-            max_stake = float(state_data.get("max_stake", state_data.get("peak_stake", 0.35)))
+            current_stake = float(state_data.get("current_stake", state_data.get("cycle_stake", state_data.get("stake", default_stake))))
+            consecutive_losses = int(state_data.get("consecutive_losses", state_data.get("consecutive_cycle_losses", 0)))
+            max_stake = float(state_data.get("max_stake", state_data.get("peak_stake", default_stake)))
             max_stake_market = state_data.get("max_stake_market", "")
-            current_market = state_data.get("current_market", "")
+            current_market = state_data.get("current_market", "") or ""
 
         bot_profit_val = round(bot_profit, 2)
         if (wins + losses) == 0:
@@ -226,7 +230,9 @@ def build_payload():
         }
 
         # Categorize into distinct fleets
-        if "even-odd" in name:
+        if "bybit" in name:
+            fleets_dict["Fleet 1 (Bybit)"].append(bot_info)
+        elif "even-odd" in name:
             if "fleet3" in name:
                 fleets_dict["Fleet 3 (Even/Odd)"].append(bot_info)
             elif "fleet2" in name:
@@ -305,21 +311,24 @@ def build_payload():
                 "bots": sorted(bots, key=lambda x: x["name"])
             })
 
-    # System totals and peaks (12 bots each)
+    # System totals and peaks
     eo_bots = fleets_dict.get("Fleet 1 (Even/Odd)", []) + fleets_dict.get("Fleet 2 (Even/Odd)", [])
     ou_bots = fleets_dict.get("Fleet 1 (Over/Under)", []) + fleets_dict.get("Fleet 2 (Over/Under)", [])
     # Converted Call/Put system holds Over/Under Team 3 & Even/Odd Team 3 (or native C/P if reverted)
     cp_bots = fleets_dict.get("Fleet 3 (Over/Under)", []) + fleets_dict.get("Fleet 3 (Even/Odd)", [])
     if not cp_bots:
         cp_bots = fleets_dict.get("Fleet 1 (Call/Put)", []) + fleets_dict.get("Fleet 2 (Call/Put)", [])
+    bybit_bots = fleets_dict.get("Fleet 1 (Bybit)", [])
 
     eo_profit = round(sum(b["profit"] for b in eo_bots), 2)
     ou_profit = round(sum(b["profit"] for b in ou_bots), 2)
     cp_profit = round(sum(b["profit"] for b in cp_bots), 2)
+    bybit_profit = round(sum(b["profit"] for b in bybit_bots), 2)
 
     eo_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in eo_bots)
     ou_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in ou_bots)
     cp_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in cp_bots)
+    bybit_trades = sum(b.get("wins", 0) + b.get("losses", 0) for b in bybit_bots)
 
     if eo_trades == 0:
         peaks["systems"]["eo"] = 0.0
@@ -335,6 +344,11 @@ def build_payload():
         peaks["systems"]["cp"] = 0.0
     else:
         peaks["systems"]["cp"] = max(peaks["systems"].get("cp", 0.0), cp_profit)
+
+    if bybit_trades == 0:
+        peaks["systems"]["bybit"] = 0.0
+    else:
+        peaks["systems"]["bybit"] = max(peaks["systems"].get("bybit", 0.0), bybit_profit)
 
     total_trades = total_wins + total_losses
     win_rate = round((total_wins / total_trades * 100), 1) if total_trades > 0 else 0.0
@@ -359,12 +373,14 @@ def build_payload():
         "system_peak_profits": {
             "eo": peaks["systems"]["eo"],
             "ou": peaks["systems"]["ou"],
-            "cp": peaks["systems"]["cp"]
+            "cp": peaks["systems"]["cp"],
+            "bybit": peaks["systems"]["bybit"]
         },
         "system_profit_drawdowns": {
             "eo": max(0.0, round(peaks["systems"]["eo"] - eo_profit, 2)),
             "ou": max(0.0, round(peaks["systems"]["ou"] - ou_profit, 2)),
-            "cp": max(0.0, round(peaks["systems"]["cp"] - cp_profit, 2))
+            "cp": max(0.0, round(peaks["systems"]["cp"] - cp_profit, 2)),
+            "bybit": max(0.0, round(peaks["systems"]["bybit"] - bybit_profit, 2))
         },
         "total_wins": total_wins,
         "total_losses": total_losses,

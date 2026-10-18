@@ -194,8 +194,8 @@
   <!-- Main Content -->
   <main class="max-w-3xl mx-auto px-4 py-5 w-full flex-1 space-y-4">
 
-    <!-- Dedicated System Switcher (Even/Odd vs Over/Under vs Call/Put) -->
-    <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm flex items-center gap-1.5">
+    <!-- Dedicated System Switcher (Even/Odd vs Over/Under vs Call/Put vs Bybit) -->
+    <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 sm:flex items-center gap-1.5">
       <button onclick="switchSystem('eo')" id="sysBtn-eo" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
         <span class="text-base">🎲</span>
         <span class="truncate">Even / Odd</span>
@@ -210,6 +210,11 @@
         <span class="text-base">⚡</span>
         <span class="truncate">Call / Put (Converted)</span>
         <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">12</span>
+      </button>
+      <button onclick="switchSystem('bybit')" id="sysBtn-bybit" class="flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
+        <span class="text-base">🚀</span>
+        <span class="truncate">Bybit Fleet</span>
+        <span id="sysCount-bybit" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold">4</span>
       </button>
     </div>
 
@@ -339,11 +344,13 @@
     let guiMode = localStorage.getItem("fleet_gui_mode") || (localStorage.getItem("fleet_simple_mode") === "false" ? "tech" : "simple");
     let isSimpleMode = guiMode !== "tech";
     let currentTheme = localStorage.getItem("fleet_theme") || "light"; // Default cheerful light mode
-    let currentSystem = (window.location.hash.includes("call-put") || window.location.hash.includes("cp"))
-      ? "cp"
-      : (window.location.hash.includes("over-under") || window.location.hash.includes("ou")) 
-        ? "ou" 
-        : (localStorage.getItem("fleet_active_system") || "eo");
+    let currentSystem = window.location.hash.includes("bybit")
+      ? "bybit"
+      : (window.location.hash.includes("call-put") || window.location.hash.includes("cp"))
+        ? "cp"
+        : (window.location.hash.includes("over-under") || window.location.hash.includes("ou")) 
+          ? "ou" 
+          : (localStorage.getItem("fleet_active_system") || "eo");
     let currentFleetTab = localStorage.getItem("active_fleet_tab") || "all";
 
     function applyTheme() {
@@ -419,7 +426,7 @@
     function switchSystem(sys) {
       currentSystem = sys;
       localStorage.setItem("fleet_active_system", sys);
-      const hash = sys === "cp" ? "#call-put" : (sys === "ou" ? "#over-under" : "#even-odd");
+      const hash = sys === "bybit" ? "#bybit" : (sys === "cp" ? "#call-put" : (sys === "ou" ? "#over-under" : "#even-odd"));
       if (history.pushState) {
         history.pushState(null, null, hash);
       } else {
@@ -436,9 +443,11 @@
       const btnEO = document.getElementById("sysBtn-eo");
       const btnOU = document.getElementById("sysBtn-ou");
       const btnCP = document.getElementById("sysBtn-cp");
+      const btnBybit = document.getElementById("sysBtn-bybit");
       const countEO = document.getElementById("sysCount-eo");
       const countOU = document.getElementById("sysCount-ou");
       const countCP = document.getElementById("sysCount-cp");
+      const countBybit = document.getElementById("sysCount-bybit");
 
       const inactiveBtn = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60";
       const inactiveBadge = "px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold";
@@ -447,11 +456,16 @@
       if (btnEO) btnEO.className = inactiveBtn;
       if (btnOU) btnOU.className = inactiveBtn;
       if (btnCP) btnCP.className = inactiveBtn;
+      if (btnBybit) btnBybit.className = inactiveBtn;
       if (countEO) countEO.className = inactiveBadge;
       if (countOU) countOU.className = inactiveBadge;
       if (countCP) countCP.className = inactiveBadge;
+      if (countBybit) countBybit.className = inactiveBadge;
 
-      if (currentSystem === "cp") {
+      if (currentSystem === "bybit") {
+        if (btnBybit) btnBybit.className = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-sky-600 text-white shadow-md shadow-sky-500/20";
+        if (countBybit) countBybit.className = activeBadge;
+      } else if (currentSystem === "cp") {
         if (btnCP) btnCP.className = "flex-1 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-amber-600 text-white shadow-md shadow-amber-500/20";
         if (countCP) countCP.className = activeBadge;
       } else if (currentSystem === "ou") {
@@ -470,8 +484,13 @@
         const isFleet3 = nameLower.includes("fleet 3") || nameLower.includes("team 3");
         const isOU = nameLower.includes("over-under") || nameLower.includes("over/under");
         const isCP = nameLower.includes("call-put") || nameLower.includes("call/put");
+        const isBybit = nameLower.includes("bybit");
 
-        if (system === "cp") {
+        if (system === "bybit") {
+          if (isBybit) {
+            targetBots = targetBots.concat(f.bots || []);
+          }
+        } else if (system === "cp") {
           // Converted C/P holds Fleet 3 (or native Call/Put if reverted)
           if (isFleet3 || isCP) {
             targetBots = targetBots.concat(f.bots || []);
@@ -481,7 +500,7 @@
             targetBots = targetBots.concat(f.bots || []);
           }
         } else if (system === "eo") {
-          if (!isOU && !isCP && !isFleet3) {
+          if (!isOU && !isCP && !isFleet3 && !isBybit) {
             targetBots = targetBots.concat(f.bots || []);
           }
         }
@@ -491,7 +510,7 @@
       let totalWins = 0;
       let totalLosses = 0;
       let activeCount = 0;
-      let peakStake = 0.35;
+      let peakStake = system === "bybit" ? 15.0 : 0.35;
       let peakMarket = "";
       let longestUptimeSec = 0;
 
@@ -884,7 +903,10 @@
     }
 
     function friendlyBotName(rawName) {
-      if (rawName.includes("even-odd-fleet3")) {
+      if (rawName.includes("bybit")) {
+        const num = rawName.split("-").pop();
+        return `Bybit Fleet • Helper #${num}`;
+      } else if (rawName.includes("even-odd-fleet3")) {
         const num = rawName.split("-").pop();
         return `Team 4 • Helper #${num}`;
       } else if (rawName.includes("over-under-fleet3")) {
@@ -1133,18 +1155,22 @@
       const eoMetrics = calculateSystemMetrics(data, "eo");
       const ouMetrics = calculateSystemMetrics(data, "ou");
       const cpMetrics = calculateSystemMetrics(data, "cp");
+      const bybitMetrics = calculateSystemMetrics(data, "bybit");
 
       const sysCountEO = document.getElementById("sysCount-eo");
       const sysCountOU = document.getElementById("sysCount-ou");
       const sysCountCP = document.getElementById("sysCount-cp");
+      const sysCountBybit = document.getElementById("sysCount-bybit");
       if (sysCountEO) sysCountEO.innerText = `${eoMetrics.totalBots}`;
       if (sysCountOU) sysCountOU.innerText = `${ouMetrics.totalBots}`;
       if (sysCountCP) sysCountCP.innerText = cpMetrics.totalBots > 0 ? `${cpMetrics.totalBots}` : "Dormant";
+      if (sysCountBybit) sysCountBybit.innerText = bybitMetrics.totalBots > 0 ? `${bybitMetrics.totalBots}` : "4";
       updateSystemSwitcherUI();
 
       // 2. Select metrics for active system
       let activeMetrics = eoMetrics;
-      if (currentSystem === "cp") activeMetrics = cpMetrics;
+      if (currentSystem === "bybit") activeMetrics = bybitMetrics;
+      else if (currentSystem === "cp") activeMetrics = cpMetrics;
       else if (currentSystem === "ou") activeMetrics = ouMetrics;
 
       // 3. Update Hero Card
@@ -1152,11 +1178,13 @@
       const isProfitable = activeMetrics.totalProfit >= 0;
       profitEl.innerText = `${isProfitable ? '+' : ''}$${activeMetrics.totalProfit.toFixed(2)}`;
       profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${
-        currentSystem === "cp"
-          ? (isProfitable ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400')
-          : currentSystem === "ou" 
-            ? (isProfitable ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400')
-            : (isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
+        currentSystem === "bybit"
+          ? (isProfitable ? 'text-sky-600 dark:text-sky-400' : 'text-rose-600 dark:text-rose-400')
+          : currentSystem === "cp"
+            ? (isProfitable ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400')
+            : currentSystem === "ou" 
+              ? (isProfitable ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400')
+              : (isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
       }`;
 
       const isKidsMode = guiMode === "kids";
@@ -1177,7 +1205,27 @@
       if (lblPeakProfit) lblPeakProfit.innerText = isKidsMode ? "Gold Trophy 🏆" : (isTechMode ? "PEAK PROFIT" : "Peak Profit");
       if (lblPeakStake) lblPeakStake.innerText = isKidsMode ? "Super Power ⚡" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
 
-      if (currentSystem === "cp") {
+      if (currentSystem === "bybit") {
+        if (heroTag) {
+          heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-300 border border-sky-300 dark:border-sky-800 mb-2.5";
+          heroTag.innerHTML = isKidsMode ? "🚀 Bybit Rocket Playground" : (isTechMode ? "🚀 BYBIT LONG/SHORT TELEMETRY" : "🚀 Bybit Long/Short Fleet Profit");
+        }
+        if (peaceText) {
+          peaceText.innerHTML = isKidsMode
+            ? '<span class="text-base">🎈</span> 4 rocket robots trading Long & Short every 5m with $50 daily goal!'
+            : '<span class="text-base">🛡️</span> 4 Bybit Bots • 5m Stagger • 20m Cooldown • $50/Day Target.';
+        }
+        if (comfortingNotice) {
+          comfortingNotice.innerText = isKidsMode
+            ? "Your 4 Bybit rocket robots are trading crypto safely in Demo mode!"
+            : "Active Bybit Fleet: 4 Bots (Long/Short 2-Step Switch • 20m Rest • $50 Daily TP).";
+        }
+        if (heroContainer) {
+          heroContainer.className = isKidsMode
+            ? "bg-gradient-to-br from-sky-50 via-cyan-50 to-indigo-50 dark:from-[#0c243c] dark:via-[#1e293b] dark:to-[#0f172a] border-4 border-sky-300 dark:border-sky-700 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all"
+            : "bg-gradient-to-br from-white via-sky-50/50 to-cyan-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#0c243c] border-2 border-sky-200 dark:border-sky-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
+        }
+      } else if (currentSystem === "cp") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 mb-2.5";
           heroTag.innerHTML = isKidsMode ? "🍭 Call / Put (Converted) Playground" : (isTechMode ? "⚡ CALL / PUT (CONVERTED) TELEMETRY" : "⚡ Call / Put (Converted) Fleet Profit");
@@ -1293,7 +1341,13 @@
       // 4. Sub-tabs bar rendering
       const tabsBar = document.getElementById("fleetTabsBar");
       if (tabsBar) {
-        if (currentSystem === "cp") {
+        if (currentSystem === "bybit") {
+          tabsBar.innerHTML = `
+            <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap bg-sky-600 text-white shadow-md shadow-sky-500/20">
+              <span>🚀</span> All Bybit Long/Short Bots <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${bybitMetrics.totalBots}</span>
+            </button>
+          `;
+        } else if (currentSystem === "cp") {
           tabsBar.innerHTML = `
             <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'all' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
               <span>🌟</span> All Converted (C/P) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${cpMetrics.totalBots}</span>
@@ -1346,7 +1400,12 @@
       // Filter fleets based on active system and sub-tab
       let fleetsToRender = [];
       let sysFleets = [];
-      if (currentSystem === "cp") {
+      if (currentSystem === "bybit") {
+        sysFleets = (data.fleets || []).filter(f => {
+          const nl = f.fleet_name.toLowerCase();
+          return nl.includes("bybit");
+        });
+      } else if (currentSystem === "cp") {
         sysFleets = (data.fleets || []).filter(f => {
           const nl = f.fleet_name.toLowerCase();
           return nl.includes("call-put") || nl.includes("call/put") || nl.includes("fleet 3") || nl.includes("team 3");
@@ -1359,7 +1418,7 @@
       } else {
         sysFleets = (data.fleets || []).filter(f => {
           const nl = f.fleet_name.toLowerCase();
-          return !nl.includes("over-under") && !nl.includes("over/under") && !nl.includes("call-put") && !nl.includes("call/put") && !nl.includes("fleet 3") && !nl.includes("team 3");
+          return !nl.includes("over-under") && !nl.includes("over/under") && !nl.includes("call-put") && !nl.includes("call/put") && !nl.includes("fleet 3") && !nl.includes("team 3") && !nl.includes("bybit");
         });
       }
 
@@ -1388,7 +1447,10 @@
       fleetsToRender.forEach(fleet => {
         let friendlyFleetName = fleet.fleet_name;
         let fleetSubtitle = "Even / Odd Digits Strategy • 30m Safe Rest";
-        if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
+        if (fleet.fleet_name.toLowerCase().includes("bybit")) {
+          friendlyFleetName = "🚀 Team 1 (Bybit Long / Short)";
+          fleetSubtitle = "Long/Short 2-Step Switch • 4 Bots • 5m Stagger • 20m Rest • $50 Daily Target";
+        } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
           friendlyFleetName = "🔥 Team 4 (Converted) • Even / Odd";
           fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 30m Rest • Converted from C/P";
         } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
@@ -1693,11 +1755,13 @@
     updateSystemSwitcherUI();
     window.addEventListener("hashchange", () => {
       const hash = window.location.hash.toLowerCase();
-      currentSystem = (hash.includes("call-put") || hash.includes("cp"))
-        ? "cp"
-        : (hash.includes("over-under") || hash.includes("ou"))
-          ? "ou"
-          : "eo";
+      currentSystem = hash.includes("bybit")
+        ? "bybit"
+        : (hash.includes("call-put") || hash.includes("cp"))
+          ? "cp"
+          : (hash.includes("over-under") || hash.includes("ou"))
+            ? "ou"
+            : "eo";
       localStorage.setItem("fleet_active_system", currentSystem);
       currentFleetTab = "all";
       updateSystemSwitcherUI();

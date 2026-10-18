@@ -64,11 +64,30 @@ for i in 1 2 3 4; do
     headless-bybit-fleet
 done
 
+# 6. Update live monitor pusher so Bybit Fleet tab shows on the Webapp (preserving existing token!)
+echo "🔄 Updating live monitor pusher with Bybit Fleet detection..."
+EXISTING_TOKEN=$(grep -oP 'GITHUB_TOKEN = os\.getenv\("GITHUB_TOKEN", "\K[^"]+' /root/fleet_monitor_pusher.py 2>/dev/null || true)
+EXISTING_GIST=$(grep -oP 'GIST_ID = os\.getenv\("GIST_ID", "\K[^"]+' /root/fleet_monitor_pusher.py 2>/dev/null || true)
+pkill -f fleet_monitor_pusher.py 2>/dev/null || true
+curl -s -H "Cache-Control: no-cache" "https://raw.githubusercontent.com/Eugine-Onyango/fleet-bot-monitor/main/fleet_monitor_pusher.py" > /root/fleet_monitor_pusher.py
+if [ -n "$EXISTING_TOKEN" ] && [ "$EXISTING_TOKEN" != "YOUR_GITHUB_TOKEN_HERE" ]; then
+  sed -i "s/YOUR_GITHUB_TOKEN_HERE/$EXISTING_TOKEN/g" /root/fleet_monitor_pusher.py
+fi
+if [ -n "$EXISTING_GIST" ]; then
+  sed -i "s/e89e6db2da1433214922b69f101e15aa/$EXISTING_GIST/g" /root/fleet_monitor_pusher.py
+fi
+if [ -f /root/run_pusher.sh ]; then
+  /root/run_pusher.sh
+else
+  nohup python3 -u /root/fleet_monitor_pusher.py > /root/pusher.log 2>&1 &
+fi
+
 echo ""
 echo "============================================================"
 echo "🎉 BYBIT FLEET DEPLOYMENT SUCCESSFUL!"
 echo "   • 4 Bybit Fleet bots running with 20-min cooldown (1 trade / 5m)!"
 echo "   • Daily Take Profit target: \$50.00"
 echo "   • All Deriv Binary fleets remain 100% untouched!"
+echo "   • Live status pushing to the new 🚀 Bybit Fleet tab on your Webapp!"
 echo "============================================================"
 docker ps --filter "name=my-bybit-fleet-bot"
