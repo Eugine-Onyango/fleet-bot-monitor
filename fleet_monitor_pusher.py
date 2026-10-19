@@ -33,33 +33,117 @@ def save_peaks(peaks):
     except Exception:
         pass
 
-def run_cmd(cmd):
+def run_cmd(cmd, timeout_sec=20):
     try:
-        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout_sec)
         return res.stdout.strip()
     except Exception as e:
         return ""
 
+def resolve_bot_dir(name):
+    num = name.split("-")[-1]
+    if name.startswith("acc2-"):
+        if "even-odd-fleet3" in name: return f"/root/acc2_even_odd_fleet3_bot_{num}"
+        if "even-odd-fleet2" in name: return f"/root/acc2_even_odd_fleet2_bot_{num}"
+        if "even-odd-bot" in name: return f"/root/acc2_even_odd_millipede_bot_{num}"
+        if "over-under-fleet3" in name: return f"/root/acc2_over_under_fleet3_bot_{num}"
+        if "over-under-fleet2" in name: return f"/root/acc2_over_under_fleet2_bot_{num}"
+        if "over-under-fleet" in name: return f"/root/acc2_over_under_fleet_bot_{num}"
+    elif name.startswith("acc3-"):
+        if "even-odd-fleet3" in name: return f"/root/acc3_even_odd_fleet3_bot_{num}"
+        if "even-odd-fleet2" in name: return f"/root/acc3_even_odd_fleet2_bot_{num}"
+        if "even-odd-bot" in name: return f"/root/acc3_even_odd_millipede_bot_{num}"
+        if "over-under-fleet3" in name: return f"/root/acc3_over_under_fleet3_bot_{num}"
+        if "over-under-fleet2" in name: return f"/root/acc3_over_under_fleet2_bot_{num}"
+        if "over-under-fleet" in name: return f"/root/acc3_over_under_fleet_bot_{num}"
+    else:
+        if "bybit" in name: return f"/root/bybit_fleet_bot_{num}"
+        if "even-odd-fleet3" in name: return f"/root/even_odd_fleet3_bot_{num}"
+        if "even-odd-fleet2" in name: return f"/root/even_odd_fleet2_bot_{num}"
+        if "even-odd-bot" in name: return f"/root/even_odd_millipede_bot_{num}"
+        if "over-under-fleet3" in name: return f"/root/over_under_fleet3_bot_{num}"
+        if "over-under-fleet2" in name: return f"/root/over_under_fleet2_bot_{num}"
+        if "over-under-fleet" in name: return f"/root/over_under_fleet_bot_{num}"
+        if "call-put-fleet2" in name: return f"/root/call_put_fleet2_bot_{num}"
+        if "call-put-fleet" in name: return f"/root/call_put_fleet_bot_{num}"
+    return f"/root/{name.replace('-', '_')}"
+
 def get_containers():
-    # List all bot containers matching known fleets
-    out = run_cmd("docker ps -a --format '{{.Names}}|{{.Status}}|{{.State}}'")
     containers = []
+    seen_names = set()
+
+    # 1. List Docker containers (Account 1 & Bybit)
+    out = run_cmd("docker ps -a --format '{{.Names}}|{{.Status}}|{{.State}}'", timeout_sec=20)
     for line in out.splitlines():
         if not line.strip():
             continue
         parts = line.split("|")
         if len(parts) >= 3:
             name, status_str, state = parts[0], parts[1], parts[2]
-            # Match our bot prefixes
             if any(k in name for k in ["even-odd", "over-under", "call-put", "millipede", "bybit"]):
-                containers.append({"name": name, "status": status_str, "state": state})
+                containers.append({
+                    "name": name,
+                    "status": status_str,
+                    "state": state,
+                    "is_native": False,
+                    "dir": resolve_bot_dir(name)
+                })
+                seen_names.add(name)
+
+    # 2. Discover lightweight native bots (Account 2 & Account 3) from /root/acc2_* and /root/acc3_*
+    if os.path.exists("/root"):
+        try:
+            for entry in sorted(os.listdir("/root")):
+                if entry.startswith("acc2_") or entry.startswith("acc3_"):
+                    bot_dir = os.path.join("/root", entry)
+                    meta_path = os.path.join(bot_dir, "bot_meta.json")
+                    if os.path.isdir(bot_dir) and os.path.exists(meta_path):
+                        try:
+                            with open(meta_path, "r", encoding="utf-8") as f:
+                                meta = json.load(f)
+                            b_name = meta.get("name", "")
+                            if b_name and b_name not in seen_names:
+                                pid = meta.get("pid", 0)
+                                is_alive = bool(pid and os.path.exists(f"/proc/{pid}"))
+                                started_ts = float(meta.get("started_at", time.time()))
+                                elapsed = max(0, int(time.time() - started_ts))
+                                containers.append({
+                                    "name": b_name,
+                                    "status": f"Up {elapsed // 60} minutes",
+                                    "state": "running" if is_alive else "stopped",
+                                    "is_native": True,
+                                    "dir": bot_dir,
+                                    "started_at": started_ts
+                                })
+                                seen_names.add(b_name)
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
     return containers
 
-def get_simplified_logs(container_name, lines=25):
-    raw_logs = run_cmd(f"docker logs --tail {lines} {container_name} 2>&1")
+def get_simplified_logs(c_obj, lines=25):
+    container_name = c_obj["name"]
+    bot_dir = c_obj.get("dir") or resolve_bot_dir(container_name)
+    raw_logs = ""
+
+    # Fast path: read directly from bot.log if present (0ms, zero Docker load)
+    log_file = os.path.join(bot_dir, "bot.log")
+    if os.path.exists(log_file):
+        try:
+            with open(log_file, "rb") as f:
+                f.seek(0, os.SEEK_END)
+                size = f.tell()
+                f.seek(max(0, size - 8192), os.SEEK_SET)
+                raw_logs = f.read().decode("utf-8", errors="replace")
+        except Exception:
+            raw_logs = ""
+
+    if not raw_logs and not c_obj.get("is_native"):
+        raw_logs = run_cmd(f"docker logs --tail {lines} {container_name} 2>&1", timeout_sec=8)
+
     simplified = []
-    
-    # Filter keywords to keep only actionable/meaningful trade log lines
     keep_keywords = [
         "win", "loss", "profit", "stake", "contract", "bought", "purchased",
         "proposal", "balance", "cycle", "cooldown", "payout", "error", "starting",
@@ -67,31 +151,33 @@ def get_simplified_logs(container_name, lines=25):
         "rise", "fall", "trend", "queue", "lock", "long", "short", "bybit", "placing", "settled", "pnl", "switch"
     ]
     
-    for line in raw_logs.splitlines():
+    all_lines = raw_logs.splitlines()[-lines:]
+    for line in all_lines:
         line_clean = line.strip()
         if not line_clean:
             continue
-        # Check if line contains any interesting trade keyword
         lower_line = line_clean.lower()
-        if any(kw in lower_line for kw in keep_keywords) or len(raw_logs.splitlines()) <= 8:
-            # Clean up escape codes / messy symbols
+        if any(kw in lower_line for kw in keep_keywords) or len(all_lines) <= 8:
             if len(line_clean) > 160:
                 line_clean = line_clean[:157] + "..."
             simplified.append(line_clean)
             
     return simplified[-15:] if simplified else ["No recent trade events recorded yet."]
 
-def get_bot_state(name):
-    # Method 1: Ask Docker for the exact /app mounted host folder
-    mount_src = run_cmd(f"docker inspect -f '{{{{range .Mounts}}}}{{{{if eq .Destination \"/app\"}}}}{{{{.Source}}}}{{{{end}}}}{{{{end}}}}' {name}")
-    if mount_src and os.path.exists(f"{mount_src}/state.json"):
+def get_bot_state(c_obj):
+    name = c_obj["name"]
+    bot_dir = c_obj.get("dir") or resolve_bot_dir(name)
+
+    # Fast path: check mapped directory directly (0ms, no docker inspect needed!)
+    direct_state = os.path.join(bot_dir, "state.json")
+    if os.path.exists(direct_state):
         try:
-            with open(f"{mount_src}/state.json", "r", encoding="utf-8") as f:
+            with open(direct_state, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
 
-    # Method 2: Fallback to all standard paths
+    # Fallback paths
     num = name.split("-")[-1]
     possible_paths = [
         f"/root/{name.replace('-', '_')}/state.json",
@@ -118,27 +204,39 @@ def get_bot_state(name):
                 pass
     return None
 
-def get_container_uptime(container_name):
-    started_raw = run_cmd(f"docker inspect -f '{{{{.State.StartedAt}}}}' {container_name}")
-    if not started_raw or "0001-01-01" in started_raw:
-        return "0m", 0
-    try:
-        clean_str = started_raw[:26] + "+00:00" if "T" in started_raw else started_raw
-        started_dt = datetime.fromisoformat(clean_str)
-        now_dt = datetime.now(timezone.utc)
-        elapsed_sec = max(0, int((now_dt - started_dt).total_seconds()))
-        days = elapsed_sec // 86400
-        hours = (elapsed_sec % 86400) // 3600
-        mins = (elapsed_sec % 3600) // 60
-        if days > 0:
-            short_str = f"{days}d {hours}h {mins}m"
-        elif hours > 0:
-            short_str = f"{hours}h {mins}m"
+def get_container_uptime(c_obj):
+    # 1. If native bot with started_at timestamp, compute exact uptime in 0ms
+    if c_obj.get("started_at"):
+        elapsed_sec = max(0, int(time.time() - float(c_obj["started_at"])))
+    else:
+        # 2. Parse Docker status string (e.g. "Up 4 hours", "Up 25 minutes", "Up 2 days") in 0ms
+        status_str = c_obj.get("status", "").lower()
+        elapsed_sec = 0
+        import re
+        if "about an hour" in status_str:
+            elapsed_sec = 3600
+        elif "about a minute" in status_str:
+            elapsed_sec = 60
         else:
-            short_str = f"{mins}m"
-        return short_str, elapsed_sec
-    except Exception:
-        return "0m", 0
+            m_days = re.search(r'(\d+)\s*day', status_str)
+            m_hrs = re.search(r'(\d+)\s*hour', status_str)
+            m_mins = re.search(r'(\d+)\s*minute', status_str)
+            m_secs = re.search(r'(\d+)\s*second', status_str)
+            if m_days: elapsed_sec += int(m_days.group(1)) * 86400
+            if m_hrs: elapsed_sec += int(m_hrs.group(1)) * 3600
+            if m_mins: elapsed_sec += int(m_mins.group(1)) * 60
+            if m_secs: elapsed_sec += int(m_secs.group(1))
+
+    days = elapsed_sec // 86400
+    hours = (elapsed_sec % 86400) // 3600
+    mins = (elapsed_sec % 3600) // 60
+    if days > 0:
+        short_str = f"{days}d {hours}h {mins}m"
+    elif hours > 0:
+        short_str = f"{hours}h {mins}m"
+    else:
+        short_str = f"{mins}m"
+    return short_str, elapsed_sec
 
 def build_payload():
     containers = get_containers()
@@ -187,9 +285,9 @@ def build_payload():
         else:
             account = "acc1"
 
-        state_data = get_bot_state(name)
-        logs = get_simplified_logs(name)
-        uptime_str, uptime_sec = get_container_uptime(name)
+        state_data = get_bot_state(c)
+        logs = get_simplified_logs(c)
+        uptime_str, uptime_sec = get_container_uptime(c)
 
         default_stake = 0.35
         bot_profit = 0.0
@@ -483,6 +581,10 @@ def main():
         try:
             now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             payload = build_payload()
+            if payload.get("total_containers", 0) == 0:
+                print(f"[{now_str}] ⚠️ 0 containers detected (Docker busy?), skipping Gist overwrite.")
+                time.sleep(UPDATE_INTERVAL_SECONDS)
+                continue
             success = push_to_gist(payload)
             if success:
                 print(f"[{now_str}] ✅ Pushed fleet status: {payload['total_active_bots']} bots active | P/L: ${payload['total_profit']} | {payload['win_rate']}% WR")

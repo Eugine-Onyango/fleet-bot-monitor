@@ -15,7 +15,7 @@ sys.stderr.reconfigure(encoding='utf-8')
 CONFIG_FILE = "config.json"
 STATE_FILE = "state.json"
 
-LOCK_DIR = "/app/lock"
+LOCK_DIR = os.getenv("LOCK_DIR", "/app/lock")
 LOCK_PATH = os.path.join(LOCK_DIR, "trade_lock")
 INFO_FILE = os.path.join(LOCK_DIR, "lock_info.json")
 BOT_NAME = os.getenv("BOT_NAME", "my-call-put-fleet-bot-1")
