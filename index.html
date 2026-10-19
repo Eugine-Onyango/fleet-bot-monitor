@@ -202,21 +202,68 @@
   <!-- Main Content -->
   <main class="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-5 w-full flex-1 space-y-4">
 
+    <!-- Multi-Account Switcher (Account 1 Lock Recovery vs Account 2 E/O Switch vs Account 3 C/P Switch) -->
+    <div id="accountSwitcherBar" class="bg-white dark:bg-[#1e293b] p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="flex items-center justify-between px-1.5 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+        <span class="flex items-center gap-1.5">
+          <span>🔑</span>
+          <span>Deriv Account Switcher (Live Multi-Account Comparison)</span>
+        </span>
+        <span id="activeAccountBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+          DOT91203477 • Same-Market Recovery
+        </span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+        <button onclick="switchAccount('acc1')" id="accBtn-acc1" class="w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-sm flex-shrink-0">🔒</span>
+            <div class="text-left truncate">
+              <div class="truncate">Account 1 • E/O (Lock)</div>
+              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Same-Market Recovery • 24 Bots</div>
+            </div>
+          </div>
+          <span id="accProfit-acc1" class="px-2 py-0.5 rounded-lg text-[11px] bg-white/20 font-black flex-shrink-0">+$0.00</span>
+        </button>
+
+        <button onclick="switchAccount('acc2')" id="accBtn-acc2" class="w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-sm flex-shrink-0">🔄</span>
+            <div class="text-left truncate">
+              <div class="truncate">Account 2 • E/O (Switch)</div>
+              <div id="accSub-acc2" class="text-[10px] opacity-75 font-semibold truncate">Switch Market on Loss • 24 Bots</div>
+            </div>
+          </div>
+          <span id="accProfit-acc2" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
+        </button>
+
+        <button onclick="switchAccount('acc3')" id="accBtn-acc3" class="w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-sm flex-shrink-0">📈</span>
+            <div class="text-left truncate">
+              <div class="truncate">Account 3 • C/P (Switch)</div>
+              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Call/Put Market-Switch • 24 Bots</div>
+            </div>
+          </div>
+          <span id="accProfit-acc3" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Dedicated System Switcher (Even/Odd vs Over/Under vs Call/Put vs Bybit) -->
     <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 md:grid-cols-4 items-center gap-1.5">
       <button onclick="switchSystem('eo')" id="sysBtn-eo" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
         <span class="text-base flex-shrink-0">🎲</span>
-        <span class="truncate">Even / Odd</span>
+        <span id="sysLabel-eo" class="truncate">Even / Odd</span>
         <span id="sysCount-eo" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-white/25 font-bold flex-shrink-0">8</span>
       </button>
       <button onclick="switchSystem('ou')" id="sysBtn-ou" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base flex-shrink-0">🎯</span>
-        <span class="truncate"><span class="md:hidden lg:inline">Over / Under (Conv)</span><span class="hidden md:inline lg:hidden">O/U (Conv)</span></span>
+        <span id="sysLabel-ou" class="truncate"><span class="md:hidden lg:inline">Over / Under (Conv)</span><span class="hidden md:inline lg:hidden">O/U (Conv)</span></span>
         <span id="sysCount-ou" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">8</span>
       </button>
       <button onclick="switchSystem('cp')" id="sysBtn-cp" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
         <span class="text-base flex-shrink-0">⚡</span>
-        <span class="truncate"><span class="md:hidden lg:inline">Call / Put (Conv)</span><span class="hidden md:inline lg:hidden">C/P (Conv)</span></span>
+        <span id="sysLabel-cp" class="truncate"><span class="md:hidden lg:inline">Call / Put (Conv)</span><span class="hidden md:inline lg:hidden">C/P (Conv)</span></span>
         <span id="sysCount-cp" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">8</span>
       </button>
       <button onclick="switchSystem('bybit')" id="sysBtn-bybit" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
@@ -359,7 +406,107 @@
         : (window.location.hash.includes("over-under") || window.location.hash.includes("ou")) 
           ? "ou" 
           : (localStorage.getItem("fleet_active_system") || "eo");
+    let currentAccount = localStorage.getItem("fleet_active_account") || "acc1";
     let currentFleetTab = localStorage.getItem("active_fleet_tab") || "all";
+
+    function switchAccount(acc) {
+      currentAccount = acc;
+      localStorage.setItem("fleet_active_account", acc);
+      if (currentSystem === "bybit") {
+        currentSystem = "eo";
+        localStorage.setItem("fleet_active_system", "eo");
+      }
+      updateAccountSwitcherUI();
+      updateSystemSwitcherUI();
+      if (window.lastPayload) {
+        renderDashboard(window.lastPayload);
+      }
+    }
+
+    function updateAccountSwitcherUI(data) {
+      const btnAcc1 = document.getElementById("accBtn-acc1");
+      const btnAcc2 = document.getElementById("accBtn-acc2");
+      const btnAcc3 = document.getElementById("accBtn-acc3");
+      const profAcc1 = document.getElementById("accProfit-acc1");
+      const profAcc2 = document.getElementById("accProfit-acc2");
+      const profAcc3 = document.getElementById("accProfit-acc3");
+      const badge = document.getElementById("activeAccountBadge");
+
+      const inactiveBtn = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60";
+      const inactiveProf = "px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0";
+      const activeProf = "px-2 py-0.5 rounded-lg text-[11px] bg-white/25 font-black flex-shrink-0";
+
+      if (btnAcc1) btnAcc1.className = inactiveBtn;
+      if (btnAcc2) btnAcc2.className = inactiveBtn;
+      if (btnAcc3) btnAcc3.className = inactiveBtn;
+      if (profAcc1) profAcc1.className = inactiveProf;
+      if (profAcc2) profAcc2.className = inactiveProf;
+      if (profAcc3) profAcc3.className = inactiveProf;
+
+      if (currentAccount === "acc2") {
+        if (btnAcc2) btnAcc2.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-violet-600 text-white shadow-md shadow-violet-500/20";
+        if (profAcc2) profAcc2.className = activeProf;
+        if (badge) {
+          badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800";
+          badge.innerText = "DOT93845070 • Even/Odd Market-Switch Recovery";
+        }
+      } else if (currentAccount === "acc3") {
+        if (btnAcc3) btnAcc3.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-amber-600 text-white shadow-md shadow-amber-500/20";
+        if (profAcc3) profAcc3.className = activeProf;
+        if (badge) {
+          badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
+          badge.innerText = "DOT91362122 • Call/Put Market-Switch Recovery";
+        }
+      } else {
+        if (btnAcc1) btnAcc1.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-500/20";
+        if (profAcc1) profAcc1.className = activeProf;
+        if (badge) {
+          badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
+          badge.innerText = "DOT91203477 • Same-Market Lock Recovery";
+        }
+      }
+
+      // Update system button labels dynamically for Account 3 (which trades Call/Put on all 3 system tabs)
+      const sysLabelEO = document.getElementById("sysLabel-eo");
+      const sysLabelOU = document.getElementById("sysLabel-ou");
+      const sysLabelCP = document.getElementById("sysLabel-cp");
+      if (currentAccount === "acc3") {
+        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Call/Put (Grp 1)</span><span class="hidden md:inline lg:hidden">C/P (G1)</span>`;
+        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Call/Put (Grp 2)</span><span class="hidden md:inline lg:hidden">C/P (G2)</span>`;
+        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Call/Put (Grp 3)</span><span class="hidden md:inline lg:hidden">C/P (G3)</span>`;
+      } else {
+        if (sysLabelEO) sysLabelEO.innerText = "Even / Odd";
+        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Over / Under (Conv)</span><span class="hidden md:inline lg:hidden">O/U (Conv)</span>`;
+        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Call / Put (Conv)</span><span class="hidden md:inline lg:hidden">C/P (Conv)</span>`;
+      }
+
+      if (data && data.fleets) {
+        ["acc1", "acc2", "acc3"].forEach(accKey => {
+          let pSum = 0.0;
+          let bCount = 0;
+          (data.fleets || []).forEach(f => {
+            if (f.fleet_name.toLowerCase().includes("bybit")) return;
+            (f.bots || []).forEach(b => {
+              if ((b.account || "acc1") === accKey) {
+                pSum += (b.profit || 0.0);
+                bCount++;
+              }
+            });
+          });
+          const pRounded = Math.round(pSum * 100) / 100;
+          const pEl = document.getElementById(`accProfit-${accKey}`);
+          if (pEl) {
+            pEl.innerText = `${pRounded >= 0 ? '+' : ''}$${pRounded.toFixed(2)}`;
+          }
+          const subEl = document.getElementById(`accSub-${accKey}`);
+          if (subEl) {
+            if (accKey === "acc1") subEl.innerText = `Same-Market Lock • ${bCount || 24} Bots`;
+            else if (accKey === "acc2") subEl.innerText = `Market-Switch E/O • ${bCount || 24} Bots`;
+            else if (accKey === "acc3") subEl.innerText = `Market-Switch C/P • ${bCount || 24} Bots`;
+          }
+        });
+      }
+    }
 
     function applyTheme() {
       const html = document.documentElement;
@@ -485,7 +632,8 @@
       }
     }
 
-    function calculateSystemMetrics(data, system) {
+    function calculateSystemMetrics(data, system, accOverride) {
+      const targetAcc = accOverride || currentAccount || "acc1";
       let targetBots = [];
       (data.fleets || []).forEach(f => {
         const nameLower = f.fleet_name.toLowerCase();
@@ -498,18 +646,20 @@
           if (isBybit) {
             targetBots = targetBots.concat(f.bots || []);
           }
-        } else if (system === "cp") {
-          // Converted C/P holds Fleet 3 (or native Call/Put if reverted)
-          if (isFleet3 || isCP) {
-            targetBots = targetBots.concat(f.bots || []);
-          }
-        } else if (system === "ou") {
-          if (isOU && !isFleet3) {
-            targetBots = targetBots.concat(f.bots || []);
-          }
-        } else if (system === "eo") {
-          if (!isOU && !isCP && !isFleet3 && !isBybit) {
-            targetBots = targetBots.concat(f.bots || []);
+        } else {
+          const accBots = (f.bots || []).filter(b => (b.account || "acc1") === targetAcc);
+          if (system === "cp") {
+            if (isFleet3 || isCP) {
+              targetBots = targetBots.concat(accBots);
+            }
+          } else if (system === "ou") {
+            if (isOU && !isFleet3) {
+              targetBots = targetBots.concat(accBots);
+            }
+          } else if (system === "eo") {
+            if (!isOU && !isCP && !isFleet3 && !isBybit) {
+              targetBots = targetBots.concat(accBots);
+            }
           }
         }
       });
@@ -543,16 +693,23 @@
       const winRate = totalTrades > 0 ? ((totalWins / totalTrades) * 100).toFixed(1) : "0.0";
 
       const roundedProfit = Math.round(totalProfit * 100) / 100;
-      const peakKey = `fleet_peak_profit_${system}`;
+      const peakKey = system === "bybit" ? `fleet_peak_profit_bybit` : `fleet_peak_profit_${targetAcc}_${system}`;
       
       let peakProfit = roundedProfit;
       let profitDrawdown = 0.0;
 
       if (totalTrades > 0) {
         let storedPeak = parseFloat(localStorage.getItem(peakKey) || "-999999");
-        let serverPeak = (data.system_peak_profits && data.system_peak_profits[system] !== undefined)
-          ? parseFloat(data.system_peak_profits[system])
-          : -999999;
+        let serverPeak = -999999;
+        if (system === "bybit") {
+          if (data.system_peak_profits && data.system_peak_profits.bybit !== undefined) {
+            serverPeak = parseFloat(data.system_peak_profits.bybit);
+          }
+        } else if (data.account_system_peaks && data.account_system_peaks[`${targetAcc}_${system}`] !== undefined) {
+          serverPeak = parseFloat(data.account_system_peaks[`${targetAcc}_${system}`]);
+        } else if (targetAcc === "acc1" && data.system_peak_profits && data.system_peak_profits[system] !== undefined) {
+          serverPeak = parseFloat(data.system_peak_profits[system]);
+        }
 
         peakProfit = Math.max(roundedProfit, storedPeak, serverPeak);
         if (peakProfit !== -999999 && !isNaN(peakProfit)) {
@@ -672,6 +829,15 @@
         };
       }
 
+      if (lower.includes("market-switch") || lower.includes("switching to a different market") || lower.includes("switching to a new market") || lower.includes("market switch on loss")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "";
+        return {
+          icon: "🔄",
+          color: "text-violet-700 dark:text-violet-300",
+          text: `Both sides dipped — switching to a fresh market for recovery ${amt ? '(' + amt + ')' : ''}!`
+        };
+      }
+
       if (lower.includes("won") || (lower.includes("settled") && lower.includes("profit/loss: +"))) {
         const amt = plusMoneyMatch ? `+$${plusMoneyMatch[1]}` : "Profit";
         return {
@@ -708,7 +874,25 @@
         };
       }
 
-      if (lower.includes("martingale step-up") || lower.includes("initiating trade")) {
+      if (lower.includes("requesting call") || lower.includes("(call)")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "📈",
+          color: "text-amber-700 dark:text-amber-300",
+          text: `Placed Rise (CALL) trade for <strong class="text-amber-600 dark:text-amber-400 font-bold">${amt}</strong>.`
+        };
+      }
+
+      if (lower.includes("requesting put") || lower.includes("(put)")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        return {
+          icon: "📉",
+          color: "text-amber-700 dark:text-amber-300",
+          text: `Placed Fall (PUT) trade for <strong class="text-amber-600 dark:text-amber-400 font-bold">${amt}</strong>.`
+        };
+      }
+
+      if (lower.includes("martingale step-up") || lower.includes("initiating trade") || lower.includes("initiating opposite trade")) {
         const amt = stakeMatch ? `$${stakeMatch[1]}` : "";
         return {
           icon: "⚡",
@@ -805,6 +989,14 @@
         };
       }
 
+      if (lower.includes("market-switch") || lower.includes("switching to a different market") || lower.includes("switching to a new market") || lower.includes("market switch on loss")) {
+        return {
+          icon: "🔄",
+          color: "text-violet-700 dark:text-violet-300 font-bold",
+          text: "Hopping to a brand new playground to win our coins back! 🎠✨"
+        };
+      }
+
       if (lower.includes("won") || (lower.includes("settled") && lower.includes("profit/loss: +"))) {
         const amt = plusMoneyMatch ? `+$${plusMoneyMatch[1]}` : "Coins";
         return {
@@ -841,7 +1033,7 @@
         };
       }
 
-      if (lower.includes("martingale step-up") || lower.includes("initiating trade")) {
+      if (lower.includes("martingale step-up") || lower.includes("initiating trade") || lower.includes("initiating opposite trade")) {
         const amt = stakeMatch ? `$${stakeMatch[1]}` : "";
         return {
           icon: "⚡",
@@ -1159,7 +1351,9 @@
     }
 
     function renderDashboard(data) {
-      // 1. Calculate isolated metrics for each system
+      updateAccountSwitcherUI(data);
+
+      // 1. Calculate isolated metrics for each system on the currently selected account
       const eoMetrics = calculateSystemMetrics(data, "eo");
       const ouMetrics = calculateSystemMetrics(data, "ou");
       const cpMetrics = calculateSystemMetrics(data, "cp");
@@ -1171,8 +1365,8 @@
       const sysCountBybit = document.getElementById("sysCount-bybit");
       if (sysCountEO) sysCountEO.innerText = `${eoMetrics.totalBots}`;
       if (sysCountOU) sysCountOU.innerText = `${ouMetrics.totalBots}`;
-      if (sysCountCP) sysCountCP.innerText = cpMetrics.totalBots > 0 ? `${cpMetrics.totalBots}` : "Dormant";
-      if (sysCountBybit) sysCountBybit.innerText = bybitMetrics.totalBots > 0 ? `${bybitMetrics.totalBots}` : "4";
+      if (sysCountCP) sysCountCP.innerText = cpMetrics.totalBots > 0 ? `${cpMetrics.totalBots}` : "0";
+      if (sysCountBybit) sysCountBybit.innerText = bybitMetrics.totalBots > 0 ? `${bybitMetrics.totalBots}` : "6";
       updateSystemSwitcherUI();
 
       // 2. Select metrics for active system
@@ -1213,6 +1407,13 @@
       if (lblPeakProfit) lblPeakProfit.innerText = isKidsMode ? "Gold Trophy 🏆" : (isTechMode ? "PEAK PROFIT" : "Peak Profit");
       if (lblPeakStake) lblPeakStake.innerText = isKidsMode ? "Super Power ⚡" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
 
+      const accNameShort = currentAccount === "acc2" ? "Account 2 (E/O Switch)" : (currentAccount === "acc3" ? "Account 3 (C/P Switch)" : "Account 1 (E/O Lock)");
+      const recBehaviorDesc = currentAccount === "acc2"
+        ? "Switches to a new market on 2-step loss"
+        : (currentAccount === "acc3"
+          ? "Call/Put • Switches to a new market on 2-step loss"
+          : "Stays LOCKED on the same market to recover");
+
       if (currentSystem === "bybit") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-300 border border-sky-300 dark:border-sky-800 mb-2.5";
@@ -1220,13 +1421,13 @@
         }
         if (peaceText) {
           peaceText.innerHTML = isKidsMode
-            ? '<span class="text-base">🎈</span> 4 rocket robots trading Long & Short every 5m with $50 daily goal!'
-            : '<span class="text-base">🛡️</span> 4 Bybit Bots • 5m Stagger • 20m Cooldown • $50/Day Target.';
+            ? '<span class="text-base">🎈</span> Rocket robots trading Long & Short every 5m with $50 daily goal!'
+            : '<span class="text-base">🛡️</span> Bybit Bots • 5m Stagger • 20m Cooldown • $50/Day Target.';
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = isKidsMode
-            ? "Your 4 Bybit rocket robots are trading crypto safely in Demo mode!"
-            : "Active Bybit Fleet: 4 Bots (Long/Short 2-Step Switch • 20m Rest • $50 Daily TP).";
+            ? "Your Bybit rocket robots are trading crypto safely in Demo mode!"
+            : "Active Bybit Fleet: Long/Short 2-Step Switch • 20m Rest • $50 Daily TP.";
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1236,17 +1437,15 @@
       } else if (currentSystem === "cp") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 mb-2.5";
-          heroTag.innerHTML = isKidsMode ? "🍭 Call / Put (Converted) Playground" : (isTechMode ? "⚡ CALL / PUT (CONVERTED) TELEMETRY" : "⚡ Call / Put (Converted) Fleet Profit");
+          heroTag.innerHTML = currentAccount === "acc3"
+            ? `📈 ${accNameShort} • Call/Put Group 3 Profit`
+            : (isKidsMode ? `🍭 ${accNameShort} • Call/Put (Conv) Playground` : `⚡ ${accNameShort} • Call/Put (Conv) Profit`);
         }
         if (peaceText) {
-          peaceText.innerHTML = isKidsMode
-            ? '<span class="text-base">🎈</span> Converted to Even / Odd trading and taking turns safely!'
-            : '<span class="text-base">🛡️</span> Converted from C/P into Even / Odd strategy (8 bots total • 20m rest).';
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (8 bots • 20m rest • 20 markets).`;
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = isKidsMode
-            ? "8 friendly helper robots are playing together nicely!"
-            : "Active Converted Fleets: Team 3 & Team 4 Even/Odd (8 bots total • 20m rest).";
+          comfortingNotice.innerText = `${accNameShort}: Team 3 & Team 4 (${recBehaviorDesc}).`;
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1256,17 +1455,15 @@
       } else if (currentSystem === "ou") {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 mb-2.5";
-          heroTag.innerHTML = isKidsMode ? "🎯 Over / Under (Converted) Toy Box" : (isTechMode ? "🎯 OVER / UNDER (CONVERTED) TELEMETRY" : "🎯 Over / Under (Converted) Fleet Profit");
+          heroTag.innerHTML = currentAccount === "acc3"
+            ? `📈 ${accNameShort} • Call/Put Group 2 Profit`
+            : (isKidsMode ? `🎯 ${accNameShort} • Over/Under (Conv) Toy Box` : `🎯 ${accNameShort} • Over/Under (Conv) Profit`);
         }
         if (peaceText) {
-          peaceText.innerHTML = isKidsMode
-            ? '<span class="text-base">🎈</span> Converted to Even / Odd trading with friendly bounce-back shield!'
-            : '<span class="text-base">🛡️</span> Converted to Even / Odd strategy with 20m automated rotation.';
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (8 bots • 20m rest • 20 markets).`;
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = isKidsMode
-            ? "Your converted Over / Under robots are trading Even / Odd happily!"
-            : "Over/Under Fleets converted to Even/Odd strategy (8 bots total • 20m rest).";
+          comfortingNotice.innerText = `${accNameShort}: ${recBehaviorDesc} (8 bots • 20m rest).`;
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1276,17 +1473,15 @@
       } else {
         if (heroTag) {
           heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5";
-          heroTag.innerHTML = isKidsMode ? "🍬 Even / Odd Treasure Chest" : (isTechMode ? "🎲 EVEN / ODD TELEMETRY" : "💰 Even / Odd System Profit");
+          heroTag.innerHTML = currentAccount === "acc3"
+            ? `📈 ${accNameShort} • Call/Put Group 1 Profit`
+            : (isKidsMode ? `🍬 ${accNameShort} • Even/Odd Treasure` : `💰 ${accNameShort} • Even/Odd Profit`);
         }
         if (peaceText) {
-          peaceText.innerHTML = isKidsMode
-            ? '<span class="text-base">🎈</span> Friendly robots taking turns in rotation and guarding the piggy bank!'
-            : '<span class="text-base">🛡️</span> Team 1 & Team 2 working together in automated rotation.';
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (8 bots • 20m rest • 20 markets).`;
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = isKidsMode
-            ? "Yay! All friendly robots are happy, healthy, and playing safely!"
-            : "Relax! Your Even/Odd helpers take care of everything automatically.";
+          comfortingNotice.innerText = `${accNameShort}: ${recBehaviorDesc}.`;
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1348,6 +1543,7 @@
 
       // 4. Sub-tabs bar rendering
       const tabsBar = document.getElementById("fleetTabsBar");
+      const isAcc3 = currentAccount === "acc3";
       if (tabsBar) {
         if (currentSystem === "bybit") {
           tabsBar.innerHTML = `
@@ -1358,37 +1554,37 @@
         } else if (currentSystem === "cp") {
           tabsBar.innerHTML = `
             <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'all' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
-              <span>🌟</span> All Converted (C/P) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${cpMetrics.totalBots}</span>
+              <span>🌟</span> ${isAcc3 ? 'All Call/Put (Grp 3)' : 'All Converted (C/P)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${cpMetrics.totalBots}</span>
             </button>
             <button onclick="switchFleetTab('ou3')" id="tab-ou3" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'ou3' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
-              <span>💎</span> Team 3 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>💎</span> ${isAcc3 ? 'Team 5 (Call/Put)' : 'Team 3 (Converted)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
             </button>
             <button onclick="switchFleetTab('eo3')" id="tab-eo3" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'eo3' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'}">
-              <span>🔥</span> Team 4 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>🔥</span> ${isAcc3 ? 'Team 6 (Call/Put)' : 'Team 4 (Converted)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
             </button>
           `;
         } else if (currentSystem === "ou") {
           tabsBar.innerHTML = `
             <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'all' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>🌟</span> All Converted (O/U) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
+              <span>🌟</span> ${isAcc3 ? 'All Call/Put (Grp 2)' : 'All Converted (O/U)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${ouMetrics.totalBots}</span>
             </button>
             <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet1' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>🎯</span> Team 1 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>🎯</span> ${isAcc3 ? 'Team 3 (Call/Put)' : 'Team 1 (Converted)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
             </button>
             <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'}">
-              <span>✨</span> Team 2 (Converted) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>✨</span> ${isAcc3 ? 'Team 4 (Call/Put)' : 'Team 2 (Converted)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
             </button>
           `;
         } else {
           tabsBar.innerHTML = `
             <button onclick="switchFleetTab('all')" id="tab-all" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'all' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
-              <span>🌟</span> All Even/Odd <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${eoMetrics.totalBots}</span>
+              <span>🌟</span> ${isAcc3 ? 'All Call/Put (Grp 1)' : 'All Even/Odd'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 font-bold">${eoMetrics.totalBots}</span>
             </button>
             <button onclick="switchFleetTab('fleet1')" id="tab-fleet1" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet1' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
-              <span>🚀</span> Team 1 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>🚀</span> ${isAcc3 ? 'Team 1 (Call/Put)' : 'Team 1 (Even/Odd)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
             </button>
             <button onclick="switchFleetTab('fleet2')" id="tab-fleet2" class="tab-btn px-4 py-2 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${currentFleetTab === 'fleet2' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-300'}">
-              <span>⭐</span> Team 2 (Even/Odd) <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">6</span>
+              <span>⭐</span> ${isAcc3 ? 'Team 2 (Call/Put)' : 'Team 2 (Even/Odd)'} <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 font-bold">4</span>
             </button>
           `;
         }
@@ -1444,52 +1640,76 @@
         fleetsToRender = sysFleets;
       }
 
-      if (fleetsToRender.length === 0) {
+      // Filter each fleet's bots by currentAccount (unless Bybit)
+      const accountFilteredFleets = [];
+      fleetsToRender.forEach(fl => {
+        const filteredBots = currentSystem === "bybit"
+          ? (fl.bots || [])
+          : (fl.bots || []).filter(b => (b.account || "acc1") === currentAccount);
+        if (filteredBots.length > 0) {
+          accountFilteredFleets.push({
+            ...fl,
+            bots: filteredBots,
+            bot_count: filteredBots.length
+          });
+        }
+      });
+
+      if (accountFilteredFleets.length === 0) {
         container.innerHTML = `
           <div class="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl">
-            No bots currently reporting in this view.
+            No bots currently reporting for ${accNameShort} in this view.
           </div>
         `;
         return;
       }
 
+      const recTag = currentAccount === "acc2"
+        ? "Market-Switch Recovery"
+        : (currentAccount === "acc3" ? "Call/Put • Market-Switch Recovery" : "Same-Market Lock Recovery");
+
       let html = "";
-      fleetsToRender.forEach(fleet => {
+      accountFilteredFleets.forEach(fleet => {
         let friendlyFleetName = fleet.fleet_name;
-        let fleetSubtitle = "Even / Odd Digits Strategy • 20m Safe Rest";
+        let fleetSubtitle = `${currentAccount === 'acc3' ? 'Call / Put (Rise/Fall) Strategy' : 'Even / Odd Strategy'} • 4 Bots • 5m Stagger • 20m Rest • ${recTag}`;
         if (fleet.fleet_name.toLowerCase().includes("bybit")) {
           friendlyFleetName = "🚀 Team 1 (Bybit Long / Short)";
-          fleetSubtitle = "Long/Short 2-Step Switch • 4 Bots • 5m Stagger • 20m Rest • $50 Daily Target";
-        } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
-          friendlyFleetName = "🔥 Team 4 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from C/P";
-        } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
-          friendlyFleetName = "⭐ Team 2 (Even / Odd)";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
-        } else if (fleet.fleet_name.includes("Fleet 1") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
-          friendlyFleetName = "🚀 Team 1 (Even / Odd)";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest";
-        } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
-          friendlyFleetName = "💎 Team 3 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from C/P";
-        } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
-          friendlyFleetName = "✨ Team 2 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from O/U";
-        } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
-          friendlyFleetName = "🎯 Team 1 (Converted) • Even / Odd";
-          fleetSubtitle = "Even / Odd Strategy • 5m Stagger • 20m Rest • Converted from O/U";
-        } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put"))) {
-          friendlyFleetName = "🚀 Team 2 (Call / Put)";
-          fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";
-        } else if (fleet.fleet_name.toLowerCase().includes("call-put") || fleet.fleet_name.toLowerCase().includes("call/put")) {
-          friendlyFleetName = "📈 Team 1 (Call / Put)";
-          fleetSubtitle = "Rise/Fall Trend Strategy • 6 Clones • 30m Rest • 2.1 Martingale";
+          fleetSubtitle = "Long/Short 2-Step Switch • 5m Stagger • 20m Rest • $50 Daily Target";
+        } else if (currentAccount === "acc3") {
+          if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
+            friendlyFleetName = "🔥 Team 6 • Call / Put (Switch Recovery)";
+          } else if (fleet.fleet_name.includes("Fleet 3")) {
+            friendlyFleetName = "💎 Team 5 • Call / Put (Switch Recovery)";
+          } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
+            friendlyFleetName = "✨ Team 4 • Call / Put (Switch Recovery)";
+          } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
+            friendlyFleetName = "🎯 Team 3 • Call / Put (Switch Recovery)";
+          } else if (fleet.fleet_name.includes("Fleet 2")) {
+            friendlyFleetName = "⭐ Team 2 • Call / Put (Switch Recovery)";
+          } else {
+            friendlyFleetName = "🚀 Team 1 • Call / Put (Switch Recovery)";
+          }
+        } else {
+          const modeLabel = currentAccount === "acc2" ? "Switch Recovery" : "Lock Recovery";
+          if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
+            friendlyFleetName = `🔥 Team 4 (Converted) • Even / Odd (${modeLabel})`;
+          } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
+            friendlyFleetName = `⭐ Team 2 (Even / Odd • ${modeLabel})`;
+          } else if (fleet.fleet_name.includes("Fleet 1") && (fleet.fleet_name.includes("Even/Odd") || fleet.fleet_name.includes("Even / Odd"))) {
+            friendlyFleetName = `🚀 Team 1 (Even / Odd • ${modeLabel})`;
+          } else if (fleet.fleet_name.includes("Fleet 3") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
+            friendlyFleetName = `💎 Team 3 (Converted) • Even / Odd (${modeLabel})`;
+          } else if (fleet.fleet_name.includes("Fleet 2") && (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under"))) {
+            friendlyFleetName = `✨ Team 2 (Converted) • Even / Odd (${modeLabel})`;
+          } else if (fleet.fleet_name.toLowerCase().includes("over-under") || fleet.fleet_name.toLowerCase().includes("over/under")) {
+            friendlyFleetName = `🎯 Team 1 (Converted) • Even / Odd (${modeLabel})`;
+          }
         }
 
-        // Calculate fleet peak stake & uptime across bots
-        let fleetPeak = fleet.fleet_peak_stake || 0.35;
-        let fleetMarket = fleet.fleet_peak_market || "";
-        let fleetMaxSec = parseToSeconds(fleet.fleet_uptime || 0);
+        // Calculate fleet peak stake & uptime across filtered bots
+        let fleetPeak = 0.35;
+        let fleetMarket = "";
+        let fleetMaxSec = 0;
 
         fleet.bots.forEach(b => {
           const info = extractPeakAndMarket(b);
@@ -1510,18 +1730,24 @@
 
         const fleetUptimeDisplay = formatFriendlyUptime(fleetMaxSec);
 
-        // Calculate fleet profit, peak profit & drawdown
+        // Calculate fleet profit, peak profit & drawdown for the active account
         let fleetProfit = (fleet.bots || []).reduce((sum, b) => sum + (b.profit || 0), 0);
         fleetProfit = Math.round(fleetProfit * 100) / 100;
         let fleetTrades = (fleet.bots || []).reduce((sum, b) => sum + (b.wins || 0) + (b.losses || 0), 0);
 
-        const fleetPeakKey = `fleet_peak_${fleet.fleet_name}`;
+        const activeAccKey = currentSystem === "bybit" ? "bybit" : currentAccount;
+        const fleetPeakKey = `fleet_peak_${activeAccKey}_${fleet.fleet_name}`;
         let fleetPeakProfit = fleetProfit;
         let fleetDrawdown = 0.0;
 
         if (fleetTrades > 0) {
           let storedFPeak = parseFloat(localStorage.getItem(fleetPeakKey) || "-999999");
-          let serverFPeak = fleet.fleet_peak_profit !== undefined ? parseFloat(fleet.fleet_peak_profit) : -999999;
+          let serverFPeak = -999999;
+          if (fleet.account_peaks && fleet.account_peaks[activeAccKey] !== undefined) {
+            serverFPeak = parseFloat(fleet.account_peaks[activeAccKey]);
+          } else if (activeAccKey === "acc1" && fleet.fleet_peak_profit !== undefined) {
+            serverFPeak = parseFloat(fleet.fleet_peak_profit);
+          }
           fleetPeakProfit = Math.max(fleetProfit, storedFPeak, serverFPeak);
           if (fleetPeakProfit !== -999999 && !isNaN(fleetPeakProfit)) {
             localStorage.setItem(fleetPeakKey, fleetPeakProfit.toString());
@@ -1762,6 +1988,7 @@
     // Initial Setup
     applyTheme();
     updateViewModeUI();
+    updateAccountSwitcherUI();
     updateSystemSwitcherUI();
     window.addEventListener("hashchange", () => {
       const hash = window.location.hash.toLowerCase();

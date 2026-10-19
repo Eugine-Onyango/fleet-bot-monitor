@@ -77,8 +77,14 @@ def load_config(verbose=False):
         if os.path.exists(CONFIG_FILE):
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 CONFIG = json.load(f)
+            if os.getenv("DERIV_API_TOKEN"):
+                CONFIG["api_token"] = os.getenv("DERIV_API_TOKEN")
+            if os.getenv("DERIV_ACCOUNT_ID"):
+                CONFIG["account_id"] = os.getenv("DERIV_ACCOUNT_ID")
+            if os.getenv("SWITCH_MARKET_ON_LOSS"):
+                CONFIG["switch_market_on_loss"] = (os.getenv("SWITCH_MARKET_ON_LOSS").lower() == "true")
             if verbose:
-                print(f"[SYSTEM] Loaded config: {json.dumps(CONFIG, indent=2)}")
+                print(f"[SYSTEM] Loaded config for account {CONFIG.get('account_id')} (switch_market_on_loss={CONFIG.get('switch_market_on_loss', False)})")
         else:
             print(f"[ERROR] Config file {CONFIG_FILE} not found!")
             sys.exit(1)
@@ -97,7 +103,7 @@ def refill_market_basket():
     return STATE["market_basket"]
 
 def advance_market_on_win():
-    # Win & recovery achieved on current market! Remove it from basket to cycle through all 19 supported markets
+    # Win & recovery achieved on current market! Remove it from basket to cycle through all supported markets
     curr = STATE.get("current_market")
     basket = STATE.get("market_basket", [])
     if curr in basket:
@@ -108,6 +114,23 @@ def advance_market_on_win():
     else:
         print(f"🎉 [BASKET ADVANCE] Profit made on {curr}! Remaining in basket ({len(basket)}): {basket}")
     STATE["current_market"] = None  # Clear market so next cycle runs live scanner fresh!
+    STATE["in_recovery"] = False
+    return STATE.get("market_basket", [None])[0]
+
+def advance_market_on_loss():
+    # Switch to a different market for recovery instead of sticking to the losing market
+    curr = STATE.get("current_market")
+    basket = STATE.get("market_basket", [])
+    if curr in basket:
+        basket.remove(curr)
+    if not basket:
+        print(f"🔄 [BASKET COMPLETED ON LOSS] All markets tried! Refilling fresh basket for recovery!")
+        refill_market_basket()
+        if len(STATE["market_basket"]) > 1 and curr in STATE["market_basket"]:
+            STATE["market_basket"].remove(curr)
+    else:
+        print(f"🔄 [MARKET SWITCH RECOVERY] Switching away from {curr} for recovery! Remaining in basket ({len(basket)}): {basket}")
+    STATE["current_market"] = None  # Clear market so next cycle runs live scanner on remaining markets!
     STATE["in_recovery"] = False
     return STATE.get("market_basket", [None])[0]
 
@@ -401,18 +424,23 @@ def on_message(ws, message):
                     save_state_unlocked()
                     
                     if cycle_step >= 2:
-                        # Completed 2-trade sequence of losses on current market -> Lock on market for recovery!
                         last_cycle_won = False
-                        STATE["in_recovery"] = True
                         STATE["consecutive_cycle_losses"] = STATE.get("consecutive_cycle_losses", 0) + 1
                         market_state["sequence"] = generate_paired_sequence()
 
                         recovery_cd = CONFIG.get("loss_cooldown_seconds", 1200)
                         cd_m = recovery_cd // 60
+                        switch_on_loss = CONFIG.get("switch_market_on_loss", False)
                         print("\n" + "="*60)
                         print(f"❌ CYCLE RESULT: LOSS (Both Even & Odd Trades Lost on {current_market}) [{BOT_NAME}]")
-                        print(f"🔒 [MARKET LOCKED FOR RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown until recovered!")
-                        print(f"   • Active Recovery Market: {current_market}")
+                        if switch_on_loss:
+                            advance_market_on_loss()
+                            print(f"🔄 [MARKET SWITCH FOR RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Leaving {current_market} and switching to a DIFFERENT market after {cd_m}m cooldown!")
+                            print(f"   • Next Recovery Market: Will live scan fresh market on wakeup")
+                        else:
+                            STATE["in_recovery"] = True
+                            print(f"🔒 [MARKET LOCKED FOR RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown until recovered!")
+                            print(f"   • Active Recovery Market: {current_market}")
                         print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
                         print(f"   • Max Session Drawdown (Deepest Loss): ${STATE.get('max_drawdown', 0.0):.2f}")
                         print(f"   • Deepest Cycle Deficit: ${STATE.get('max_cycle_loss', 0.0):.2f}")
@@ -546,7 +574,8 @@ def run_trade_cycle():
             
             now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             curr_mkt = STATE.get("current_market") or "Scanning on Wakeup..."
-            rec_str = "LOCKED" if STATE.get("in_recovery") else "SCANNING FRESH"
+            in_def = STATE.get("cycle_profit", 0.0) < 0.0
+            rec_str = "LOCKED" if STATE.get("in_recovery") else ("MARKET-SWITCH RECOVERY" if in_def else "SCANNING FRESH")
 
             print("\n" + "="*60)
             print(f"⚡ STARTING EVEN/ODD TRADE CYCLE ({BOT_NAME}): {now_str}")
@@ -609,7 +638,10 @@ def main():
             cooldown = CONFIG.get("loss_cooldown_seconds", 1200)
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"⏱️ [20m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+            if CONFIG.get("switch_market_on_loss", False):
+                print(f"⏱️ [20m RECOVERY COOLDOWN] Switching to a NEW market after {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+            else:
+                print(f"⏱️ [20m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
         else:
             cooldown = CONFIG.get("win_cooldown_minutes", 20) * 60
             cd_m = cooldown // 60

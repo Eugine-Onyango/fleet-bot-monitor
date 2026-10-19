@@ -81,8 +81,18 @@ def load_config(verbose=False):
         if os.path.exists(CONFIG_FILE):
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 CONFIG = json.load(f)
+            # Support environment variable overrides for multi-account testing
+            if os.getenv("DERIV_API_TOKEN"):
+                CONFIG["api_token"] = os.getenv("DERIV_API_TOKEN")
+            if os.getenv("DERIV_ACCOUNT_ID"):
+                CONFIG["account_id"] = os.getenv("DERIV_ACCOUNT_ID")
+            if os.getenv("SWITCH_MARKET_ON_LOSS"):
+                CONFIG["switch_market_on_loss"] = os.getenv("SWITCH_MARKET_ON_LOSS").lower() in ("1", "true", "yes")
             if verbose:
-                print(f"[SYSTEM] Loaded config: {json.dumps(CONFIG, indent=2)}")
+                safe_cfg = dict(CONFIG)
+                if "api_token" in safe_cfg:
+                    safe_cfg["api_token"] = safe_cfg["api_token"][:10] + "..."
+                print(f"[SYSTEM] Loaded config: {json.dumps(safe_cfg, indent=2)}")
         else:
             print(f"[ERROR] Config file {CONFIG_FILE} not found!")
             sys.exit(1)
@@ -110,6 +120,23 @@ def advance_market_on_win():
         refill_market_basket()
     else:
         print(f"🎉 [BASKET ADVANCE] Profit made on {curr}! Remaining in basket ({len(basket)}): {basket}")
+    STATE["current_market"] = None
+    STATE["in_recovery"] = False
+    return STATE.get("market_basket", [None])[0]
+
+def advance_market_on_loss():
+    curr = STATE.get("current_market")
+    basket = STATE.get("market_basket", [])
+    if curr in basket:
+        basket.remove(curr)
+    if not basket:
+        print(f"🔄 [BASKET COMPLETED ON LOSS] Refilling fresh basket for Market-Switch Recovery!")
+        refill_market_basket()
+        # Ensure we don't immediately re-pick the exact same losing market if possible
+        if len(STATE["market_basket"]) > 1 and curr in STATE["market_basket"]:
+            STATE["market_basket"].remove(curr)
+    else:
+        print(f"🔄 [MARKET SWITCH ON LOSS] Leaving {curr} after 2-step loss! Remaining in basket ({len(basket)}): {basket}")
     STATE["current_market"] = None
     STATE["in_recovery"] = False
     return STATE.get("market_basket", [None])[0]
@@ -204,43 +231,53 @@ def on_message(ws, message):
 
     if "error" in data:
         err = data["error"]
-        print(f"[API ERROR] Code: {err.get('code')}, Msg: {err.get('message')}")
-        trade_completed_event.set()
-        ws.close()
-        return
+        req_sym = data.get("echo_req", {}).get("ticks_history")
+        if req_sym and req_sym in scanner_targets:
+            print(f"[SCANNER SKIP] {req_sym} unavailable ({err.get('message')}). Removing from active scan.")
+            scanner_targets.remove(req_sym)
+            if len(scanner_results) >= len(scanner_targets) and len(scanner_results) > 0:
+                pass
+            else:
+                return
+        else:
+            print(f"[API ERROR] Code: {err.get('code')}, Msg: {err.get('message')}")
+            trade_completed_event.set()
+            ws.close()
+            return
 
     # Handle live scanner tick history responses for Call/Put (Rise/Fall)
-    if "history" in data:
-        sym = data.get("echo_req", {}).get("ticks_history")
-        prices = data["history"].get("prices", [])
-        
-        if prices and len(prices) >= 2:
-            start_p = float(prices[0])
-            end_p = float(prices[-1])
-            max_p = max(prices)
-            min_p = min(prices)
-            rng = max_p - min_p if max_p != min_p else 1.0
+    if "history" in data or (len(scanner_targets) > 0 and len(scanner_results) >= len(scanner_targets) and STATE.get("current_market") is None):
+        if "history" in data:
+            sym = data.get("echo_req", {}).get("ticks_history")
+            prices = data["history"].get("prices", [])
             
-            # Up ticks vs down ticks momentum
-            up_moves = sum(1 for i in range(1, len(prices)) if prices[i] > prices[i-1])
-            down_moves = sum(1 for i in range(1, len(prices)) if prices[i] < prices[i-1])
-            total_moves = up_moves + down_moves if (up_moves + down_moves) > 0 else 1
-            
-            is_up = end_p >= start_p
-            dominant = "CALL" if is_up else "PUT"
-            momentum_score = (up_moves / total_moves) if is_up else (down_moves / total_moves)
-            bias = abs(end_p - start_p) / rng + momentum_score
+            if prices and len(prices) >= 2:
+                start_p = float(prices[0])
+                end_p = float(prices[-1])
+                max_p = max(prices)
+                min_p = min(prices)
+                rng = max_p - min_p if max_p != min_p else 1.0
+                
+                # Up ticks vs down ticks momentum
+                up_moves = sum(1 for i in range(1, len(prices)) if prices[i] > prices[i-1])
+                down_moves = sum(1 for i in range(1, len(prices)) if prices[i] < prices[i-1])
+                total_moves = up_moves + down_moves if (up_moves + down_moves) > 0 else 1
+                
+                is_up = end_p >= start_p
+                dominant = "CALL" if is_up else "PUT"
+                momentum_score = (up_moves / total_moves) if is_up else (down_moves / total_moves)
+                bias = abs(end_p - start_p) / rng + momentum_score
 
-            scanner_results[sym] = {
-                "bias": bias,
-                "dominant": dominant,
-                "start": start_p,
-                "end": end_p,
-                "pct": momentum_score * 100
-            }
+                scanner_results[sym] = {
+                    "bias": bias,
+                    "dominant": dominant,
+                    "start": start_p,
+                    "end": end_p,
+                    "pct": momentum_score * 100
+                }
         
         # When all targets are scanned, pick #1 best trend market and proceed to trade
-        if len(scanner_results) >= len(scanner_targets):
+        if len(scanner_results) >= len(scanner_targets) and len(scanner_results) > 0:
             sorted_mkts = sorted(scanner_results.items(), key=lambda x: x[1]['bias'], reverse=True)
             best_sym, best_data = sorted_mkts[0]
             
@@ -367,18 +404,27 @@ def on_message(ws, message):
                     save_state_unlocked()
                     
                     if cycle_step >= 2:
-                        # Completed 2-trade sequence of losses on current market -> Lock for recovery
+                        # Completed 2-trade sequence of losses on current market
                         last_cycle_won = False
-                        STATE["in_recovery"] = True
                         STATE["consecutive_cycle_losses"] = STATE.get("consecutive_cycle_losses", 0) + 1
                         market_state["sequence"] = generate_paired_sequence()
 
-                        recovery_cd = CONFIG.get("loss_cooldown_seconds", 1800)
+                        recovery_cd = CONFIG.get("loss_cooldown_seconds", 1200)
                         cd_m = recovery_cd // 60
-                        print("\n" + "="*60)
-                        print(f"❌ CYCLE RESULT: LOSS (Both Call & Put Trades Lost on {current_market}) [{BOT_NAME}]")
-                        print(f"🔒 [MARKET LOCKED FOR 2.1 MARTINGALE RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown!")
-                        print(f"   • Active Recovery Market: {current_market}")
+                        switch_on_loss = CONFIG.get("switch_market_on_loss", False)
+
+                        if switch_on_loss:
+                            advance_market_on_loss()
+                            print("\n" + "="*60)
+                            print(f"❌ CYCLE RESULT: LOSS (Both Call & Put Trades Lost on {current_market}) [{BOT_NAME}]")
+                            print(f"🔄 [MARKET-SWITCH 2.1 MARTINGALE RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Switching to a DIFFERENT market after {cd_m}m cooldown!")
+                            print(f"   • Previous Market Left: {current_market} (Will scan remaining basket on next wakeup)")
+                        else:
+                            STATE["in_recovery"] = True
+                            print("\n" + "="*60)
+                            print(f"❌ CYCLE RESULT: LOSS (Both Call & Put Trades Lost on {current_market}) [{BOT_NAME}]")
+                            print(f"🔒 [MARKET LOCKED FOR 2.1 MARTINGALE RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown!")
+                            print(f"   • Active Recovery Market: {current_market}")
                         print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
                         print(f"   • Max Session Drawdown: ${STATE.get('max_drawdown', 0.0):.2f}")
                         print(f"   • Deepest Cycle Deficit: ${STATE.get('max_cycle_loss', 0.0):.2f}")
@@ -512,7 +558,8 @@ def run_trade_cycle():
             
             now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             curr_mkt = STATE.get("current_market") or "Scanning Trend on Wakeup..."
-            rec_str = "LOCKED (2.1 Martingale)" if STATE.get("in_recovery") else "SCANNING FRESH"
+            in_def = STATE.get("cycle_profit", 0.0) < 0.0
+            rec_str = "LOCKED (2.1 Martingale)" if STATE.get("in_recovery") else ("MARKET-SWITCH RECOVERY (2.1 Martingale)" if in_def else "SCANNING FRESH")
             stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
 
             print("\n" + "="*60)
@@ -553,7 +600,7 @@ def run_trade_cycle():
         release_lock()
 
 def main():
-    print(f"🤖 Initializing Call/Put Fleet Bot (6 Bots • 30m Rest • 2.1 Martingale): {BOT_NAME}")
+    print(f"🤖 Initializing Call/Put Fleet Bot (4 Bots • 20m Rest • 2.1 Martingale): {BOT_NAME}")
     load_config(verbose=True)
     load_state(verbose=True)
 
@@ -573,15 +620,18 @@ def main():
             last_won = last_cycle_won
             
         if not last_won or in_deficit:
-            cooldown = CONFIG.get("loss_cooldown_seconds", 1800)
+            cooldown = CONFIG.get("loss_cooldown_seconds", 1200)
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"⏱️ [30m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next Martingale recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+            if CONFIG.get("switch_market_on_loss", False):
+                print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Switching to a DIFFERENT market after {cd_m}m cooldown before next Martingale recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+            else:
+                print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next Martingale recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
         else:
-            cooldown = CONFIG.get("win_cooldown_minutes", 30) * 60
+            cooldown = CONFIG.get("win_cooldown_minutes", 20) * 60
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"✅ [30m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
+            print(f"✅ [{cd_m}m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
             
         time.sleep(cooldown)
 
