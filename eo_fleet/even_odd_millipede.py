@@ -209,6 +209,35 @@ def on_message(ws, message):
     if "error" in data:
         err = data["error"]
         print(f"[API ERROR] Code: {err.get('code')}, Msg: {err.get('message')}")
+        err_sym = data.get("echo_req", {}).get("ticks_history")
+        if err_sym and err_sym in scanner_targets:
+            print(f"⚠️ [SCANNER NOTE] Market {err_sym} unavailable during scan, skipping.")
+            scanner_results[err_sym] = {"bias": -1.0, "dominant": "DIGITEVEN", "pct": 50.0, "evens": 0, "odds": 0}
+            if len(scanner_results) >= len(scanner_targets):
+                valid_mkts = [item for item in scanner_results.items() if item[1]['bias'] >= 0]
+                if not valid_mkts:
+                    valid_mkts = list(scanner_results.items())
+                sorted_mkts = sorted(valid_mkts, key=lambda x: x[1]['bias'], reverse=True)
+                best_sym, best_data = sorted_mkts[0]
+                with state_lock:
+                    STATE["current_market"] = best_sym
+                    market_state = STATE["markets_state"].setdefault(best_sym, {
+                        "wins": 0,
+                        "losses": 0,
+                        "total_profit": 0.0,
+                        "sequence": generate_paired_sequence(best_data["dominant"]),
+                        "payout_rates": {}
+                    })
+                    market_state["sequence"] = generate_paired_sequence(best_data["dominant"])
+                    save_state_unlocked()
+                print(f"\n🔍 [LIVE SCANNER RESULTS] Scanned {len(scanner_results)} basket markets:")
+                for s, d in sorted_mkts[:3]:
+                    print(f"   • {s:<8}: Score={d['bias']:.3f} -> Dominant: {d['dominant']} ({d['pct']:.1f}%)")
+                print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with {best_data['dominant']} bias ({best_data['pct']:.1f}%). Sequence: {market_state['sequence']}")
+                stake = STATE.setdefault("cycle_stake", CONFIG.get("initial_stake", 0.35))
+                contract_type = market_state["sequence"][0]
+                send_proposal(ws, contract_type, stake)
+            return
         trade_completed_event.set()
         ws.close()
         return
@@ -241,7 +270,10 @@ def on_message(ws, message):
         
         # When all targets are scanned, pick #1 best market and proceed to trade
         if len(scanner_results) >= len(scanner_targets):
-            sorted_mkts = sorted(scanner_results.items(), key=lambda x: x[1]['bias'], reverse=True)
+            valid_mkts = [item for item in scanner_results.items() if item[1]['bias'] >= 0]
+            if not valid_mkts:
+                valid_mkts = list(scanner_results.items())
+            sorted_mkts = sorted(valid_mkts, key=lambda x: x[1]['bias'], reverse=True)
             best_sym, best_data = sorted_mkts[0]
             
             with state_lock:
