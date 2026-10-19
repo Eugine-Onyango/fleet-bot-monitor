@@ -15,12 +15,13 @@
     "SUIUSDT"
   ],
   "leverage": 10,
-  "initial_stake": 15.0,
+  "initial_stake": 0.35,
   "martingale_multiplier": 2.1,
-  "tp_percent": 0.25,
-  "sl_percent": 0.25,
+  "tp_percent": 0.36,
+  "sl_percent": 0.20,
+  "bybit_fee_percent": 0.11,
   "daily_tp_target": 50.0,
   "win_cooldown_minutes": 20,
   "loss_cooldown_seconds": 1200,
-  "max_trade_wait_seconds": 180
+  "max_trade_wait_seconds": 3600
 }

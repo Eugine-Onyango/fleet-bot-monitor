@@ -36,9 +36,9 @@ STATE = {
     "in_recovery": False,
     "market_basket": [],
     "cycle_profit": 0.0,
-    "cycle_stake": 2.0,
+    "cycle_stake": 0.35,
     "consecutive_cycle_losses": 0,
-    "max_stake": 2.0,
+    "max_stake": 0.35,
     "max_stake_market": "N/A",
     "max_drawdown": 0.0,
     "max_cycle_loss": 0.0,
@@ -217,8 +217,8 @@ def load_state(verbose=False):
             else:
                 STATE["daily_date"] = today_str
                 STATE["daily_profit"] = 0.0
-                STATE["cycle_stake"] = CONFIG.get("initial_stake", 2.0)
-                STATE["max_stake"] = CONFIG.get("initial_stake", 2.0)
+                STATE["cycle_stake"] = CONFIG.get("initial_stake", 0.35)
+                STATE["max_stake"] = CONFIG.get("initial_stake", 0.35)
                 if verbose:
                     print("[SYSTEM] No state file found. Initializing new state.")
                 if not STATE.get("market_basket"):
@@ -329,13 +329,15 @@ def get_latest_price(symbol):
 
 def execute_single_bybit_trade(symbol, direction, stake, step_num):
     """
-    Places a LONG (Buy) or SHORT (Sell) market order with tight TP/SL,
-    waits for resolution, and returns (won: bool, net_profit: float).
+    Places a LONG (Buy) or SHORT (Sell) market order sized so that hitting Take Profit
+    yields a net profit of +`stake` AFTER Bybit's round-trip fee, waits for genuine
+    TP/SL resolution, and returns (won: bool, net_profit: float).
     """
-    leverage = float(CONFIG.get("leverage", 5))
-    tp_pct = float(CONFIG.get("tp_percent", 0.15)) / 100.0
-    sl_pct = float(CONFIG.get("sl_percent", 0.15)) / 100.0
-    max_wait = int(CONFIG.get("max_trade_wait_seconds", 180))
+    leverage = float(CONFIG.get("leverage", 10))
+    tp_pct = float(CONFIG.get("tp_percent", 0.36)) / 100.0
+    sl_pct = float(CONFIG.get("sl_percent", 0.20)) / 100.0
+    fee_pct = float(CONFIG.get("bybit_fee_percent", 0.11)) / 100.0
+    max_wait = int(CONFIG.get("max_trade_wait_seconds", 3600))
 
     ensure_leverage(symbol, int(leverage))
     rules = get_instrument_rules(symbol)
@@ -344,8 +346,9 @@ def execute_single_bybit_trade(symbol, direction, stake, step_num):
         print(f"[ERROR] Could not fetch price for {symbol}.")
         return None, 0.0
 
-    # Calculate position notional = stake * leverage
-    notional = max(stake * leverage, rules.get("min_notional", 5.0) * 1.05)
+    # Size notional so that hitting TP nets exactly +`stake` after Bybit's 0.11% round-trip fee
+    net_tp_rate = max(0.0005, tp_pct - fee_pct)
+    notional = max(stake / net_tp_rate, rules.get("min_notional", 5.0) * 1.05)
     raw_qty = notional / entry_price
     if raw_qty < rules["min_qty"]:
         raw_qty = rules["min_qty"]
@@ -365,15 +368,15 @@ def execute_single_bybit_trade(symbol, direction, stake, step_num):
     sl_str = format_by_step(sl_price, rules["tick_size"])
 
     with state_lock:
-        if stake > STATE.get("max_stake", 0.0) or not STATE.get("max_stake_market"):
+        if stake > STATE.get("max_stake", 0.0) or not STATE.get("max_stake_market") or STATE.get("max_stake_market") == "N/A":
             STATE["max_stake"] = stake
             STATE["max_stake_market"] = symbol
         save_state_unlocked()
 
     print(
-        f"   • [Trade {step_num}/2] Placing {direction} ({bybit_side}) on {symbol} | "
-        f"Margin Stake: ${stake:.2f} ({int(leverage)}x Lev, Qty: {qty_str}) | "
-        f"Entry: ~{entry_price} | TP: {tp_str} | SL: {sl_str}..."
+        f"   • [Trade {step_num}/2] Placing {direction} ({bybit_side}) on {symbol} @ ${stake:.2f} | "
+        f"Target Win: +${stake:.2f} (Qty: {qty_str}) | "
+        f"Entry: ~{entry_price} | TP: {tp_str} (+{tp_pct*100:.2f}%) | SL: {sl_str} (-{sl_pct*100:.2f}%)..."
     )
 
     trade_start_ms = int(time.time() * 1000) - 1000
@@ -395,11 +398,21 @@ def execute_single_bybit_trade(symbol, direction, stake, step_num):
         return None, 0.0
 
     order_id = order_res.get("result", {}).get("orderId")
-    print(f"   • Order Active (ID: {order_id}). Monitoring live position for fast TP/SL hit...")
+    print(f"   • Order Active (ID: {order_id}). Waiting for genuine TP or SL hit...")
 
     start_wait = time.time()
+    last_heartbeat = time.time()
     while time.time() - start_wait < max_wait:
-        time.sleep(1.5)
+        time.sleep(2.0)
+        # Keep lock timestamp fresh while actively monitoring open position
+        if time.time() - last_heartbeat > 30.0:
+            try:
+                with open(INFO_FILE, "w", encoding="utf-8") as f:
+                    json.dump({"owner": BOT_NAME, "timestamp": time.time()}, f)
+            except Exception:
+                pass
+            last_heartbeat = time.time()
+
         pos_res = bybit_request("GET", "/v5/position/list", {"category": "linear", "symbol": symbol}, auth=True)
         if pos_res.get("retCode") == 0:
             pos_list = pos_res.get("result", {}).get("list", [])
@@ -409,13 +422,13 @@ def execute_single_bybit_trade(symbol, direction, stake, step_num):
                     # Position closed via TP or SL!
                     break
 
-    # If still open after max_wait, close at market so cycle can finish cleanly
+    # Safety fallback if still open after max_wait (1 hour)
     pos_res = bybit_request("GET", "/v5/position/list", {"category": "linear", "symbol": symbol}, auth=True)
     if pos_res.get("retCode") == 0:
         pos_list = pos_res.get("result", {}).get("list", [])
         if pos_list and float(pos_list[0].get("size", 0.0)) > 0:
             close_side = "Sell" if bybit_side == "Buy" else "Buy"
-            print(f"   ⏱️ Max wait ({max_wait}s) reached. Closing {symbol} position at market...")
+            print(f"   ⏱️ Safety max wait ({max_wait}s) reached. Closing {symbol} position at market...")
             bybit_request("POST", "/v5/order/create", {
                 "category": "linear",
                 "symbol": symbol,
@@ -470,7 +483,7 @@ def acquire_lock():
                         data = json.load(f)
                     owner = data.get("owner", "Another bot")
                     timestamp = data.get("timestamp", 0.0)
-                if timestamp > 0 and (time.time() - timestamp > 400.0):
+                if timestamp > 0 and (time.time() - timestamp > 300.0):
                     print(f"⚠️ [LOCK] Stale lock detected (Owned by {owner}). Overriding.")
                     try:
                         os.rmdir(LOCK_PATH)
@@ -479,7 +492,7 @@ def acquire_lock():
                     continue
                 else:
                     now = time.time()
-                    if now - last_wait_log > 8.0:
+                    if now - last_wait_log > 15.0:
                         print(f"⏳ [QUEUE DELAY] Active Bybit trade in progress by {owner}. {BOT_NAME} waiting in line...")
                         last_wait_log = now
             except Exception:
@@ -524,7 +537,7 @@ def _run_trade_cycle_inner():
 
         is_locked = STATE.get("in_recovery", False) and STATE.get("current_market") is not None
         current_market = STATE.get("current_market")
-        stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 2.0))
+        stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
 
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         curr_mkt = current_market or "Scanning Trend on Wakeup..."
@@ -573,7 +586,7 @@ def _run_trade_cycle_inner():
     for step_num in (1, 2):
         direction = sequence[step_num - 1]
         with state_lock:
-            stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 2.0))
+            stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
 
         won, profit = execute_single_bybit_trade(current_market, direction, stake, step_num)
         if won is None:
@@ -596,8 +609,9 @@ def _run_trade_cycle_inner():
                 market_state["wins"] += 1
                 last_cycle_won = True
 
+                base_stake = float(CONFIG.get("initial_stake", 0.35))
                 STATE["cycle_profit"] = 0.0
-                STATE["cycle_stake"] = CONFIG.get("initial_stake", 15.0)
+                STATE["cycle_stake"] = base_stake
                 STATE["consecutive_cycle_losses"] = 0
                 STATE["in_recovery"] = False
 
@@ -605,7 +619,7 @@ def _run_trade_cycle_inner():
                 save_state_unlocked()
 
                 print("\n" + "=" * 65)
-                print(f"🎉 CYCLE RESULT: WIN on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 15.0):.2f} [{BOT_NAME}]")
+                print(f"🎉 CYCLE RESULT: WIN on {current_market} -> Reset Stake to ${base_stake:.2f} [{BOT_NAME}]")
                 print(f"   • Net Trade Profit: +${profit:.2f}")
                 print(f"   • Fleet Today's Profit: ${STATE['daily_profit']:.2f} / ${CONFIG.get('daily_tp_target', 50.0):.2f}")
                 print(f"   • Bot Session Profit: ${STATE['total_profit']:.2f}")
@@ -618,14 +632,18 @@ def _run_trade_cycle_inner():
                 if STATE["cycle_profit"] < STATE.get("max_cycle_loss", 0.0):
                     STATE["max_cycle_loss"] = STATE["cycle_profit"]
 
-                multiplier = float(CONFIG.get("martingale_multiplier", 2.1))
-                next_stake = round(stake * multiplier, 2)
+                base_stake = float(CONFIG.get("initial_stake", 0.35))
+                if STATE["cycle_profit"] < 0:
+                    next_stake = round(abs(STATE["cycle_profit"]) + base_stake, 2)
+                else:
+                    multiplier = float(CONFIG.get("martingale_multiplier", 2.1))
+                    next_stake = round(stake * multiplier, 2)
                 STATE["cycle_stake"] = next_stake
                 save_state_unlocked()
 
                 if step_num == 1:
                     opp_dir = sequence[1]
-                    print(f"\n⚠️ Trade 1/2 ({direction}) lost. Martingale step-up to ${next_stake:.2f}. Switching immediately to {opp_dir} (Trade 2/2)...")
+                    print(f"\n⚠️ Trade 1/2 ({direction}) lost. Martingale step-up to ${next_stake:.2f} on {current_market}. Switching immediately to {opp_dir} (Trade 2/2)...")
                 else:
                     last_cycle_won = False
                     STATE["in_recovery"] = True
@@ -726,7 +744,7 @@ def main():
             cooldown = int(CONFIG.get("loss_cooldown_seconds", 1200))
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} before next recovery @ ${STATE.get('cycle_stake', 2.0):.2f}. Next trade at {next_t}.")
+            print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
         else:
             cooldown = int(CONFIG.get("win_cooldown_minutes", 20)) * 60
             cd_m = cooldown // 60

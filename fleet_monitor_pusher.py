@@ -177,7 +177,7 @@ def build_payload():
         logs = get_simplified_logs(name)
         uptime_str, uptime_sec = get_container_uptime(name)
 
-        default_stake = 15.0 if "bybit" in name else 0.35
+        default_stake = 0.35
         bot_profit = 0.0
         wins = 0
         losses = 0

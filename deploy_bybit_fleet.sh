@@ -22,8 +22,22 @@ done
 # 2. Setup isolated shared trade lock for Bybit fleet
 SHARED_LOCK="/root/shared_trade_lock_bybit"
 mkdir -p "$SHARED_LOCK"
-rm -rf "$SHARED_LOCK/bybit_trade_lock" "$SHARED_LOCK/bybit_lock_info.json"
-echo "✅ Dedicated Bybit trade lock initialized at $SHARED_LOCK"
+rm -rf "$SHARED_LOCK/bybit_trade_lock" "$SHARED_LOCK/bybit_lock_info.json" "$SHARED_LOCK/daily_fleet_profit.json"
+python3 -c '
+import json, os
+p = "/root/fleet_peak_profits.json"
+if os.path.exists(p):
+    try:
+        with open(p, "r") as f: d = json.load(f)
+        if "systems" in d: d["systems"]["bybit"] = 0.0
+        if "fleets" in d: d["fleets"].pop("Fleet 1 (Bybit)", None)
+        if "bots" in d:
+            for k in [k for k in d["bots"] if "bybit" in k]:
+                d["bots"].pop(k, None)
+        with open(p, "w") as f: json.dump(d, f, indent=2)
+    except Exception: pass
+' 2>/dev/null || true
+echo "✅ Dedicated Bybit trade lock & fresh stats initialized at $SHARED_LOCK"
 
 # 3. Download source code for build
 BUILD_DIR="/root/bybit_fleet_build"
