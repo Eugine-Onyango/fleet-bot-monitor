@@ -29,8 +29,8 @@
   "recovery_strategy": "martingale",
   "martingale_multiplier": 2.1,
   "max_losses": 99,
-  "win_cooldown_minutes": 20,
-  "loss_cooldown_seconds": 1200,
+  "win_cooldown_minutes": 30,
+  "loss_cooldown_seconds": 1800,
   "trade_duration": 1,
   "duration_unit": "t"
 }

@@ -90,11 +90,11 @@ def get_containers():
                 })
                 seen_names.add(name)
 
-    # 2. Discover lightweight native bots (Account 2 & Account 3) from /root/acc2_* and /root/acc3_*
+    # 2. Discover lightweight native bots (Account 1, 2, and 3)
     if os.path.exists("/root"):
         try:
             for entry in sorted(os.listdir("/root")):
-                if entry.startswith("acc2_") or entry.startswith("acc3_"):
+                if any(entry.startswith(prefix) for prefix in ["acc1_", "acc2_", "acc3_", "even_odd_", "over_under_", "call_put_"]):
                     bot_dir = os.path.join("/root", entry)
                     meta_path = os.path.join(bot_dir, "bot_meta.json")
                     if os.path.isdir(bot_dir) and os.path.exists(meta_path):

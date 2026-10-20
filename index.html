@@ -219,7 +219,7 @@
             <span class="text-sm flex-shrink-0">🔒</span>
             <div class="text-left truncate">
               <div class="truncate">Account 1 • E/O (Lock)</div>
-              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Same-Market Recovery • 24 Bots</div>
+              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Same-Market Recovery • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc1" class="px-2 py-0.5 rounded-lg text-[11px] bg-white/20 font-black flex-shrink-0">+$0.00</span>
@@ -230,7 +230,7 @@
             <span class="text-sm flex-shrink-0">🔄</span>
             <div class="text-left truncate">
               <div class="truncate">Account 2 • E/O (Switch)</div>
-              <div id="accSub-acc2" class="text-[10px] opacity-75 font-semibold truncate">Switch Market on Loss • 24 Bots</div>
+              <div id="accSub-acc2" class="text-[10px] opacity-75 font-semibold truncate">Switch Market on Loss • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc2" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -241,7 +241,7 @@
             <span class="text-sm flex-shrink-0">📈</span>
             <div class="text-left truncate">
               <div class="truncate">Account 3 • C/P (Switch)</div>
-              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Call/Put Market-Switch • 24 Bots</div>
+              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Call/Put Market-Switch • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc3" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -698,6 +698,10 @@
       let peakProfit = roundedProfit;
       let profitDrawdown = 0.0;
 
+      const manualResetTs = parseInt(localStorage.getItem("peaks_manual_reset_ts") || "0");
+      const payloadResetTs = data.reset_at ? new Date(data.reset_at).getTime() : 0;
+      const isManualResetActive = (manualResetTs > 0 && (payloadResetTs === 0 || manualResetTs >= payloadResetTs));
+
       if (totalTrades > 0) {
         let storedPeak = parseFloat(localStorage.getItem(peakKey) || "-999999");
         let serverPeak = -999999;
@@ -705,10 +709,16 @@
           if (data.system_peak_profits && data.system_peak_profits.bybit !== undefined) {
             serverPeak = parseFloat(data.system_peak_profits.bybit);
           }
-        } else if (data.account_system_peaks && data.account_system_peaks[`${targetAcc}_${system}`] !== undefined) {
-          serverPeak = parseFloat(data.account_system_peaks[`${targetAcc}_${system}`]);
-        } else if (targetAcc === "acc1" && data.system_peak_profits && data.system_peak_profits[system] !== undefined) {
-          serverPeak = parseFloat(data.system_peak_profits[system]);
+        } else if (!isManualResetActive) {
+          if (data.account_system_peaks && data.account_system_peaks[`${targetAcc}_${system}`] !== undefined) {
+            serverPeak = parseFloat(data.account_system_peaks[`${targetAcc}_${system}`]);
+          } else if (targetAcc === "acc1" && data.system_peak_profits && data.system_peak_profits[system] !== undefined) {
+            serverPeak = parseFloat(data.system_peak_profits[system]);
+          }
+        } else {
+          // Manual peak reset was clicked: ignore old historical peaks from server
+          serverPeak = roundedProfit;
+          storedPeak = roundedProfit;
         }
 
         peakProfit = Math.max(roundedProfit, storedPeak, serverPeak);
@@ -745,12 +755,35 @@
     }
 
     function resetLocalPeaks() {
+      const nowTs = Date.now();
+      localStorage.setItem("peaks_manual_reset_ts", nowTs.toString());
       Object.keys(localStorage).forEach(k => {
         if (k.startsWith("fleet_peak_") || k.startsWith("bot_peak_")) {
           localStorage.removeItem(k);
         }
       });
       if (window.lastPayload) {
+        if (window.lastPayload.account_system_peaks) {
+          Object.keys(window.lastPayload.account_system_peaks).forEach(k => {
+            if (!k.includes("bybit")) window.lastPayload.account_system_peaks[k] = 0.0;
+          });
+        }
+        if (window.lastPayload.system_peak_profits) {
+          ["eo", "ou", "cp"].forEach(k => { window.lastPayload.system_peak_profits[k] = 0.0; });
+        }
+        if (window.lastPayload.fleets) {
+          window.lastPayload.fleets.forEach(f => {
+            if (!f.fleet_name.toLowerCase().includes("bybit")) {
+              f.fleet_peak_profit = 0.0;
+              if (f.account_peaks) {
+                Object.keys(f.account_peaks).forEach(ak => { f.account_peaks[ak] = 0.0; });
+              }
+              (f.bots || []).forEach(b => {
+                b.peak_profit = b.profit || 0.0;
+              });
+            }
+          });
+        }
         renderDashboard(window.lastPayload);
       }
     }
@@ -1442,7 +1475,7 @@
             : (isKidsMode ? `🍭 ${accNameShort} • Call/Put (Conv) Playground` : `⚡ ${accNameShort} • Call/Put (Conv) Profit`);
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (8 bots • 20m rest • 20 markets).`;
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 30m rest • 20 markets).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 3 & Team 4 (${recBehaviorDesc}).`;
@@ -1460,10 +1493,10 @@
             : (isKidsMode ? `🎯 ${accNameShort} • Over/Under (Conv) Toy Box` : `🎯 ${accNameShort} • Over/Under (Conv) Profit`);
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (8 bots • 20m rest • 20 markets).`;
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 30m rest • 20 markets).`;
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = `${accNameShort}: ${recBehaviorDesc} (8 bots • 20m rest).`;
+          comfortingNotice.innerText = `${accNameShort}: ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 30m rest).`;
         }
         if (heroContainer) {
           heroContainer.className = isKidsMode
@@ -1478,7 +1511,7 @@
             : (isKidsMode ? `🍬 ${accNameShort} • Even/Odd Treasure` : `💰 ${accNameShort} • Even/Odd Profit`);
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (8 bots • 20m rest • 20 markets).`;
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 30m rest • 20 markets).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: ${recBehaviorDesc}.`;
@@ -1671,7 +1704,7 @@
       let html = "";
       accountFilteredFleets.forEach(fleet => {
         let friendlyFleetName = fleet.fleet_name;
-        let fleetSubtitle = `${currentAccount === 'acc3' ? 'Call / Put (Rise/Fall) Strategy' : 'Even / Odd Strategy'} • 4 Bots • 5m Stagger • 20m Rest • ${recTag}`;
+        let fleetSubtitle = `${currentAccount === 'acc3' ? 'Call / Put (Rise/Fall) Strategy' : 'Even / Odd Strategy'} • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • ${recTag}`;
         if (fleet.fleet_name.toLowerCase().includes("bybit")) {
           friendlyFleetName = "🚀 Team 1 (Bybit Long / Short)";
           fleetSubtitle = "Long/Short 2-Step Switch • 5m Stagger • 20m Rest • $50 Daily Target";

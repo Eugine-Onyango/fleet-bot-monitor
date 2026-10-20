@@ -2,106 +2,175 @@
 set -e
 
 echo "============================================================"
-echo "✨ FRESH CLEAN START FOR ALL DERIV FLEETS (72 BOTS TOTAL)"
-echo "   • Account 1 (DOT91203477): 24 E/O Bots (Lock Recovery)   -> RESET & RESTART"
-echo "   • Account 2 (DOT93845070): 24 E/O Bots (Switch Recovery) -> RESET & RESTART"
-echo "   • Account 3 (DOT91362122): 24 C/P Bots (Switch Recovery) -> RESET & RESTART"
+echo "🚀 30-MINUTE COOLDOWN • FRESH CLEAN START FOR ALL DERIV FLEETS"
+echo "   • Cooldown: 30-Minute Rest per bot (1800s)"
+echo "   • Fleets:   6 Helper Bots per Team (Trades occur every 5 minutes)"
+echo "   • Fleets per Account: 6 Teams × 6 Bots = 36 Bots Each"
+echo "   ------------------------------------------------------------"
+echo "   • Account 1 (DOT91203477): 36 E/O Bots (Lock Recovery)   -> CLEAN START"
+echo "   • Account 2 (DOT93845070): 36 E/O Bots (Switch Recovery) -> CLEAN START"
+echo "   • Account 3 (DOT91362122): 36 C/P Bots (Switch Recovery) -> CLEAN START"
 echo "   • Bybit Fleet (Crypto):    6 Bots                        -> 100% UNTOUCHED"
 echo "============================================================"
 
-# ------------------------------------------------------------
-# 1. STOP & WIPE ACCOUNT 1 (DOT91203477 - 24 BOTS)
-# ------------------------------------------------------------
-echo "🛑 Stopping Account 1 bot containers..."
-docker ps -q --filter "name=my-even-odd" --filter "name=my-over-under" --filter "name=my-call-put" | xargs -r docker stop >/dev/null 2>&1 || true
-
-echo "🧹 Wiping Account 1 state files & locks..."
-rm -f /root/even_odd_millipede_bot_*/state.json 2>/dev/null || true
-rm -f /root/even_odd_fleet2_bot_*/state.json 2>/dev/null || true
-rm -f /root/even_odd_fleet3_bot_*/state.json 2>/dev/null || true
-rm -f /root/over_under_fleet_bot_*/state.json 2>/dev/null || true
-rm -f /root/over_under_fleet2_bot_*/state.json 2>/dev/null || true
-rm -f /root/over_under_fleet3_bot_*/state.json 2>/dev/null || true
-rm -f /root/call_put_fleet_bot_*/state.json 2>/dev/null || true
-rm -f /root/call_put_fleet2_bot_*/state.json 2>/dev/null || true
-rm -rf /root/shared_master_trade_lock/trade_lock /root/shared_master_trade_lock/lock_info.json
-
-# ------------------------------------------------------------
-# 2. STOP & WIPE ACCOUNT 2 (DOT93845070 - 24 BOTS)
-# ------------------------------------------------------------
-echo "🛑 Stopping Account 2 runner..."
-docker rm -f acc2-fleet-runner >/dev/null 2>&1 || true
-pkill -f "run_acc2_fleet" 2>/dev/null || true
-pkill -f "DOT93845070" 2>/dev/null || true
-
-echo "🧹 Wiping Account 2 state files & locks..."
-rm -rf /root/acc2_*_bot_*/state.json /root/acc2_*_bot_*/bot.log /root/acc2_*_bot_*/bot_meta.json 2>/dev/null || true
-rm -rf /root/shared_master_trade_lock_acc2/trade_lock /root/shared_master_trade_lock_acc2/lock_info.json
-
-# ------------------------------------------------------------
-# 3. STOP & WIPE ACCOUNT 3 (DOT91362122 - 24 BOTS)
-# ------------------------------------------------------------
-echo "🛑 Stopping Account 3 runner..."
-docker rm -f acc3-fleet-runner >/dev/null 2>&1 || true
-pkill -f "run_acc3_fleet" 2>/dev/null || true
-pkill -f "DOT91362122" 2>/dev/null || true
-
-echo "🧹 Wiping Account 3 state files & locks..."
-rm -rf /root/acc3_*_bot_*/state.json /root/acc3_*_bot_*/bot.log /root/acc3_*_bot_*/bot_meta.json 2>/dev/null || true
-rm -rf /root/shared_master_trade_lock_acc3/trade_lock /root/shared_master_trade_lock_acc3/lock_info.json
-
-# ------------------------------------------------------------
-# 4. RESET DERIV PEAK PROFITS (KEEP BYBIT PEAK PROFIT 100% INTACT)
-# ------------------------------------------------------------
-echo "🎯 Resetting Deriv historical peaks to \$0.00 (Bybit preserved)..."
-if [ -f /root/fleet_peak_profits.json ]; then
-  python3 -c "
-import json
-try:
-  with open('/root/fleet_peak_profits.json', 'r') as f:
-    d = json.load(f)
-  d['reset_at'] = '$(date -u +%Y-%m-%dT%H:%M:%SZ)'
-  if 'systems' in d:
-    d['systems']['eo'] = 0.0
-    d['systems']['ou'] = 0.0
-    d['systems']['cp'] = 0.0
-  acc_sys = d.setdefault('account_systems', {})
-  for k in ['acc2_eo', 'acc2_ou', 'acc2_cp', 'acc3_eo', 'acc3_ou', 'acc3_cp']:
-    acc_sys[k] = 0.0
-  with open('/root/fleet_peak_profits.json', 'w') as f:
-    json.dump(d, f, indent=2)
-except Exception as e:
-  print(f'Warning resetting peak profits: {e}')
-" 2>/dev/null || true
+# Ensure extra 1GB swap is active so the VPS runs cool and smooth
+if ! swapon --show | grep -q "/swapfile_extra"; then
+  echo "⚡ Ensuring 1GB swap (/swapfile_extra) is active..."
+  fallocate -l 1G /swapfile_extra 2>/dev/null || dd if=/dev/zero of=/swapfile_extra bs=1M count=1024 status=none
+  chmod 600 /swapfile_extra
+  mkswap /swapfile_extra >/dev/null 2>&1 || true
+  swapon /swapfile_extra 2>/dev/null || true
 fi
 
 # ------------------------------------------------------------
-# 5. RESTART ACCOUNT 1 (24 BOTS WITH CLEAN STAGGER SCHEDULE)
+# 1. STOP & CLEAN PREVIOUS CONTAINERS / PROCESSES (BYBIT UNTOUCHED)
 # ------------------------------------------------------------
-echo "🚀 Restarting Account 1 (24 Even/Odd Bots - Lock Recovery)..."
+echo "🛑 Stopping and cleaning old bot containers (Bybit preserved)..."
+docker ps -aq --filter "name=my-even-odd" --filter "name=my-over-under" --filter "name=my-call-put" | xargs -r docker rm -f >/dev/null 2>&1 || true
+docker rm -f acc1-fleet-runner acc2-fleet-runner acc3-fleet-runner >/dev/null 2>&1 || true
+
+pkill -f "run_acc1_fleet" 2>/dev/null || true
+pkill -f "run_acc2_fleet" 2>/dev/null || true
+pkill -f "run_acc3_fleet" 2>/dev/null || true
+pkill -f "DOT91203477" 2>/dev/null || true
+pkill -f "DOT93845070" 2>/dev/null || true
+pkill -f "DOT91362122" 2>/dev/null || true
+
+# ------------------------------------------------------------
+# 2. WIPE ALL DERIV STATE FILES & LOGS (RESET EVERYTHING TO $0.00)
+# ------------------------------------------------------------
+echo "🧹 Wiping all old state files & logs for a 100% clean start..."
+rm -rf /root/even_odd_millipede_bot_* /root/even_odd_fleet2_bot_* /root/even_odd_fleet3_bot_* 2>/dev/null || true
+rm -rf /root/over_under_fleet_bot_* /root/over_under_fleet2_bot_* /root/over_under_fleet3_bot_* 2>/dev/null || true
+rm -rf /root/call_put_fleet_bot_* /root/call_put_fleet2_bot_* 2>/dev/null || true
+rm -rf /root/acc2_* /root/acc3_* 2>/dev/null || true
+
+# ------------------------------------------------------------
+# 3. RE-INITIALIZE TRADE LOCKS
+# ------------------------------------------------------------
+MASTER_LOCK_ACC1="/root/shared_master_trade_lock"
+MASTER_LOCK_ACC2="/root/shared_master_trade_lock_acc2"
+MASTER_LOCK_ACC3="/root/shared_master_trade_lock_acc3"
+mkdir -p "$MASTER_LOCK_ACC1" "$MASTER_LOCK_ACC2" "$MASTER_LOCK_ACC3"
+rm -rf "$MASTER_LOCK_ACC1/trade_lock" "$MASTER_LOCK_ACC1/lock_info.json"
+rm -rf "$MASTER_LOCK_ACC2/trade_lock" "$MASTER_LOCK_ACC2/lock_info.json"
+rm -rf "$MASTER_LOCK_ACC3/trade_lock" "$MASTER_LOCK_ACC3/lock_info.json"
+
+# ------------------------------------------------------------
+# 4. RESET HISTORICAL PEAK PROFITS (WIPE DERIV PEAKS TO $0.00, KEEP BYBIT)
+# ------------------------------------------------------------
+echo "🎯 Resetting historical Deriv peak profits completely to \$0.00..."
+python3 -c "
+import json, os
+bybit_peak = 0.0
+if os.path.exists('/root/fleet_peak_profits.json'):
+  try:
+    with open('/root/fleet_peak_profits.json', 'r') as f:
+      old = json.load(f)
+      bybit_peak = float(old.get('systems', {}).get('bybit', 0.0))
+  except Exception:
+    pass
+
+d = {
+  'overall': bybit_peak,
+  'reset_at': '$(date -u +%Y-%m-%dT%H:%M:%SZ)',
+  'systems': {'eo': 0.0, 'ou': 0.0, 'cp': 0.0, 'bybit': bybit_peak},
+  'account_systems': {
+    'acc1_eo': 0.0, 'acc1_ou': 0.0, 'acc1_cp': 0.0, 'acc1_all': 0.0,
+    'acc2_eo': 0.0, 'acc2_ou': 0.0, 'acc2_cp': 0.0, 'acc2_all': 0.0,
+    'acc3_eo': 0.0, 'acc3_ou': 0.0, 'acc3_cp': 0.0, 'acc3_all': 0.0
+  },
+  'account_fleets': {},
+  'fleets': {},
+  'bots': {}
+}
+with open('/root/fleet_peak_profits.json', 'w') as f:
+  json.dump(d, f, indent=2)
+" 2>/dev/null || true
+
+# ------------------------------------------------------------
+# 5. PULL LATEST BOT CODE & CONFIGS (30m Cooldown Active)
+# ------------------------------------------------------------
 REPO_RAW="https://raw.githubusercontent.com/Eugine-Onyango/fleet-bot-monitor/main"
-mkdir -p /root/eo_fleet_build /root/cp_fleet_build
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/eo_fleet/even_odd_millipede.py" > /root/eo_fleet_build/even_odd_millipede.py
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/eo_fleet/config.json" > /root/eo_fleet_build/config.json
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/call_put_fleet.py" > /root/cp_fleet_build/call_put_fleet.py
-curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/config.json" > /root/cp_fleet_build/config.json
+EO_BUILD="/root/eo_fleet_build"
+CP_BUILD="/root/cp_fleet_build"
+mkdir -p "$EO_BUILD" "$CP_BUILD"
 
-# Copy clean code to all Account 1 bot directories
-for d in /root/even_odd_millipede_bot_* /root/even_odd_fleet2_bot_* /root/even_odd_fleet3_bot_* \
-         /root/over_under_fleet_bot_* /root/over_under_fleet2_bot_* /root/over_under_fleet3_bot_*; do
-  if [ -d "$d" ]; then
-    cp /root/eo_fleet_build/config.json "$d/config.json" 2>/dev/null || true
-    cp /root/eo_fleet_build/even_odd_millipede.py "$d/even_odd_millipede.py" 2>/dev/null || true
-  fi
-done
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/eo_fleet/even_odd_millipede.py" > "$EO_BUILD/even_odd_millipede.py"
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/eo_fleet/config.json" > "$EO_BUILD/config.json"
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/eo_fleet/Dockerfile" > "$EO_BUILD/Dockerfile"
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/eo_fleet/requirements.txt" > "$EO_BUILD/requirements.txt"
+cd "$EO_BUILD"
+docker build -q -t headless-even-odd-millipede . >/dev/null
 
-docker ps -aq --filter "name=my-even-odd" --filter "name=my-over-under" --filter "name=my-call-put" | xargs -r docker start >/dev/null 2>&1 || true
-echo "✅ Account 1: All 24 Bots restarted with clean slate."
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/call_put_fleet.py" > "$CP_BUILD/call_put_fleet.py"
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/config.json" > "$CP_BUILD/config.json"
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/Dockerfile" > "$CP_BUILD/Dockerfile"
+curl -s -H "Cache-Control: no-cache" "$REPO_RAW/cp_fleet/requirements.txt" > "$CP_BUILD/requirements.txt"
+cd "$CP_BUILD"
+docker build -q -t headless-call-put-fleet . >/dev/null
 
 # ------------------------------------------------------------
-# 6. RESTART ACCOUNT 2 (24 BOTS - MARKET-SWITCH RECOVERY)
+# 6. LAUNCH ACCOUNT 1 (DOT91203477 - 36 BOTS, 30m COOLDOWN, LOCK RECOVERY)
 # ------------------------------------------------------------
-echo "🚀 Restarting Account 2 (24 Even/Odd Bots - Market-Switch Recovery)..."
+echo "🚀 Launching Account 1 (36 Bots • 6 per team • 30m Rest • Lock Recovery)..."
+cat << 'EOF' > /root/run_acc1_fleet.sh
+#!/bin/bash
+ACC1_ID="DOT91203477"
+ACC1_TOKEN="pat_d858bf2ec8a6a47d45bfa2d4a7182ce7e63d993912dacfe4a5af32266af07277"
+MASTER_LOCK_ACC1="/root/shared_master_trade_lock"
+
+spawn_team() {
+  local PREFIX=$1
+  local DIR_PREFIX=$2
+  local BASE_OFFSET=$3
+  for i in 1 2 3 4 5 6; do
+    local BOT_NAME="my-${PREFIX}-$i"
+    local BOT_DIR="/root/${DIR_PREFIX}_$i"
+    local DELAY=$(( BASE_OFFSET + (i - 1) * 300 ))
+    mkdir -p "$BOT_DIR"
+    cp /root/eo_fleet_build/config.json "$BOT_DIR/config.json"
+    cp /root/eo_fleet_build/even_odd_millipede.py "$BOT_DIR/even_odd_millipede.py"
+    (
+      cd "$BOT_DIR" || exit 1
+      export BOT_NAME="$BOT_NAME"
+      export DERIV_ACCOUNT_ID="$ACC1_ID"
+      export DERIV_API_TOKEN="$ACC1_TOKEN"
+      export SWITCH_MARKET_ON_LOSS="false"
+      export INITIAL_DELAY_SECONDS="$DELAY"
+      export LOCK_DIR="$MASTER_LOCK_ACC1"
+      START_TS=$(date +%s)
+      python3 -c "import json; json.dump({'name': '$BOT_NAME', 'pid': $BASHPID, 'started_at': $START_TS}, open('$BOT_DIR/bot_meta.json', 'w'))"
+      while true; do
+        python3 -u even_odd_millipede.py >> "$BOT_DIR/bot.log" 2>&1
+        export INITIAL_DELAY_SECONDS="5"
+        sleep 5
+      done
+    ) &
+  done
+}
+
+spawn_team "even-odd-bot"          "even_odd_millipede_bot" 0
+spawn_team "even-odd-fleet2-bot"   "even_odd_fleet2_bot"    45
+spawn_team "over-under-fleet-bot"  "over_under_fleet_bot"   90
+spawn_team "over-under-fleet2-bot" "over_under_fleet2_bot"  135
+spawn_team "over-under-fleet3-bot" "over_under_fleet3_bot"  180
+spawn_team "even-odd-fleet3-bot"   "even_odd_fleet3_bot"    225
+wait
+EOF
+chmod +x /root/run_acc1_fleet.sh
+
+docker run -d --restart always --name acc1-fleet-runner \
+  --pid=host \
+  -v /root:/root \
+  --entrypoint /bin/bash \
+  headless-even-odd-millipede /root/run_acc1_fleet.sh >/dev/null
+echo "✅ Account 1: 36 Bots active (6 teams × 6 bots, 30m rest)."
+
+# ------------------------------------------------------------
+# 7. LAUNCH ACCOUNT 2 (DOT93845070 - 36 BOTS, 30m COOLDOWN, SWITCH RECOVERY)
+# ------------------------------------------------------------
+echo "🚀 Launching Account 2 (36 Bots • 6 per team • 30m Rest • Switch Recovery)..."
 cat << 'EOF' > /root/run_acc2_fleet.sh
 #!/bin/bash
 ACC2_ID="DOT93845070"
@@ -112,7 +181,7 @@ spawn_team() {
   local PREFIX=$1
   local DIR_PREFIX=$2
   local BASE_OFFSET=$3
-  for i in 1 2 3 4; do
+  for i in 1 2 3 4 5 6; do
     local BOT_NAME="acc2-${PREFIX}-$i"
     local BOT_DIR="/root/acc2_${DIR_PREFIX}_$i"
     local DELAY=$(( BASE_OFFSET + (i - 1) * 300 ))
@@ -153,12 +222,12 @@ docker run -d --restart always --name acc2-fleet-runner \
   -v /root:/root \
   --entrypoint /bin/bash \
   headless-even-odd-millipede /root/run_acc2_fleet.sh >/dev/null
-echo "✅ Account 2: 24 Bots launched in clean runner."
+echo "✅ Account 2: 36 Bots active (6 teams × 6 bots, 30m rest)."
 
 # ------------------------------------------------------------
-# 7. RESTART ACCOUNT 3 (24 BOTS - MARKET-SWITCH RECOVERY)
+# 8. LAUNCH ACCOUNT 3 (DOT91362122 - 36 BOTS, 30m COOLDOWN, C/P SWITCH RECOVERY)
 # ------------------------------------------------------------
-echo "🚀 Restarting Account 3 (24 Call/Put Bots - Market-Switch Recovery)..."
+echo "🚀 Launching Account 3 (36 Bots • 6 per team • 30m Rest • Call/Put Switch)..."
 cat << 'EOF' > /root/run_acc3_fleet.sh
 #!/bin/bash
 ACC3_ID="DOT91362122"
@@ -169,7 +238,7 @@ spawn_team() {
   local PREFIX=$1
   local DIR_PREFIX=$2
   local BASE_OFFSET=$3
-  for i in 1 2 3 4; do
+  for i in 1 2 3 4 5 6; do
     local BOT_NAME="acc3-${PREFIX}-$i"
     local BOT_DIR="/root/acc3_${DIR_PREFIX}_$i"
     local DELAY=$(( BASE_OFFSET + (i - 1) * 300 ))
@@ -210,10 +279,10 @@ docker run -d --restart always --name acc3-fleet-runner \
   -v /root:/root \
   --entrypoint /bin/bash \
   headless-call-put-fleet /root/run_acc3_fleet.sh >/dev/null
-echo "✅ Account 3: 24 Bots launched in clean runner."
+echo "✅ Account 3: 36 Bots active (6 teams × 6 bots, 30m rest)."
 
 # ------------------------------------------------------------
-# 8. UPDATE AND RESTART MONITOR PUSHER
+# 9. UPDATE AND RESTART MONITOR PUSHER
 # ------------------------------------------------------------
 echo "🔄 Updating & restarting live monitor pusher..."
 EXISTING_TOKEN=$(grep -oP 'GITHUB_TOKEN = os\.getenv\("GITHUB_TOKEN", "\K[^"]+' /root/fleet_monitor_pusher.py 2>/dev/null || true)
@@ -235,11 +304,14 @@ fi
 sleep 3
 echo ""
 echo "============================================================"
-echo "🎉 ALL DERIV FLEETS HAVE BEEN GIVEN A FRESH CLEAN START!"
-echo "   • Account 1 (DOT91203477): 24 E/O Bots (Lock Recovery)   - RESET & RUNNING"
-echo "   • Account 2 (DOT93845070): 24 E/O Bots (Switch Recovery) - RESET & RUNNING"
-echo "   • Account 3 (DOT91362122): 24 C/P Bots (Switch Recovery) - RESET & RUNNING"
+echo "🎉 ALL DERIV FLEETS DEPLOYED WITH 30m REST • FRESH CLEAN START!"
+echo "   • Account 1 (DOT91203477): 36 E/O Bots (Lock Recovery)   - RESET & RUNNING"
+echo "   • Account 2 (DOT93845070): 36 E/O Bots (Switch Recovery) - RESET & RUNNING"
+echo "   • Account 3 (DOT91362122): 36 C/P Bots (Switch Recovery) - RESET & RUNNING"
+echo "   • Total Active Deriv Bots: 108 Bots (18 Teams of 6 Bots Each)"
+echo "   • Cooldown:                30-Minute Rest (Trades occur every 5 minutes)"
 echo "   • Bybit Fleet:             6 Crypto Bots                 - 100% UNTOUCHED"
-echo "   • All Deriv P/L reset to \$0.00 and win/loss records reset to 0-0."
-echo "   • Dashboard Live at: https://fleet-bot-monitor.vercel.app"
+echo "   • All Deriv Peaks & P/L:   Completely reset to \$0.00 (0W - 0L)"
+echo "   • Dashboard Live at:       https://fleet-bot-monitor.vercel.app"
 echo "============================================================"
+free -h
