@@ -2,10 +2,10 @@
 set -e
 
 echo "============================================================"
-echo "🚀 30-MINUTE COOLDOWN • FRESH CLEAN START FOR ALL DERIV FLEETS"
-echo "   • Cooldown: 30-Minute Rest per bot (1800s)"
-echo "   • Fleets:   6 Helper Bots per Team (Trades occur every 5 minutes)"
-echo "   • Fleets per Account: 6 Teams × 6 Bots = 36 Bots Each"
+echo "🚀 ULTRA-LIGHT 3-PROCESS ENGINE • FRESH CLEAN START (108 BOTS)"
+echo "   • RAM Usage: ~40 MB total for all 108 bots (3 Python processes)"
+echo "   • Cooldown:  30-Minute Rest per bot (1800s)"
+echo "   • Fleets:    6 Helper Bots per Team (Trades occur every 5 minutes)"
 echo "   ------------------------------------------------------------"
 echo "   • Account 1 (DOT91203477): 36 E/O Bots (Lock Recovery)   -> CLEAN START"
 echo "   • Account 2 (DOT93845070): 36 E/O Bots (Switch Recovery) -> CLEAN START"
@@ -32,9 +32,8 @@ docker rm -f acc1-fleet-runner acc2-fleet-runner acc3-fleet-runner >/dev/null 2>
 pkill -f "run_acc1_fleet" 2>/dev/null || true
 pkill -f "run_acc2_fleet" 2>/dev/null || true
 pkill -f "run_acc3_fleet" 2>/dev/null || true
-pkill -f "DOT91203477" 2>/dev/null || true
-pkill -f "DOT93845070" 2>/dev/null || true
-pkill -f "DOT91362122" 2>/dev/null || true
+pkill -f "even_odd_millipede.py" 2>/dev/null || true
+pkill -f "call_put_fleet.py" 2>/dev/null || true
 
 # ------------------------------------------------------------
 # 2. WIPE ALL DERIV STATE FILES & LOGS (RESET EVERYTHING TO $0.00)
@@ -89,7 +88,7 @@ with open('/root/fleet_peak_profits.json', 'w') as f:
 " 2>/dev/null || true
 
 # ------------------------------------------------------------
-# 5. PULL LATEST BOT CODE & CONFIGS (30m Cooldown Active)
+# 5. PULL LATEST BOT CODE & CONFIGS (30m Cooldown + Single-Process Scheduler)
 # ------------------------------------------------------------
 REPO_RAW="https://raw.githubusercontent.com/Eugine-Onyango/fleet-bot-monitor/main"
 EO_BUILD="/root/eo_fleet_build"
@@ -111,52 +110,27 @@ cd "$CP_BUILD"
 docker build -q -t headless-call-put-fleet . >/dev/null
 
 # ------------------------------------------------------------
-# 6. LAUNCH ACCOUNT 1 (DOT91203477 - 36 BOTS, 30m COOLDOWN, LOCK RECOVERY)
+# 6. LAUNCH ACCOUNT 1 (1 PYTHON PROCESS MANAGING ALL 36 BOTS)
 # ------------------------------------------------------------
-echo "🚀 Launching Account 1 (36 Bots • 6 per team • 30m Rest • Lock Recovery)..."
+echo "🚀 Launching Account 1 (36 Bots in 1 Ultra-Light Process • Lock Recovery)..."
 cat << 'EOF' > /root/run_acc1_fleet.sh
 #!/bin/bash
-ACC1_ID="DOT91203477"
-ACC1_TOKEN="pat_d858bf2ec8a6a47d45bfa2d4a7182ce7e63d993912dacfe4a5af32266af07277"
-MASTER_LOCK_ACC1="/root/shared_master_trade_lock"
+export DERIV_ACCOUNT_ID="DOT91203477"
+export DERIV_API_TOKEN="pat_d858bf2ec8a6a47d45bfa2d4a7182ce7e63d993912dacfe4a5af32266af07277"
+export SWITCH_MARKET_ON_LOSS="false"
+export LOCK_DIR="/root/shared_master_trade_lock"
 
-spawn_team() {
-  local PREFIX=$1
-  local DIR_PREFIX=$2
-  local BASE_OFFSET=$3
+for d_prefix in even_odd_millipede_bot even_odd_fleet2_bot over_under_fleet_bot over_under_fleet2_bot over_under_fleet3_bot even_odd_fleet3_bot; do
   for i in 1 2 3 4 5 6; do
-    local BOT_NAME="my-${PREFIX}-$i"
-    local BOT_DIR="/root/${DIR_PREFIX}_$i"
-    local DELAY=$(( BASE_OFFSET + (i - 1) * 300 ))
-    mkdir -p "$BOT_DIR"
-    cp /root/eo_fleet_build/config.json "$BOT_DIR/config.json"
-    cp /root/eo_fleet_build/even_odd_millipede.py "$BOT_DIR/even_odd_millipede.py"
-    (
-      cd "$BOT_DIR" || exit 1
-      export BOT_NAME="$BOT_NAME"
-      export DERIV_ACCOUNT_ID="$ACC1_ID"
-      export DERIV_API_TOKEN="$ACC1_TOKEN"
-      export SWITCH_MARKET_ON_LOSS="false"
-      export INITIAL_DELAY_SECONDS="$DELAY"
-      export LOCK_DIR="$MASTER_LOCK_ACC1"
-      START_TS=$(date +%s)
-      python3 -c "import json; json.dump({'name': '$BOT_NAME', 'pid': $BASHPID, 'started_at': $START_TS}, open('$BOT_DIR/bot_meta.json', 'w'))"
-      while true; do
-        python3 -u even_odd_millipede.py >> "$BOT_DIR/bot.log" 2>&1
-        export INITIAL_DELAY_SECONDS="5"
-        sleep 5
-      done
-    ) &
+    mkdir -p "/root/${d_prefix}_$i"
+    cp /root/eo_fleet_build/config.json "/root/${d_prefix}_$i/config.json"
   done
-}
+done
 
-spawn_team "even-odd-bot"          "even_odd_millipede_bot" 0
-spawn_team "even-odd-fleet2-bot"   "even_odd_fleet2_bot"    45
-spawn_team "over-under-fleet-bot"  "over_under_fleet_bot"   90
-spawn_team "over-under-fleet2-bot" "over_under_fleet2_bot"  135
-spawn_team "over-under-fleet3-bot" "over_under_fleet3_bot"  180
-spawn_team "even-odd-fleet3-bot"   "even_odd_fleet3_bot"    225
-wait
+while true; do
+  python3 -u /root/eo_fleet_build/even_odd_millipede.py --multi-scheduler acc1
+  sleep 5
+done
 EOF
 chmod +x /root/run_acc1_fleet.sh
 
@@ -165,55 +139,30 @@ docker run -d --restart always --name acc1-fleet-runner \
   -v /root:/root \
   --entrypoint /bin/bash \
   headless-even-odd-millipede /root/run_acc1_fleet.sh >/dev/null
-echo "✅ Account 1: 36 Bots active (6 teams × 6 bots, 30m rest)."
+echo "✅ Account 1: 36 Bots active in 1 single Python process (~13 MB RAM)."
 
 # ------------------------------------------------------------
-# 7. LAUNCH ACCOUNT 2 (DOT93845070 - 36 BOTS, 30m COOLDOWN, SWITCH RECOVERY)
+# 7. LAUNCH ACCOUNT 2 (1 PYTHON PROCESS MANAGING ALL 36 BOTS)
 # ------------------------------------------------------------
-echo "🚀 Launching Account 2 (36 Bots • 6 per team • 30m Rest • Switch Recovery)..."
+echo "🚀 Launching Account 2 (36 Bots in 1 Ultra-Light Process • Switch Recovery)..."
 cat << 'EOF' > /root/run_acc2_fleet.sh
 #!/bin/bash
-ACC2_ID="DOT93845070"
-ACC2_TOKEN="pat_e8b31d27beb9c0a040f1059ce12bac092383a3838554078c75378bf9831bf955"
-MASTER_LOCK_ACC2="/root/shared_master_trade_lock_acc2"
+export DERIV_ACCOUNT_ID="DOT93845070"
+export DERIV_API_TOKEN="pat_e8b31d27beb9c0a040f1059ce12bac092383a3838554078c75378bf9831bf955"
+export SWITCH_MARKET_ON_LOSS="true"
+export LOCK_DIR="/root/shared_master_trade_lock_acc2"
 
-spawn_team() {
-  local PREFIX=$1
-  local DIR_PREFIX=$2
-  local BASE_OFFSET=$3
+for d_prefix in even_odd_millipede_bot even_odd_fleet2_bot over_under_fleet_bot over_under_fleet2_bot over_under_fleet3_bot even_odd_fleet3_bot; do
   for i in 1 2 3 4 5 6; do
-    local BOT_NAME="acc2-${PREFIX}-$i"
-    local BOT_DIR="/root/acc2_${DIR_PREFIX}_$i"
-    local DELAY=$(( BASE_OFFSET + (i - 1) * 300 ))
-    mkdir -p "$BOT_DIR"
-    cp /root/eo_fleet_build/config.json "$BOT_DIR/config.json"
-    cp /root/eo_fleet_build/even_odd_millipede.py "$BOT_DIR/even_odd_millipede.py"
-    (
-      cd "$BOT_DIR" || exit 1
-      export BOT_NAME="$BOT_NAME"
-      export DERIV_ACCOUNT_ID="$ACC2_ID"
-      export DERIV_API_TOKEN="$ACC2_TOKEN"
-      export SWITCH_MARKET_ON_LOSS="true"
-      export INITIAL_DELAY_SECONDS="$DELAY"
-      export LOCK_DIR="$MASTER_LOCK_ACC2"
-      START_TS=$(date +%s)
-      python3 -c "import json; json.dump({'name': '$BOT_NAME', 'pid': $BASHPID, 'started_at': $START_TS}, open('$BOT_DIR/bot_meta.json', 'w'))"
-      while true; do
-        python3 -u even_odd_millipede.py >> "$BOT_DIR/bot.log" 2>&1
-        export INITIAL_DELAY_SECONDS="5"
-        sleep 5
-      done
-    ) &
+    mkdir -p "/root/acc2_${d_prefix}_$i"
+    cp /root/eo_fleet_build/config.json "/root/acc2_${d_prefix}_$i/config.json"
   done
-}
+done
 
-spawn_team "even-odd-bot"          "even_odd_millipede_bot" 0
-spawn_team "even-odd-fleet2-bot"   "even_odd_fleet2_bot"    45
-spawn_team "over-under-fleet-bot"  "over_under_fleet_bot"   90
-spawn_team "over-under-fleet2-bot" "over_under_fleet2_bot"  135
-spawn_team "over-under-fleet3-bot" "over_under_fleet3_bot"  180
-spawn_team "even-odd-fleet3-bot"   "even_odd_fleet3_bot"    225
-wait
+while true; do
+  python3 -u /root/eo_fleet_build/even_odd_millipede.py --multi-scheduler acc2
+  sleep 5
+done
 EOF
 chmod +x /root/run_acc2_fleet.sh
 
@@ -222,55 +171,30 @@ docker run -d --restart always --name acc2-fleet-runner \
   -v /root:/root \
   --entrypoint /bin/bash \
   headless-even-odd-millipede /root/run_acc2_fleet.sh >/dev/null
-echo "✅ Account 2: 36 Bots active (6 teams × 6 bots, 30m rest)."
+echo "✅ Account 2: 36 Bots active in 1 single Python process (~13 MB RAM)."
 
 # ------------------------------------------------------------
-# 8. LAUNCH ACCOUNT 3 (DOT91362122 - 36 BOTS, 30m COOLDOWN, C/P SWITCH RECOVERY)
+# 8. LAUNCH ACCOUNT 3 (1 PYTHON PROCESS MANAGING ALL 36 BOTS)
 # ------------------------------------------------------------
-echo "🚀 Launching Account 3 (36 Bots • 6 per team • 30m Rest • Call/Put Switch)..."
+echo "🚀 Launching Account 3 (36 Bots in 1 Ultra-Light Process • Call/Put Switch)..."
 cat << 'EOF' > /root/run_acc3_fleet.sh
 #!/bin/bash
-ACC3_ID="DOT91362122"
-ACC3_TOKEN="pat_6ca0c6bca661b25f102eb309d6748e7fcf423a33138c9b3ed2d7d5605a45f54a"
-MASTER_LOCK_ACC3="/root/shared_master_trade_lock_acc3"
+export DERIV_ACCOUNT_ID="DOT91362122"
+export DERIV_API_TOKEN="pat_6ca0c6bca661b25f102eb309d6748e7fcf423a33138c9b3ed2d7d5605a45f54a"
+export SWITCH_MARKET_ON_LOSS="true"
+export LOCK_DIR="/root/shared_master_trade_lock_acc3"
 
-spawn_team() {
-  local PREFIX=$1
-  local DIR_PREFIX=$2
-  local BASE_OFFSET=$3
+for d_prefix in even_odd_millipede_bot even_odd_fleet2_bot over_under_fleet_bot over_under_fleet2_bot over_under_fleet3_bot even_odd_fleet3_bot; do
   for i in 1 2 3 4 5 6; do
-    local BOT_NAME="acc3-${PREFIX}-$i"
-    local BOT_DIR="/root/acc3_${DIR_PREFIX}_$i"
-    local DELAY=$(( BASE_OFFSET + (i - 1) * 300 ))
-    mkdir -p "$BOT_DIR"
-    cp /root/cp_fleet_build/config.json "$BOT_DIR/config.json"
-    cp /root/cp_fleet_build/call_put_fleet.py "$BOT_DIR/call_put_fleet.py"
-    (
-      cd "$BOT_DIR" || exit 1
-      export BOT_NAME="$BOT_NAME"
-      export DERIV_ACCOUNT_ID="$ACC3_ID"
-      export DERIV_API_TOKEN="$ACC3_TOKEN"
-      export SWITCH_MARKET_ON_LOSS="true"
-      export INITIAL_DELAY_SECONDS="$DELAY"
-      export LOCK_DIR="$MASTER_LOCK_ACC3"
-      START_TS=$(date +%s)
-      python3 -c "import json; json.dump({'name': '$BOT_NAME', 'pid': $BASHPID, 'started_at': $START_TS}, open('$BOT_DIR/bot_meta.json', 'w'))"
-      while true; do
-        python3 -u call_put_fleet.py >> "$BOT_DIR/bot.log" 2>&1
-        export INITIAL_DELAY_SECONDS="5"
-        sleep 5
-      done
-    ) &
+    mkdir -p "/root/acc3_${d_prefix}_$i"
+    cp /root/cp_fleet_build/config.json "/root/acc3_${d_prefix}_$i/config.json"
   done
-}
+done
 
-spawn_team "even-odd-bot"          "even_odd_millipede_bot" 15
-spawn_team "even-odd-fleet2-bot"   "even_odd_fleet2_bot"    60
-spawn_team "over-under-fleet-bot"  "over_under_fleet_bot"   105
-spawn_team "over-under-fleet2-bot" "over_under_fleet2_bot"  150
-spawn_team "over-under-fleet3-bot" "over_under_fleet3_bot"  195
-spawn_team "even-odd-fleet3-bot"   "even_odd_fleet3_bot"    240
-wait
+while true; do
+  python3 -u /root/cp_fleet_build/call_put_fleet.py --multi-scheduler acc3
+  sleep 5
+done
 EOF
 chmod +x /root/run_acc3_fleet.sh
 
@@ -279,7 +203,7 @@ docker run -d --restart always --name acc3-fleet-runner \
   -v /root:/root \
   --entrypoint /bin/bash \
   headless-call-put-fleet /root/run_acc3_fleet.sh >/dev/null
-echo "✅ Account 3: 36 Bots active (6 teams × 6 bots, 30m rest)."
+echo "✅ Account 3: 36 Bots active in 1 single Python process (~13 MB RAM)."
 
 # ------------------------------------------------------------
 # 9. UPDATE AND RESTART MONITOR PUSHER
@@ -301,17 +225,14 @@ else
   nohup python3 -u /root/fleet_monitor_pusher.py > /root/pusher.log 2>&1 &
 fi
 
-sleep 3
+sleep 4
 echo ""
 echo "============================================================"
-echo "🎉 ALL DERIV FLEETS DEPLOYED WITH 30m REST • FRESH CLEAN START!"
-echo "   • Account 1 (DOT91203477): 36 E/O Bots (Lock Recovery)   - RESET & RUNNING"
-echo "   • Account 2 (DOT93845070): 36 E/O Bots (Switch Recovery) - RESET & RUNNING"
-echo "   • Account 3 (DOT91362122): 36 C/P Bots (Switch Recovery) - RESET & RUNNING"
-echo "   • Total Active Deriv Bots: 108 Bots (18 Teams of 6 Bots Each)"
-echo "   • Cooldown:                30-Minute Rest (Trades occur every 5 minutes)"
+echo "🎉 ULTRA-LIGHT 3-PROCESS ENGINE DEPLOYED (108 BOTS • ~40MB RAM)!"
+echo "   • Account 1 (DOT91203477): 36 E/O Bots (Lock Recovery)   - LIVE (1 Process)"
+echo "   • Account 2 (DOT93845070): 36 E/O Bots (Switch Recovery) - LIVE (1 Process)"
+echo "   • Account 3 (DOT91362122): 36 C/P Bots (Switch Recovery) - LIVE (1 Process)"
 echo "   • Bybit Fleet:             6 Crypto Bots                 - 100% UNTOUCHED"
-echo "   • All Deriv Peaks & P/L:   Completely reset to \$0.00 (0W - 0L)"
 echo "   • Dashboard Live at:       https://fleet-bot-monitor.vercel.app"
 echo "============================================================"
 free -h

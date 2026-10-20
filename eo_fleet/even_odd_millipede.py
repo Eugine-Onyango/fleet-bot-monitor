@@ -614,7 +614,152 @@ def run_trade_cycle():
     finally:
         release_lock()
 
+def reset_bot_globals():
+    global STATE, cycle_step, active_proposal_id, active_contract_id, ws_connection, is_trade_active, halted, last_cycle_won, scanner_results, scanner_targets
+    STATE = {
+        "total_profit": 0.0,
+        "wins": 0,
+        "losses": 0,
+        "current_market": None,
+        "in_recovery": False,
+        "market_basket": [],
+        "market_index": 0,
+        "cycle_profit": 0.0,
+        "cycle_stake": 0.35,
+        "consecutive_cycle_losses": 0,
+        "max_stake": 0.35,
+        "max_stake_market": "N/A",
+        "max_drawdown": 0.0,
+        "max_cycle_loss": 0.0,
+        "trade_timestamps": [],
+        "markets_state": {}
+    }
+    cycle_step = 1
+    active_proposal_id = None
+    active_contract_id = None
+    ws_connection = None
+    is_trade_active = False
+    halted = False
+    last_cycle_won = False
+    scanner_results = {}
+    scanner_targets = []
+
+def run_multi_bot_scheduler(acc_mode):
+    global BOT_NAME, START_TIME
+    orig_stdout = sys.stdout
+    orig_stderr = sys.stderr
+    start_ts = time.time()
+    START_TIME = start_ts
+    my_pid = os.getpid()
+
+    teams = [
+        ("even-odd-bot",          "even_odd_millipede_bot", 0),
+        ("even-odd-fleet2-bot",   "even_odd_fleet2_bot",    45),
+        ("over-under-fleet-bot",  "over_under_fleet_bot",   90),
+        ("over-under-fleet2-bot", "over_under_fleet2_bot",  135),
+        ("over-under-fleet3-bot", "over_under_fleet3_bot",  180),
+        ("even-odd-fleet3-bot",   "even_odd_fleet3_bot",    225),
+    ]
+
+    bot_prefix = "my" if acc_mode == "acc1" else "acc2"
+    dir_prefix_root = "/root" if acc_mode == "acc1" else "/root/acc2"
+
+    bots_schedule = []
+    for t_prefix, d_prefix, base_offset in teams:
+        for i in range(1, 7):
+            b_name = f"{bot_prefix}-{t_prefix}-{i}"
+            b_dir = f"/root/{d_prefix}_{i}" if acc_mode == "acc1" else f"/root/acc2_{d_prefix}_{i}"
+            delay = base_offset + (i - 1) * 300
+            os.makedirs(b_dir, exist_ok=True)
+            meta_path = os.path.join(b_dir, "bot_meta.json")
+            with open(meta_path, "w", encoding="utf-8") as mf:
+                json.dump({"name": b_name, "pid": my_pid, "started_at": int(start_ts)}, mf)
+
+            log_path = os.path.join(b_dir, "bot.log")
+            with open(log_path, "a", encoding="utf-8", buffering=1) as lf:
+                sys.stdout = lf
+                sys.stderr = lf
+                os.chdir(b_dir)
+                BOT_NAME = b_name
+                reset_bot_globals()
+                load_config(verbose=False)
+                load_state(verbose=False)
+                sched_time = (datetime.datetime.now() + datetime.timedelta(seconds=delay)).strftime("%Y-%m-%d %H:%M:%S")
+                print(f"🤖 Initializing Even/Odd Millipede Bot: {b_name} [Ultra-Light Single-Process Engine]")
+                print(f"⏳ [STAGGER LAUNCH] Initial delay of {delay // 60}m {delay % 60}s active ({b_name}). First trade scheduled for {sched_time}.")
+                print(f"🚀 [STARTING FLEET LOOP] {b_name} is active!")
+
+            bots_schedule.append({
+                "name": b_name,
+                "dir": b_dir,
+                "next_run": start_ts + delay
+            })
+
+    sys.stdout = orig_stdout
+    sys.stderr = orig_stderr
+    print(f"✅ [{acc_mode.upper()} MULTI-SCHEDULER] Managing {len(bots_schedule)} bots in 1 process (PID {my_pid})!")
+
+    while True:
+        now = time.time()
+        ready = [b for b in bots_schedule if now >= b["next_run"]]
+        if not ready:
+            time.sleep(1.0)
+            continue
+
+        ready.sort(key=lambda x: x["next_run"])
+        bot = ready[0]
+        b_name = bot["name"]
+        b_dir = bot["dir"]
+        log_path = os.path.join(b_dir, "bot.log")
+
+        try:
+            with open(log_path, "a", encoding="utf-8", buffering=1) as lf:
+                sys.stdout = lf
+                sys.stderr = lf
+                os.chdir(b_dir)
+                BOT_NAME = b_name
+                reset_bot_globals()
+                load_config(verbose=False)
+                load_state(verbose=False)
+
+                trades_before = STATE.get("wins", 0) + STATE.get("losses", 0)
+                run_trade_cycle()
+                trades_after = STATE.get("wins", 0) + STATE.get("losses", 0)
+
+                if trades_after == trades_before:
+                    print(f"⚠️ [RETRY SCHEDULED] No trade completed due to temporary API/network hiccup. Retrying in 20s...")
+                    bot["next_run"] = time.time() + 20
+                else:
+                    in_deficit = STATE.get("cycle_profit", 0.0) < 0.0
+                    last_won = last_cycle_won
+                    if not last_won or in_deficit:
+                        cooldown = CONFIG.get("loss_cooldown_seconds", 1800)
+                        cd_m = cooldown // 60
+                        next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
+                        if CONFIG.get("switch_market_on_loss", False):
+                            print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Switching to a NEW market after {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+                        else:
+                            print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+                    else:
+                        cooldown = CONFIG.get("win_cooldown_minutes", 30) * 60
+                        cd_m = cooldown // 60
+                        next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
+                        print(f"✅ [{cd_m}m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
+                    bot["next_run"] = time.time() + cooldown
+        except Exception as e:
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
+            print(f"[SCHEDULER ERROR] {b_name}: {e}")
+            bot["next_run"] = time.time() + 30
+        finally:
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
+
 def main():
+    if len(sys.argv) >= 3 and sys.argv[1] == "--multi-scheduler":
+        run_multi_bot_scheduler(sys.argv[2])
+        return
+
     print(f"🤖 Initializing Even/Odd Millipede Bot: {BOT_NAME}")
     load_config(verbose=True)
     load_state(verbose=True)
@@ -628,25 +773,31 @@ def main():
 
     print(f"🚀 [STARTING FLEET LOOP] {BOT_NAME} is active!")
     while not halted:
+        trades_before = STATE.get("wins", 0) + STATE.get("losses", 0)
         run_trade_cycle()
+        trades_after = STATE.get("wins", 0) + STATE.get("losses", 0)
+        if trades_after == trades_before:
+            print(f"⚠️ [RETRY SCHEDULED] No trade completed due to temporary API/network hiccup. Retrying in 20s...")
+            time.sleep(20)
+            continue
         
         with state_lock:
             in_deficit = STATE.get("cycle_profit", 0.0) < 0.0
             last_won = last_cycle_won
             
         if not last_won or in_deficit:
-            cooldown = CONFIG.get("loss_cooldown_seconds", 1200)
+            cooldown = CONFIG.get("loss_cooldown_seconds", 1800)
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
             if CONFIG.get("switch_market_on_loss", False):
-                print(f"⏱️ [20m RECOVERY COOLDOWN] Switching to a NEW market after {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+                print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Switching to a NEW market after {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
             else:
-                print(f"⏱️ [20m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
+                print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
         else:
-            cooldown = CONFIG.get("win_cooldown_minutes", 20) * 60
+            cooldown = CONFIG.get("win_cooldown_minutes", 30) * 60
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
-            print(f"✅ [20m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
+            print(f"✅ [{cd_m}m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
             
         time.sleep(cooldown)
 
