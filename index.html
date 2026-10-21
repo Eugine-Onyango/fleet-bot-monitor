@@ -250,7 +250,7 @@
     </div>
 
     <!-- Dedicated System Switcher (Even/Odd vs Over/Under vs Call/Put vs Bybit) -->
-    <div class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 md:grid-cols-4 items-center gap-1.5">
+    <div id="systemSwitcherGrid" class="bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 md:grid-cols-4 items-center gap-1.5">
       <button onclick="switchSystem('eo')" id="sysBtn-eo" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
         <span class="text-base flex-shrink-0">🎲</span>
         <span id="sysLabel-eo" class="truncate">Even / Odd</span>
@@ -470,6 +470,25 @@
       const sysLabelEO = document.getElementById("sysLabel-eo");
       const sysLabelOU = document.getElementById("sysLabel-ou");
       const sysLabelCP = document.getElementById("sysLabel-cp");
+      const btnBybit = document.getElementById("sysBtn-bybit");
+      const sysGrid = document.getElementById("systemSwitcherGrid");
+
+      if (currentAccount === "acc1") {
+        if (btnBybit) btnBybit.classList.remove("hidden");
+        if (sysGrid) {
+          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 md:grid-cols-4 items-center gap-1.5";
+        }
+      } else {
+        if (btnBybit) btnBybit.classList.add("hidden");
+        if (sysGrid) {
+          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-1 sm:grid-cols-3 items-center gap-1.5";
+        }
+        if (currentSystem === "bybit") {
+          currentSystem = "eo";
+          localStorage.setItem("fleet_active_system", "eo");
+        }
+      }
+
       if (currentAccount === "acc3") {
         if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Call/Put (Grp 1)</span><span class="hidden md:inline lg:hidden">C/P (G1)</span>`;
         if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Call/Put (Grp 2)</span><span class="hidden md:inline lg:hidden">C/P (G2)</span>`;
@@ -611,7 +630,7 @@
       if (btnEO) btnEO.className = inactiveBtn;
       if (btnOU) btnOU.className = inactiveBtn;
       if (btnCP) btnCP.className = inactiveBtn;
-      if (btnBybit) btnBybit.className = inactiveBtn;
+      if (btnBybit) btnBybit.className = inactiveBtn + (currentAccount !== "acc1" ? " hidden" : "");
       if (countEO) countEO.className = inactiveBadge;
       if (countOU) countOU.className = inactiveBadge;
       if (countCP) countCP.className = inactiveBadge;
