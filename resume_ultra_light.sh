@@ -55,7 +55,7 @@ docker build -q -t headless-call-put-fleet . >/dev/null
 cat << 'EOF' > /root/run_acc1_fleet.sh
 #!/bin/bash
 export DERIV_ACCOUNT_ID="DOT91203477"
-export DERIV_API_TOKEN="pat_d858bf2ec8a6a47d45bfa2d4a7182ce7e63d993912dacfe4a5af32266af07277"
+export DERIV_API_TOKEN="pat_695988b49294981ebda503b4b975f50c6bf826130fe14f5ea25ccea122bcffab"
 export SWITCH_MARKET_ON_LOSS="false"
 export LOCK_DIR="/root/shared_master_trade_lock"
 
