@@ -31,6 +31,15 @@ def get_uptime_string():
     return f"{days} days, {hours} hours, {minutes} minutes"
 
 def generate_paired_sequence(dominant_side=None):
+    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+    if mode == "OVER_UNDER":
+        if dominant_side:
+            opp = "DIGITOVER" if dominant_side == "DIGITUNDER" else "DIGITUNDER"
+            return [dominant_side, opp]
+        pair = ["DIGITUNDER", "DIGITOVER"]
+        random.shuffle(pair)
+        return pair
+
     if dominant_side:
         opp = "DIGITODD" if dominant_side == "DIGITEVEN" else "DIGITEVEN"
         return [dominant_side, opp]
@@ -81,10 +90,17 @@ def load_config(verbose=False):
                 CONFIG["api_token"] = os.getenv("DERIV_API_TOKEN")
             if os.getenv("DERIV_ACCOUNT_ID"):
                 CONFIG["account_id"] = os.getenv("DERIV_ACCOUNT_ID")
+            if os.getenv("INITIAL_STAKE"):
+                try:
+                    CONFIG["initial_stake"] = float(os.getenv("INITIAL_STAKE"))
+                except ValueError:
+                    pass
+            elif os.getenv("STRATEGY_MODE", "EVEN_ODD").upper() == "OVER_UNDER":
+                CONFIG["initial_stake"] = 0.50
             if os.getenv("SWITCH_MARKET_ON_LOSS"):
                 CONFIG["switch_market_on_loss"] = (os.getenv("SWITCH_MARKET_ON_LOSS").lower() == "true")
             if verbose:
-                print(f"[SYSTEM] Loaded config for account {CONFIG.get('account_id')} (switch_market_on_loss={CONFIG.get('switch_market_on_loss', False)})")
+                print(f"[SYSTEM] Loaded config for account {CONFIG.get('account_id')} (switch_market_on_loss={CONFIG.get('switch_market_on_loss', False)}, initial_stake={CONFIG.get('initial_stake', 0.35)})")
         else:
             print(f"[ERROR] Config file {CONFIG_FILE} not found!")
             sys.exit(1)
@@ -142,6 +158,10 @@ def load_state(verbose=False):
                 with open(STATE_FILE, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
                     STATE.update(loaded)
+                # Ensure cycle_stake starts at configured initial_stake if not in deficit
+                init_stk = float(CONFIG.get("initial_stake", 0.35))
+                if STATE.get("cycle_profit", 0.0) >= 0.0 and STATE.get("cycle_stake", 0.0) < init_stk:
+                    STATE["cycle_stake"] = init_stk
                 if verbose:
                     print(f"[SYSTEM] Loaded state: {json.dumps(STATE, indent=2)}")
             else:
@@ -210,6 +230,10 @@ def send_proposal(ws, contract_type, stake):
         "duration_unit": duration_unit,
         "underlying_symbol": current_market
     }
+    if contract_type == "DIGITUNDER":
+        req["barrier"] = "9"
+    elif contract_type == "DIGITOVER":
+        req["barrier"] = "0"
     
     # Track maximum peak stakes reached
     with state_lock:
@@ -218,7 +242,8 @@ def send_proposal(ws, contract_type, stake):
             STATE["max_stake_market"] = current_market
             save_state_unlocked()
             
-    print(f"   • [Trade {cycle_step}/2] Requesting {contract_type} ({duration}{duration_unit}) proposal on {current_market} @ ${stake:.2f}...")
+    barrier_str = f" [Barrier: {req.get('barrier')}]" if "barrier" in req else ""
+    print(f"   • [Trade {cycle_step}/2] Requesting {contract_type}{barrier_str} ({duration}{duration_unit}) proposal on {current_market} @ ${stake:.2f}...")
     ws.send(json.dumps(req))
 
 def send_buy(ws, proposal_id, stake):
@@ -275,26 +300,58 @@ def on_message(ws, message):
         sym = data.get("echo_req", {}).get("ticks_history")
         prices = data["history"].get("prices", [])
         pip_size = int(data.get("pip_size", 3))
-        evens = 0
-        odds = 0
-        for p in prices:
-            s = f"{p:.{pip_size}f}"
-            last_digit = int(s[-1])
-            if last_digit % 2 == 0:
-                evens += 1
+        
+        mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+        if mode == "OVER_UNDER":
+            zeros = 0
+            nines = 0
+            for p in prices:
+                s = f"{p:.{pip_size}f}"
+                d_val = int(s[-1])
+                if d_val == 0:
+                    zeros += 1
+                elif d_val == 9:
+                    nines += 1
+            total = len(prices) if prices else 1
+            # Dominant: If fewer 9s have appeared, Under 9 has higher safety.
+            # If fewer 0s have appeared, Over 0 has higher safety.
+            if nines <= zeros:
+                dominant = "DIGITUNDER"
+                safe_pct = ((total - nines) / total) * 100
+                bias = (zeros - nines + 1) / total
             else:
-                odds += 1
-        total = len(prices) if prices else 1
-        bias = abs(evens - odds) / total
-        dominant = "DIGITEVEN" if evens >= odds else "DIGITODD"
-        dominant_pct = (max(evens, odds) / total) * 100
-        scanner_results[sym] = {
-            "bias": bias,
-            "dominant": dominant,
-            "pct": dominant_pct,
-            "evens": evens,
-            "odds": odds
-        }
+                dominant = "DIGITOVER"
+                safe_pct = ((total - zeros) / total) * 100
+                bias = (nines - zeros + 1) / total
+                
+            scanner_results[sym] = {
+                "bias": bias,
+                "dominant": dominant,
+                "pct": safe_pct,
+                "nines": nines,
+                "zeros": zeros
+            }
+        else:
+            evens = 0
+            odds = 0
+            for p in prices:
+                s = f"{p:.{pip_size}f}"
+                last_digit = int(s[-1])
+                if last_digit % 2 == 0:
+                    evens += 1
+                else:
+                    odds += 1
+            total = len(prices) if prices else 1
+            bias = abs(evens - odds) / total
+            dominant = "DIGITEVEN" if evens >= odds else "DIGITODD"
+            dominant_pct = (max(evens, odds) / total) * 100
+            scanner_results[sym] = {
+                "bias": bias,
+                "dominant": dominant,
+                "pct": dominant_pct,
+                "evens": evens,
+                "odds": odds
+            }
         
         # When all targets are scanned, pick #1 best market and proceed to trade
         if len(scanner_results) >= len(scanner_targets):
@@ -422,9 +479,22 @@ def on_message(ws, message):
                     if STATE["cycle_profit"] < STATE.get("max_cycle_loss", 0.0):
                         STATE["max_cycle_loss"] = round(STATE["cycle_profit"], 2)
                         
-                    # 2.1 Martingale Multiplier Step-Up
-                    multiplier = CONFIG.get("martingale_multiplier", 2.1)
-                    next_stake = round(last_stake * multiplier, 2)
+                    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+                    init_stk = float(CONFIG.get("initial_stake", 0.35))
+                    if mode == "OVER_UNDER":
+                        # Target Recovery: calculate stake needed so that winning at ~9.5% net payout
+                        # recovers the entire cycle deficit PLUS target profit (init_stk * 0.10, e.g. $0.05)
+                        target_profit = round(max(0.02, init_stk * 0.10), 2)
+                        deficit_abs = abs(cycle_profit)
+                        # Net payout rate for Under 9 / Over 0 is approx 9.5% (0.095)
+                        net_payout_rate = float(CONFIG.get("ou_payout_rate", 0.095))
+                        calculated_stake = round((deficit_abs + target_profit) / net_payout_rate, 2)
+                        next_stake = max(init_stk, calculated_stake)
+                    else:
+                        # 2.1 Martingale Multiplier Step-Up for Even/Odd
+                        multiplier = CONFIG.get("martingale_multiplier", 2.1)
+                        next_stake = round(last_stake * multiplier, 2)
+
                     STATE["cycle_stake"] = next_stake
                     save_state_unlocked()
                     
@@ -461,7 +531,7 @@ def on_message(ws, message):
                         active_contract_id = None
                         
                         next_type = current_sequence[cycle_step - 1]
-                        print(f"\n⚠️ Trade {cycle_step - 1} lost. 2.1 Martingale step-up to ${next_stake:.2f}. Initiating Trade {cycle_step}/2 immediately on {current_market} ({next_type})...")
+                        print(f"\n⚠️ Trade {cycle_step - 1} lost. Recovery step-up to ${next_stake:.2f}. Initiating Trade {cycle_step}/2 immediately on {current_market} ({next_type})...")
                         send_proposal(ws, next_type, next_stake)
 
 def on_error(ws, error):
@@ -491,7 +561,15 @@ def on_open(ws):
             "payout_rates": {}
         })
         current_sequence = market_state.get("sequence", [])
-        if not current_sequence or len(current_sequence) < 2:
+        mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+        is_ou = (mode == "OVER_UNDER")
+        valid = (current_sequence and len(current_sequence) >= 2)
+        if valid:
+            if is_ou and current_sequence[0] not in ("DIGITUNDER", "DIGITOVER"):
+                valid = False
+            elif not is_ou and current_sequence[0] not in ("DIGITEVEN", "DIGITODD"):
+                valid = False
+        if not valid:
             current_sequence = generate_paired_sequence()
             market_state["sequence"] = current_sequence
         contract_type = current_sequence[0]
@@ -621,6 +699,18 @@ def run_trade_cycle():
 
 def reset_bot_globals():
     global STATE, cycle_step, active_proposal_id, active_contract_id, ws_connection, is_trade_active, halted, last_cycle_won, scanner_results, scanner_targets
+    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+    default_stk = 0.50 if mode == "OVER_UNDER" else 0.35
+    if os.getenv("INITIAL_STAKE"):
+        try:
+            init_stk = float(os.getenv("INITIAL_STAKE"))
+        except ValueError:
+            init_stk = default_stk
+    elif "initial_stake" in CONFIG:
+        init_stk = float(CONFIG["initial_stake"])
+    else:
+        init_stk = default_stk
+
     STATE = {
         "total_profit": 0.0,
         "wins": 0,
@@ -630,9 +720,9 @@ def reset_bot_globals():
         "market_basket": [],
         "market_index": 0,
         "cycle_profit": 0.0,
-        "cycle_stake": 0.35,
+        "cycle_stake": init_stk,
         "consecutive_cycle_losses": 0,
-        "max_stake": 0.35,
+        "max_stake": init_stk,
         "max_stake_market": "N/A",
         "max_drawdown": 0.0,
         "max_cycle_loss": 0.0,
@@ -651,6 +741,9 @@ def reset_bot_globals():
 
 def run_multi_bot_scheduler(acc_mode):
     global BOT_NAME, START_TIME
+    if acc_mode == "acc1":
+        os.environ.setdefault("STRATEGY_MODE", "OVER_UNDER")
+        os.environ.setdefault("INITIAL_STAKE", "0.50")
     orig_stdout = sys.stdout
     orig_stderr = sys.stderr
     start_ts = time.time()
