@@ -47,6 +47,17 @@ def generate_paired_sequence(dominant_side=None):
     random.shuffle(pair)
     return pair
 
+def get_max_trades_per_cycle():
+    val = os.getenv("MAX_TRADES_PER_CYCLE")
+    if val is not None:
+        try:
+            return int(val)
+        except ValueError:
+            pass
+    if os.getenv("SINGLE_TRADE_PER_CYCLE", "false").lower() == "true":
+        return 1
+    return 2
+
 CONFIG = {}
 STATE = {
     "total_profit": 0.0,
@@ -242,12 +253,14 @@ def send_proposal(ws, contract_type, stake):
             STATE["max_stake_market"] = current_market
             save_state_unlocked()
             
+    max_trades = get_max_trades_per_cycle()
     barrier_str = f" [Barrier: {req.get('barrier')}]" if "barrier" in req else ""
-    print(f"   • [Trade {cycle_step}/2] Requesting {contract_type}{barrier_str} ({duration}{duration_unit}) proposal on {current_market} @ ${stake:.2f}...")
+    print(f"   • [Trade {cycle_step}/{max_trades}] Requesting {contract_type}{barrier_str} ({duration}{duration_unit}) proposal on {current_market} @ ${stake:.2f}...")
     ws.send(json.dumps(req))
 
 def send_buy(ws, proposal_id, stake):
-    print(f"   • [Trade {cycle_step}/2] Executing buy for proposal: {proposal_id} @ ${stake:.2f}")
+    max_trades = get_max_trades_per_cycle()
+    print(f"   • [Trade {cycle_step}/{max_trades}] Executing buy for proposal: {proposal_id} @ ${stake:.2f}")
     req = {
         "buy": proposal_id,
         "price": stake
@@ -438,7 +451,8 @@ def on_message(ws, message):
                 if STATE["total_profit"] < STATE.get("max_drawdown", 0.0):
                     STATE["max_drawdown"] = round(STATE["total_profit"], 2)
 
-                print(f"   📊 [Trade {cycle_step}/2] Settled ({contract_type}): {status.upper()} (Profit/Loss: {'+' if profit >= 0 else ''}${profit:.2f})")
+                max_trades = get_max_trades_per_cycle()
+                print(f"   📊 [Trade {cycle_step}/{max_trades}] Settled ({contract_type}): {status.upper()} (Profit/Loss: {'+' if profit >= 0 else ''}${profit:.2f})")
 
                 if status == "won":
                     STATE["wins"] += 1
@@ -498,16 +512,19 @@ def on_message(ws, message):
                     STATE["cycle_stake"] = next_stake
                     save_state_unlocked()
                     
-                    if cycle_step >= 2:
+                    if cycle_step >= max_trades:
                         last_cycle_won = False
                         STATE["consecutive_cycle_losses"] = STATE.get("consecutive_cycle_losses", 0) + 1
                         market_state["sequence"] = generate_paired_sequence()
 
-                        recovery_cd = CONFIG.get("loss_cooldown_seconds", 1200)
+                        recovery_cd = CONFIG.get("loss_cooldown_seconds", 1800)
                         cd_m = recovery_cd // 60
                         switch_on_loss = CONFIG.get("switch_market_on_loss", False)
                         print("\n" + "="*60)
-                        print(f"❌ CYCLE RESULT: LOSS (Both Even & Odd Trades Lost on {current_market}) [{BOT_NAME}]")
+                        if max_trades == 1:
+                            print(f"❌ CYCLE RESULT: LOSS (Trade Lost on {current_market}) [{BOT_NAME}]")
+                        else:
+                            print(f"❌ CYCLE RESULT: LOSS (Both Even & Odd Trades Lost on {current_market}) [{BOT_NAME}]")
                         if switch_on_loss:
                             advance_market_on_loss()
                             print(f"🔄 [MARKET SWITCH FOR RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Leaving {current_market} and switching to a DIFFERENT market after {cd_m}m cooldown!")
@@ -531,7 +548,7 @@ def on_message(ws, message):
                         active_contract_id = None
                         
                         next_type = current_sequence[cycle_step - 1]
-                        print(f"\n⚠️ Trade {cycle_step - 1} lost. Recovery step-up to ${next_stake:.2f}. Initiating Trade {cycle_step}/2 immediately on {current_market} ({next_type})...")
+                        print(f"\n⚠️ Trade {cycle_step - 1} lost. Recovery step-up to ${next_stake:.2f}. Initiating Trade {cycle_step}/{max_trades} immediately on {current_market} ({next_type})...")
                         send_proposal(ws, next_type, next_stake)
 
 def on_error(ws, error):
@@ -744,6 +761,9 @@ def run_multi_bot_scheduler(acc_mode):
     if acc_mode == "acc1":
         os.environ.setdefault("STRATEGY_MODE", "OVER_UNDER")
         os.environ.setdefault("INITIAL_STAKE", "0.50")
+    elif acc_mode == "acc2":
+        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "true")
+        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "1")
     orig_stdout = sys.stdout
     orig_stderr = sys.stderr
     start_ts = time.time()

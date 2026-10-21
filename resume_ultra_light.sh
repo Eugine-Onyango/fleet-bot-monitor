@@ -87,6 +87,8 @@ export DERIV_ACCOUNT_ID="DOT93845070"
 export DERIV_API_TOKEN="pat_e8b31d27beb9c0a040f1059ce12bac092383a3838554078c75378bf9831bf955"
 export SWITCH_MARKET_ON_LOSS="true"
 export LOCK_DIR="/root/shared_master_trade_lock_acc2"
+export SINGLE_TRADE_PER_CYCLE="true"
+export MAX_TRADES_PER_CYCLE="1"
 
 for d_prefix in even_odd_millipede_bot even_odd_fleet2_bot over_under_fleet_bot over_under_fleet2_bot over_under_fleet3_bot even_odd_fleet3_bot; do
   for i in 1 2 3 4 5 6; do
