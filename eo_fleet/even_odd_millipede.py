@@ -182,8 +182,13 @@ def get_otp_ws_url():
         res = requests.post(url, headers=headers, timeout=10)
         if res.status_code == 200:
             return res.json()['data']['url']
+        elif res.status_code == 429:
+            retry_after = int(res.headers.get("Retry-After", "60"))
+            print(f"⚠️ [RATE LIMIT 429] Deriv requested a pause. Backing off for {retry_after}s...")
+            time.sleep(min(retry_after, 120))
+            return None
         else:
-            print(f"[OTP ERROR] Status: {res.status_code}, Response: {res.text}")
+            print(f"[OTP ERROR] Status: {res.status_code}, Response: {res.text[:120]}")
             return None
     except Exception as e:
         print(f"[OTP EXCEPTION] {e}")
