@@ -180,12 +180,12 @@ echo "✅ Account 2: 36 Bots active in 1 single Python process (~13 MB RAM)."
 # ------------------------------------------------------------
 # 8. LAUNCH ACCOUNT 3 (1 PYTHON PROCESS MANAGING ALL 36 BOTS)
 # ------------------------------------------------------------
-echo "🚀 Launching Account 3 (36 Bots in 1 Ultra-Light Process • Call/Put Switch)..."
+echo "🚀 Launching Account 3 (36 Bots in 1 Ultra-Light Process • Hybrid E/O × C/P Lock)..."
 cat << 'EOF' > /root/run_acc3_fleet.sh
 #!/bin/bash
 export DERIV_ACCOUNT_ID="DOT91362122"
 export DERIV_API_TOKEN="pat_6ca0c6bca661b25f102eb309d6748e7fcf423a33138c9b3ed2d7d5605a45f54a"
-export SWITCH_MARKET_ON_LOSS="true"
+export SWITCH_MARKET_ON_LOSS="false"
 export LOCK_DIR="/root/shared_master_trade_lock_acc3"
 
 for d_prefix in even_odd_millipede_bot even_odd_fleet2_bot over_under_fleet_bot over_under_fleet2_bot over_under_fleet3_bot even_odd_fleet3_bot; do

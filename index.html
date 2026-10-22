@@ -240,8 +240,8 @@
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-sm flex-shrink-0">📈</span>
             <div class="text-left truncate">
-              <div class="truncate">Account 3 • C/P (Switch)</div>
-              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Call/Put Market-Switch • 36 Bots</div>
+              <div class="truncate">Account 3 • Hybrid (Lock)</div>
+              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Hybrid E/O × C/P Lock • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc3" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -1459,11 +1459,11 @@
       if (lblPeakProfit) lblPeakProfit.innerText = isKidsMode ? "Gold Trophy 🏆" : (isTechMode ? "PEAK PROFIT" : "Peak Profit");
       if (lblPeakStake) lblPeakStake.innerText = isKidsMode ? "Super Power ⚡" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
 
-      const accNameShort = currentAccount === "acc2" ? "Account 2 (E/O Switch)" : (currentAccount === "acc3" ? "Account 3 (C/P Switch)" : "Account 1 (E/O Lock)");
+      const accNameShort = currentAccount === "acc2" ? "Account 2 (E/O Switch)" : (currentAccount === "acc3" ? "Account 3 (Hybrid Lock)" : "Account 1 (E/O Lock)");
       const recBehaviorDesc = currentAccount === "acc2"
         ? "Switches to a new market on 2-step loss"
         : (currentAccount === "acc3"
-          ? "Call/Put • Switches to a new market on 2-step loss"
+          ? "Hybrid E/O × C/P • Stays LOCKED on the same market to recover"
           : "Stays LOCKED on the same market to recover");
 
       if (currentSystem === "bybit") {
