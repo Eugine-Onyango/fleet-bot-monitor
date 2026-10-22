@@ -272,10 +272,13 @@ def on_message(ws, message):
         if req_sym and req_sym in scanner_targets:
             print(f"[SCANNER SKIP] {req_sym} unavailable ({err.get('message')}). Removing from active scan.")
             scanner_targets.remove(req_sym)
-            if len(scanner_results) >= len(scanner_targets) and len(scanner_results) > 0:
-                pass
-            else:
-                return
+            return
+        elif err.get("code") == "RateLimit":
+            print(f"⚠️ [RATE LIMIT] Deriv requested a pause ({err.get('message')}). Backing off...")
+            time.sleep(30)
+            trade_completed_event.set()
+            ws.close()
+            return
         else:
             print(f"[API ERROR] Code: {err.get('code')}, Msg: {err.get('message')}")
             trade_completed_event.set()
@@ -283,65 +286,64 @@ def on_message(ws, message):
             return
 
     # Handle live scanner tick history responses for Hybrid E/O and Call/Put
-    if "history" in data or (len(scanner_targets) > 0 and len(scanner_results) >= len(scanner_targets) and (STATE.get("current_market") is None or STATE.get("in_recovery", False))):
-        if "history" in data:
-            sym = data.get("echo_req", {}).get("ticks_history")
-            prices = data["history"].get("prices", [])
-            pip_size = int(data.get("pip_size", 3))
-            
-            if prices and len(prices) >= 2:
-                # 1. Even / Odd digit distribution
-                evens = 0
-                odds = 0
-                for p in prices:
-                    s = f"{p:.{pip_size}f}"
-                    d_val = int(s[-1])
-                    if d_val % 2 == 0:
-                        evens += 1
-                    else:
-                        odds += 1
-                total_digits = len(prices)
-                dominant_eo = "DIGITEVEN" if evens >= odds else "DIGITODD"
-                eo_pct = (max(evens, odds) / total_digits) * 100
-                eo_bias = abs(evens - odds) / total_digits
-
-                # 2. Call / Put momentum & trend
-                start_p = float(prices[0])
-                end_p = float(prices[-1])
-                max_p = max(prices)
-                min_p = min(prices)
-                rng = max_p - min_p if max_p != min_p else 1.0
-
-                up_moves = sum(1 for i in range(1, len(prices)) if prices[i] > prices[i-1])
-                down_moves = sum(1 for i in range(1, len(prices)) if prices[i] < prices[i-1])
-                total_moves = up_moves + down_moves if (up_moves + down_moves) > 0 else 1
-
-                is_up = end_p >= start_p
-                dominant_cp = "CALL" if is_up else "PUT"
-                cp_momentum = (up_moves / total_moves) if is_up else (down_moves / total_moves)
-                cp_pct = cp_momentum * 100
-                cp_bias = (abs(end_p - start_p) / rng) * 0.5 + (cp_momentum - 0.5) * 0.5
-
-                overall_score = eo_bias + max(0.0, cp_bias)
-
-                # Prioritize stronger family for Trade 1
-                if eo_pct >= cp_pct:
-                    pair_sequence = [dominant_eo, dominant_cp]
-                    order_desc = f"{dominant_eo} ({eo_pct:.1f}%) > {dominant_cp} ({cp_pct:.1f}%)"
-                else:
-                    pair_sequence = [dominant_cp, dominant_eo]
-                    order_desc = f"{dominant_cp} ({cp_pct:.1f}%) > {dominant_eo} ({eo_pct:.1f}%)"
-
-                scanner_results[sym] = {
-                    "score": overall_score,
-                    "sequence": pair_sequence,
-                    "dominant_eo": dominant_eo,
-                    "dominant_cp": dominant_cp,
-                    "eo_pct": eo_pct,
-                    "cp_pct": cp_pct,
-                    "order_desc": order_desc
-                }
+    if "history" in data:
+        sym = data.get("echo_req", {}).get("ticks_history")
+        prices = data["history"].get("prices", [])
+        pip_size = int(data.get("pip_size", 3))
         
+        if prices and len(prices) >= 2:
+            # 1. Even / Odd digit distribution
+            evens = 0
+            odds = 0
+            for p in prices:
+                s = f"{p:.{pip_size}f}"
+                d_val = int(s[-1])
+                if d_val % 2 == 0:
+                    evens += 1
+                else:
+                    odds += 1
+            total_digits = len(prices)
+            dominant_eo = "DIGITEVEN" if evens >= odds else "DIGITODD"
+            eo_pct = (max(evens, odds) / total_digits) * 100
+            eo_bias = abs(evens - odds) / total_digits
+
+            # 2. Call / Put momentum & trend
+            start_p = float(prices[0])
+            end_p = float(prices[-1])
+            max_p = max(prices)
+            min_p = min(prices)
+            rng = max_p - min_p if max_p != min_p else 1.0
+
+            up_moves = sum(1 for i in range(1, len(prices)) if prices[i] > prices[i-1])
+            down_moves = sum(1 for i in range(1, len(prices)) if prices[i] < prices[i-1])
+            total_moves = up_moves + down_moves if (up_moves + down_moves) > 0 else 1
+
+            is_up = end_p >= start_p
+            dominant_cp = "CALL" if is_up else "PUT"
+            cp_momentum = (up_moves / total_moves) if is_up else (down_moves / total_moves)
+            cp_pct = cp_momentum * 100
+            cp_bias = (abs(end_p - start_p) / rng) * 0.5 + (cp_momentum - 0.5) * 0.5
+
+            overall_score = eo_bias + max(0.0, cp_bias)
+
+            # Prioritize stronger family for Trade 1
+            if eo_pct >= cp_pct:
+                pair_sequence = [dominant_eo, dominant_cp]
+                order_desc = f"{dominant_eo} ({eo_pct:.1f}%) > {dominant_cp} ({cp_pct:.1f}%)"
+            else:
+                pair_sequence = [dominant_cp, dominant_eo]
+                order_desc = f"{dominant_cp} ({cp_pct:.1f}%) > {dominant_eo} ({eo_pct:.1f}%)"
+
+            scanner_results[sym] = {
+                "score": overall_score,
+                "sequence": pair_sequence,
+                "dominant_eo": dominant_eo,
+                "dominant_cp": dominant_cp,
+                "eo_pct": eo_pct,
+                "cp_pct": cp_pct,
+                "order_desc": order_desc
+            }
+    
         # When all targets are scanned, pick #1 best hybrid market and proceed to trade
         if len(scanner_results) >= len(scanner_targets) and len(scanner_results) > 0:
             sorted_mkts = sorted(scanner_results.items(), key=lambda x: x[1]['score'], reverse=True)
@@ -366,6 +368,7 @@ def on_message(ws, message):
 
             stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
             contract_type = market_state["sequence"][0]
+            scanner_targets = []
             send_proposal(ws, contract_type, stake)
 
     elif msg_type == "proposal":
@@ -770,8 +773,8 @@ def run_multi_bot_scheduler(acc_mode):
                 trades_after = STATE.get("wins", 0) + STATE.get("losses", 0)
 
                 if trades_after == trades_before:
-                    print(f"⚠️ [RETRY SCHEDULED] No trade completed due to temporary API/network hiccup. Retrying in 20s...")
-                    bot["next_run"] = time.time() + 20
+                    print(f"⚠️ [RETRY SCHEDULED] No trade completed due to temporary API/network hiccup. Retrying in 45s...")
+                    bot["next_run"] = time.time() + 45
                 else:
                     in_deficit = STATE.get("cycle_profit", 0.0) < 0.0 or STATE.get("in_recovery", False)
                     last_won = last_cycle_won
