@@ -3,10 +3,7 @@
   "api_token": "pat_695988b49294981ebda503b4b975f50c6bf826130fe14f5ea25ccea122bcffab",
   "account_id": "DOT91203477",
   "markets": [
-    "R_10",
-    "R_100",
-    "1HZ10V",
-    "1HZ100V"
+    "1HZ10V"
   ],
   "disabled_markets": [],
   "initial_stake": 0.35,
