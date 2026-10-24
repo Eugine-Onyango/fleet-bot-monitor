@@ -277,10 +277,18 @@ def send_proposal(ws, contract_type, stake):
         "duration_unit": duration_unit,
         "underlying_symbol": current_market
     }
-    if contract_type == "DIGITUNDER":
-        req["barrier"] = "9"
-    elif contract_type == "DIGITOVER":
-        req["barrier"] = "0"
+    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+    if mode == "HYBRID_OU_EO":
+        # 50/50 Over/Under barriers: Under 5 (digits 0-4) and Over 4 (digits 5-9)
+        if contract_type == "DIGITUNDER":
+            req["barrier"] = "5"
+        elif contract_type == "DIGITOVER":
+            req["barrier"] = "4"
+    else:
+        if contract_type == "DIGITUNDER":
+            req["barrier"] = "9"
+        elif contract_type == "DIGITOVER":
+            req["barrier"] = "0"
     
     # Track maximum peak stakes reached
     with state_lock:
@@ -364,44 +372,47 @@ def on_message(ws, message):
         
         mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
         if mode == "HYBRID_OU_EO":
-            # 1. Over / Under analysis
-            zeros = 0
-            nines = 0
+            # 1. 50/50 Over / Under analysis (Under 5: 0-4 vs Over 4: 5-9)
+            unders = 0
+            overs = 0
             evens = 0
             odds = 0
             for p in prices:
                 s = f"{p:.{pip_size}f}"
                 d_val = int(s[-1])
-                if d_val == 0:
-                    zeros += 1
-                elif d_val == 9:
-                    nines += 1
+                if d_val < 5:
+                    unders += 1
+                else:
+                    overs += 1
                 if d_val % 2 == 0:
                     evens += 1
                 else:
                     odds += 1
             total = len(prices) if prices else 1
 
-            if nines <= zeros:
+            if unders >= overs:
                 dominant_ou = "DIGITUNDER"
-                ou_pct = ((total - nines) / total) * 100
-                ou_bias = (zeros - nines + 1) / total
+                ou_pct = (unders / total) * 100
+                ou_bias = (unders - overs) / total
+                ou_label = f"Under 5 ({ou_pct:.1f}%)"
             else:
                 dominant_ou = "DIGITOVER"
-                ou_pct = ((total - zeros) / total) * 100
-                ou_bias = (nines - zeros + 1) / total
+                ou_pct = (overs / total) * 100
+                ou_bias = (overs - unders) / total
+                ou_label = f"Over 4 ({ou_pct:.1f}%)"
 
             dominant_eo = "DIGITEVEN" if evens >= odds else "DIGITODD"
             eo_pct = (max(evens, odds) / total) * 100
             eo_bias = abs(evens - odds) / total
+            eo_label = f"{dominant_eo} ({eo_pct:.1f}%)"
 
             # Cross-breed Pair 1: start with family that has stronger bias
             if ou_pct >= eo_pct:
                 pair1 = [dominant_ou, dominant_eo]
-                order_desc = f"{dominant_ou} ({ou_pct:.1f}%) > {dominant_eo} ({eo_pct:.1f}%)"
+                order_desc = f"{ou_label} > {eo_label}"
             else:
                 pair1 = [dominant_eo, dominant_ou]
-                order_desc = f"{dominant_eo} ({eo_pct:.1f}%) > {dominant_ou} ({ou_pct:.1f}%)"
+                order_desc = f"{eo_label} > {ou_label}"
 
             # Pair 2: Remaining unused breed (complementary opposite family members)
             pair2 = [get_opposite_side(pair1[0]), get_opposite_side(pair1[1])]
