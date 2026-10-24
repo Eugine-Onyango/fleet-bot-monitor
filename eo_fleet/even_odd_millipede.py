@@ -30,8 +30,41 @@ def get_uptime_string():
     minutes = int((elapsed % 3600) // 60)
     return f"{days} days, {hours} hours, {minutes} minutes"
 
+def get_opposite_side(side):
+    if side == "DIGITUNDER": return "DIGITOVER"
+    if side == "DIGITOVER": return "DIGITUNDER"
+    if side == "DIGITEVEN": return "DIGITODD"
+    if side == "DIGITODD": return "DIGITEVEN"
+    return side
+
+def is_valid_hybrid_oe_sequence(seq):
+    if not isinstance(seq, list) or len(seq) < 4:
+        return False
+    ou_types = {"DIGITUNDER", "DIGITOVER"}
+    eo_types = {"DIGITEVEN", "DIGITODD"}
+    s1, s2, s3, s4 = seq[0], seq[1], seq[2], seq[3]
+    pair1_valid = (s1 in ou_types and s2 in eo_types) or (s1 in eo_types and s2 in ou_types)
+    pair2_valid = (s3 == get_opposite_side(s1) and s4 == get_opposite_side(s2))
+    return pair1_valid and pair2_valid
+
+def generate_hybrid_oe_sequence(dominant_ou=None, dominant_eo=None, first_family=None):
+    ou = dominant_ou if dominant_ou in ("DIGITUNDER", "DIGITOVER") else random.choice(["DIGITUNDER", "DIGITOVER"])
+    eo = dominant_eo if dominant_eo in ("DIGITEVEN", "DIGITODD") else random.choice(["DIGITEVEN", "DIGITODD"])
+    
+    if first_family == "OU":
+        pair1 = [ou, eo]
+    elif first_family == "EO":
+        pair1 = [eo, ou]
+    else:
+        pair1 = [ou, eo] if random.random() < 0.5 else [eo, ou]
+        
+    pair2 = [get_opposite_side(pair1[0]), get_opposite_side(pair1[1])]
+    return pair1 + pair2
+
 def generate_paired_sequence(dominant_side=None):
     mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+    if mode == "HYBRID_OU_EO":
+        return generate_hybrid_oe_sequence()
     if mode == "OVER_UNDER":
         if dominant_side:
             opp = "DIGITOVER" if dominant_side == "DIGITUNDER" else "DIGITUNDER"
@@ -48,6 +81,9 @@ def generate_paired_sequence(dominant_side=None):
     return pair
 
 def get_max_trades_per_cycle():
+    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+    if mode == "HYBRID_OU_EO":
+        return 4
     val = os.getenv("MAX_TRADES_PER_CYCLE")
     if val is not None:
         try:
@@ -253,14 +289,26 @@ def send_proposal(ws, contract_type, stake):
             STATE["max_stake_market"] = current_market
             save_state_unlocked()
             
-    max_trades = get_max_trades_per_cycle()
+    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
     barrier_str = f" [Barrier: {req.get('barrier')}]" if "barrier" in req else ""
-    print(f"   • [Trade {cycle_step}/{max_trades}] Requesting {contract_type}{barrier_str} ({duration}{duration_unit}) proposal on {current_market} @ ${stake:.2f}...")
+    if mode == "HYBRID_OU_EO":
+        pair_num = 1 if cycle_step <= 2 else 2
+        step_in_pair = 1 if cycle_step in (1, 3) else 2
+        print(f"   • [Pair {pair_num}/2 • Trade {step_in_pair}/2 (Overall {cycle_step}/4)] Requesting {contract_type}{barrier_str} ({duration}{duration_unit}) on {current_market} @ ${stake:.2f}...")
+    else:
+        max_trades = get_max_trades_per_cycle()
+        print(f"   • [Trade {cycle_step}/{max_trades}] Requesting {contract_type}{barrier_str} ({duration}{duration_unit}) proposal on {current_market} @ ${stake:.2f}...")
     ws.send(json.dumps(req))
 
 def send_buy(ws, proposal_id, stake):
-    max_trades = get_max_trades_per_cycle()
-    print(f"   • [Trade {cycle_step}/{max_trades}] Executing buy for proposal: {proposal_id} @ ${stake:.2f}")
+    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+    if mode == "HYBRID_OU_EO":
+        pair_num = 1 if cycle_step <= 2 else 2
+        step_in_pair = 1 if cycle_step in (1, 3) else 2
+        print(f"   • [Pair {pair_num}/2 • Trade {step_in_pair}/2 (Overall {cycle_step}/4)] Executing buy for proposal: {proposal_id} @ ${stake:.2f}")
+    else:
+        max_trades = get_max_trades_per_cycle()
+        print(f"   • [Trade {cycle_step}/{max_trades}] Executing buy for proposal: {proposal_id} @ ${stake:.2f}")
     req = {
         "buy": proposal_id,
         "price": stake
@@ -315,7 +363,60 @@ def on_message(ws, message):
         pip_size = int(data.get("pip_size", 3))
         
         mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
-        if mode == "OVER_UNDER":
+        if mode == "HYBRID_OU_EO":
+            # 1. Over / Under analysis
+            zeros = 0
+            nines = 0
+            evens = 0
+            odds = 0
+            for p in prices:
+                s = f"{p:.{pip_size}f}"
+                d_val = int(s[-1])
+                if d_val == 0:
+                    zeros += 1
+                elif d_val == 9:
+                    nines += 1
+                if d_val % 2 == 0:
+                    evens += 1
+                else:
+                    odds += 1
+            total = len(prices) if prices else 1
+
+            if nines <= zeros:
+                dominant_ou = "DIGITUNDER"
+                ou_pct = ((total - nines) / total) * 100
+                ou_bias = (zeros - nines + 1) / total
+            else:
+                dominant_ou = "DIGITOVER"
+                ou_pct = ((total - zeros) / total) * 100
+                ou_bias = (nines - zeros + 1) / total
+
+            dominant_eo = "DIGITEVEN" if evens >= odds else "DIGITODD"
+            eo_pct = (max(evens, odds) / total) * 100
+            eo_bias = abs(evens - odds) / total
+
+            # Cross-breed Pair 1: start with family that has stronger bias
+            if ou_pct >= eo_pct:
+                pair1 = [dominant_ou, dominant_eo]
+                order_desc = f"{dominant_ou} ({ou_pct:.1f}%) > {dominant_eo} ({eo_pct:.1f}%)"
+            else:
+                pair1 = [dominant_eo, dominant_ou]
+                order_desc = f"{dominant_eo} ({eo_pct:.1f}%) > {dominant_ou} ({ou_pct:.1f}%)"
+
+            # Pair 2: Remaining unused breed (complementary opposite family members)
+            pair2 = [get_opposite_side(pair1[0]), get_opposite_side(pair1[1])]
+            full_sequence = pair1 + pair2
+
+            scanner_results[sym] = {
+                "bias": ou_bias + eo_bias,
+                "dominant": pair1[0],
+                "sequence": full_sequence,
+                "pair1": pair1,
+                "pair2": pair2,
+                "pct": max(ou_pct, eo_pct),
+                "order_desc": order_desc
+            }
+        elif mode == "OVER_UNDER":
             zeros = 0
             nines = 0
             for p in prices:
@@ -376,23 +477,31 @@ def on_message(ws, message):
             
             with state_lock:
                 STATE["current_market"] = best_sym
+                seq_to_use = best_data.get("sequence") if mode == "HYBRID_OU_EO" else generate_paired_sequence(best_data["dominant"])
                 market_state = STATE["markets_state"].setdefault(best_sym, {
                     "wins": 0,
                     "losses": 0,
                     "total_profit": 0.0,
-                    "sequence": generate_paired_sequence(best_data["dominant"]),
+                    "sequence": seq_to_use,
                     "payout_rates": {}
                 })
-                market_state["sequence"] = generate_paired_sequence(best_data["dominant"])
+                market_state["sequence"] = seq_to_use
                 save_state_unlocked()
 
-            print(f"\n🔍 [LIVE SCANNER RESULTS] Scanned {len(scanner_results)} basket markets:")
-            for s, d in sorted_mkts[:3]:
-                print(f"   • {s:<8}: Score={d['bias']:.3f} -> Dominant: {d['dominant']} ({d['pct']:.1f}%)")
-            print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with {best_data['dominant']} bias ({best_data['pct']:.1f}%). Sequence: {market_state['sequence']}")
+            if mode == "HYBRID_OU_EO":
+                print(f"\n🔍 [HYBRID OVER/UNDER × EVEN/ODD SCANNER] Scanned {len(scanner_results)} basket markets:")
+                for s, d in sorted_mkts[:3]:
+                    print(f"   • {s:<8}: Score={d['bias']:.3f} -> Pair 1: {d['pair1']} [{d['order_desc']}] | Pair 2: {d['pair2']}")
+                print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with Hybrid Pairs -> Pair 1: {market_state['sequence'][:2]} | Pair 2 (Remaining): {market_state['sequence'][2:]}")
+            else:
+                print(f"\n🔍 [LIVE SCANNER RESULTS] Scanned {len(scanner_results)} basket markets:")
+                for s, d in sorted_mkts[:3]:
+                    print(f"   • {s:<8}: Score={d['bias']:.3f} -> Dominant: {d['dominant']} ({d['pct']:.1f}%)")
+                print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with {best_data['dominant']} bias ({best_data['pct']:.1f}%). Sequence: {market_state['sequence']}")
 
             stake = STATE.setdefault("cycle_stake", CONFIG.get("initial_stake", 0.35))
             contract_type = market_state["sequence"][0]
+            scanner_targets = []
             send_proposal(ws, contract_type, stake)
 
     elif msg_type == "proposal":
@@ -451,8 +560,14 @@ def on_message(ws, message):
                 if STATE["total_profit"] < STATE.get("max_drawdown", 0.0):
                     STATE["max_drawdown"] = round(STATE["total_profit"], 2)
 
-                max_trades = get_max_trades_per_cycle()
-                print(f"   📊 [Trade {cycle_step}/{max_trades}] Settled ({contract_type}): {status.upper()} (Profit/Loss: {'+' if profit >= 0 else ''}${profit:.2f})")
+                mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
+                if mode == "HYBRID_OU_EO":
+                    pair_num = 1 if cycle_step <= 2 else 2
+                    step_in_pair = 1 if cycle_step in (1, 3) else 2
+                    print(f"   📊 [Pair {pair_num}/2 • Trade {step_in_pair}/2 (Overall {cycle_step}/4)] Settled ({contract_type}): {status.upper()} (Profit/Loss: {'+' if profit >= 0 else ''}${profit:.2f})")
+                else:
+                    max_trades = get_max_trades_per_cycle()
+                    print(f"   📊 [Trade {cycle_step}/{max_trades}] Settled ({contract_type}): {status.upper()} (Profit/Loss: {'+' if profit >= 0 else ''}${profit:.2f})")
 
                 if status == "won":
                     STATE["wins"] += 1
@@ -469,7 +584,10 @@ def on_message(ws, message):
                     advance_market_on_win()
                     
                     print("\n" + "="*60)
-                    print(f"🎉 CYCLE RESULT: WIN (Martingale Recovery Complete on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 0.35):.2f}) [{BOT_NAME}]")
+                    if mode == "HYBRID_OU_EO":
+                        print(f"🎉 CYCLE RESULT: WIN (Hybrid Recovery Complete at Pair {pair_num}/2 Trade {step_in_pair}/2 on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 0.35):.2f}) [{BOT_NAME}]")
+                    else:
+                        print(f"🎉 CYCLE RESULT: WIN (Martingale Recovery Complete on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 0.35):.2f}) [{BOT_NAME}]")
                     print(f"   • Net Trade Profit: +${profit:.2f}")
                     print(f"   • Market Unlocked: Will live scan fresh best market on next cycle")
                     print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
@@ -493,7 +611,6 @@ def on_message(ws, message):
                     if STATE["cycle_profit"] < STATE.get("max_cycle_loss", 0.0):
                         STATE["max_cycle_loss"] = round(STATE["cycle_profit"], 2)
                         
-                    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
                     init_stk = float(CONFIG.get("initial_stake", 0.35))
                     if mode == "OVER_UNDER":
                         # Target Recovery: calculate stake needed so that winning at ~9.5% net payout
@@ -505,33 +622,37 @@ def on_message(ws, message):
                         calculated_stake = round((deficit_abs + target_profit) / net_payout_rate, 2)
                         next_stake = max(init_stk, calculated_stake)
                     else:
-                        # 2.1 Martingale Multiplier Step-Up for Even/Odd
+                        # 2.1 Martingale Multiplier Step-Up for Even/Odd & Hybrid
                         multiplier = CONFIG.get("martingale_multiplier", 2.1)
                         next_stake = round(last_stake * multiplier, 2)
 
                     STATE["cycle_stake"] = next_stake
                     save_state_unlocked()
                     
+                    max_trades = get_max_trades_per_cycle()
                     if cycle_step >= max_trades:
                         last_cycle_won = False
                         STATE["consecutive_cycle_losses"] = STATE.get("consecutive_cycle_losses", 0) + 1
-                        market_state["sequence"] = generate_paired_sequence()
+                        market_state["sequence"] = generate_hybrid_oe_sequence() if mode == "HYBRID_OU_EO" else generate_paired_sequence()
 
                         recovery_cd = CONFIG.get("loss_cooldown_seconds", 1800)
                         cd_m = recovery_cd // 60
                         switch_on_loss = CONFIG.get("switch_market_on_loss", False)
                         print("\n" + "="*60)
-                        if max_trades == 1:
+                        if mode == "HYBRID_OU_EO":
+                            print(f"❌ CYCLE RESULT: LOSS (All 4 Hybrid Trades / Both Pairs Lost on {current_market}) [{BOT_NAME}]")
+                        elif max_trades == 1:
                             print(f"❌ CYCLE RESULT: LOSS (Trade Lost on {current_market}) [{BOT_NAME}]")
                         else:
                             print(f"❌ CYCLE RESULT: LOSS (Both Even & Odd Trades Lost on {current_market}) [{BOT_NAME}]")
+
                         if switch_on_loss:
                             advance_market_on_loss()
                             print(f"🔄 [MARKET SWITCH FOR RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Leaving {current_market} and switching to a DIFFERENT market after {cd_m}m cooldown!")
                             print(f"   • Next Recovery Market: Will live scan fresh market on wakeup")
                         else:
                             STATE["in_recovery"] = True
-                            print(f"🔒 [MARKET LOCKED FOR RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown until recovered!")
+                            print(f"🔒 [MARKET LOCKED FOR 2.1 MARTINGALE RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown until recovered!")
                             print(f"   • Active Recovery Market: {current_market}")
                         print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
                         print(f"   • Max Session Drawdown (Deepest Loss): ${STATE.get('max_drawdown', 0.0):.2f}")
@@ -542,13 +663,21 @@ def on_message(ws, message):
                         trade_completed_event.set()
                         ws.close()
                     else:
-                        # Trade 1 lost -> Initiate Trade 2/2 immediately on opposite side with 2.1 Martingale stake
                         cycle_step += 1
                         active_proposal_id = None
                         active_contract_id = None
                         
                         next_type = current_sequence[cycle_step - 1]
-                        print(f"\n⚠️ Trade {cycle_step - 1} lost. Recovery step-up to ${next_stake:.2f}. Initiating Trade {cycle_step}/{max_trades} immediately on {current_market} ({next_type})...")
+                        if mode == "HYBRID_OU_EO":
+                            next_pair_num = 1 if cycle_step <= 2 else 2
+                            next_step_in_pair = 1 if cycle_step in (1, 3) else 2
+                            if cycle_step == 3:
+                                print(f"\n⚠️ Pair 1 ({current_sequence[0]} + {current_sequence[1]}) failed both trades! Unused remaining breed Pair 2 ({current_sequence[2]} + {current_sequence[3]}) takes over IMMEDIATELY with no cooldown.")
+                                print(f"   2.1 Martingale step-up to ${next_stake:.2f}. Executing [Pair 2/2 • Trade 1/2 (Overall 3/4)] on {current_market} ({next_type})...")
+                            else:
+                                print(f"\n⚠️ Trade {cycle_step - 1} lost. 2.1 Martingale step-up to ${next_stake:.2f}. Initiating [Pair {next_pair_num}/2 • Trade {next_step_in_pair}/2 (Overall {cycle_step}/4)] immediately on {current_market} ({next_type})...")
+                        else:
+                            print(f"\n⚠️ Trade {cycle_step - 1} lost. Recovery step-up to ${next_stake:.2f}. Initiating Trade {cycle_step}/{max_trades} immediately on {current_market} ({next_type})...")
                         send_proposal(ws, next_type, next_stake)
 
 def on_error(ws, error):
@@ -567,30 +696,35 @@ def on_open(ws):
         current_market = STATE.get("current_market")
         stake = STATE.setdefault("cycle_stake", CONFIG.get("initial_stake", 0.35))
     
+    mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
     if is_locked:
-        # Bot is in recovery on its locked market -> place recovery trade directly
-        print(f"🔒 [LOCKED RECOVERY TRADE] Bot is locked on {current_market} @ ${stake:.2f}. Bypassing scanner.")
-        market_state = STATE["markets_state"].setdefault(current_market, {
-            "wins": 0,
-            "losses": 0,
-            "total_profit": 0.0,
-            "sequence": generate_paired_sequence(),
-            "payout_rates": {}
-        })
-        current_sequence = market_state.get("sequence", [])
-        mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
-        is_ou = (mode == "OVER_UNDER")
-        valid = (current_sequence and len(current_sequence) >= 2)
-        if valid:
-            if is_ou and current_sequence[0] not in ("DIGITUNDER", "DIGITOVER"):
-                valid = False
-            elif not is_ou and current_sequence[0] not in ("DIGITEVEN", "DIGITODD"):
-                valid = False
-        if not valid:
-            current_sequence = generate_paired_sequence()
-            market_state["sequence"] = current_sequence
-        contract_type = current_sequence[0]
-        send_proposal(ws, contract_type, stake)
+        if mode == "HYBRID_OU_EO":
+            print(f"🔒 [LOCKED HYBRID RECOVERY] Bot is locked on {current_market} @ ${stake:.2f}. Scanning recent ticks to select best hybrid sequence...")
+            scanner_targets = [current_market]
+            ws.send(json.dumps({"ticks_history": current_market, "end": "latest", "count": 50, "style": "ticks"}))
+        else:
+            # Bot is in recovery on its locked market -> place recovery trade directly
+            print(f"🔒 [LOCKED RECOVERY TRADE] Bot is locked on {current_market} @ ${stake:.2f}. Bypassing scanner.")
+            market_state = STATE["markets_state"].setdefault(current_market, {
+                "wins": 0,
+                "losses": 0,
+                "total_profit": 0.0,
+                "sequence": generate_paired_sequence(),
+                "payout_rates": {}
+            })
+            current_sequence = market_state.get("sequence", [])
+            is_ou = (mode == "OVER_UNDER")
+            valid = (current_sequence and len(current_sequence) >= 2)
+            if valid:
+                if is_ou and current_sequence[0] not in ("DIGITUNDER", "DIGITOVER"):
+                    valid = False
+                elif not is_ou and current_sequence[0] not in ("DIGITEVEN", "DIGITODD"):
+                    valid = False
+            if not valid:
+                current_sequence = generate_paired_sequence()
+                market_state["sequence"] = current_sequence
+            contract_type = current_sequence[0]
+            send_proposal(ws, contract_type, stake)
     else:
         # Fresh trade cycle -> Run Live Market Scanner across all basket markets
         basket = list(STATE.get("market_basket", []))
@@ -678,7 +812,8 @@ def run_trade_cycle():
             rec_str = "LOCKED" if STATE.get("in_recovery") else ("MARKET-SWITCH RECOVERY" if in_def else "SCANNING FRESH")
 
             print("\n" + "="*60)
-            print(f"⚡ STARTING EVEN/ODD TRADE CYCLE ({BOT_NAME}): {now_str}")
+            mode_lbl = "HYBRID OVER/UNDER × EVEN/ODD" if os.getenv("STRATEGY_MODE") == "HYBRID_OU_EO" else "EVEN/ODD"
+            print(f"⚡ STARTING {mode_lbl} TRADE CYCLE ({BOT_NAME}): {now_str}")
             print(f"   • Bot Uptime: {get_uptime_string()}")
             print(f"   • Active Market Status: {curr_mkt} [{rec_str}] (Basket remaining: {len(STATE.get('market_basket', []))})")
             print(f"   • Active Martingale Stake: ${STATE.get('cycle_stake', CONFIG['initial_stake']):.2f} (Deficit: ${STATE.get('cycle_profit', 0.0):.2f})")
@@ -706,9 +841,9 @@ def run_trade_cycle():
         wst.daemon = True
         wst.start()
 
-        trade_completed_event.wait(timeout=60)
+        trade_completed_event.wait(timeout=120)
         if not trade_completed_event.is_set():
-            print("⚠️ [TIMEOUT] Trade sequence timed out after 60s. Forcing disconnect.")
+            print("⚠️ [TIMEOUT] Trade sequence timed out after 120s. Forcing disconnect.")
             if ws_connection:
                 ws_connection.close()
     finally:
@@ -759,8 +894,9 @@ def reset_bot_globals():
 def run_multi_bot_scheduler(acc_mode):
     global BOT_NAME, START_TIME
     if acc_mode == "acc1":
-        os.environ.setdefault("STRATEGY_MODE", "OVER_UNDER")
-        os.environ.setdefault("INITIAL_STAKE", "0.50")
+        os.environ["STRATEGY_MODE"] = "HYBRID_OU_EO"
+        os.environ.setdefault("INITIAL_STAKE", "0.35")
+        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
     elif acc_mode == "acc2":
         os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "true")
         os.environ.setdefault("MAX_TRADES_PER_CYCLE", "1")
