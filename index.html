@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -168,7 +168,7 @@
       <div class="flex items-center space-x-2">
         <!-- Theme Toggle Button (Sun / Moon) -->
         <button onclick="toggleTheme()" id="themeBtn" title="Change Theme" class="p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-300 transition text-sm">
-          ☀️
+          🌙
         </button>
 
         <!-- GUI Mode Switcher (Friendly Simple / Tech / Kids) -->
@@ -398,7 +398,7 @@
     let countdown = REFRESH_SECONDS;
     let guiMode = localStorage.getItem("fleet_gui_mode") || (localStorage.getItem("fleet_simple_mode") === "false" ? "tech" : "simple");
     let isSimpleMode = guiMode !== "tech";
-    let currentTheme = localStorage.getItem("fleet_theme") || "light"; // Default cheerful light mode
+    let currentTheme = localStorage.getItem("fleet_theme") || "dark"; // Default dark mode
     let currentSystem = window.location.hash.includes("bybit")
       ? "bybit"
       : (window.location.hash.includes("call-put") || window.location.hash.includes("cp"))
@@ -1552,7 +1552,6 @@
         if (heroContainer) {
           heroContainer.className = isKidsMode
             ? "bg-gradient-to-br from-emerald-50 via-teal-50 to-yellow-50 dark:from-[#1e1b4b] dark:via-[#162032] dark:to-[#1e293b] border-4 border-emerald-300 dark:border-emerald-700 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all"
-            : "bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all";
             : "bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all";
         }
       }
