@@ -1479,8 +1479,8 @@
       const recBehaviorDesc = currentAccount === "acc2"
         ? "Pure Even/Odd • Switches to a new market on 2-step loss"
         : (currentAccount === "acc3"
-          ? "Hybrid Call/Put × Even/Odd (2 Pairs Max) • Stays LOCKED on 1HZ10V to recover"
-          : "Hybrid 50/50 Over/Under × Even/Odd (2 Pairs Max) • Stays LOCKED on 1HZ10V to recover");
+          ? "Hybrid Call/Put × Even/Odd (2 Pairs Max) • Stays LOCKED on market to recover"
+          : "Hybrid 50/50 Over/Under × Even/Odd (2 Pairs Max) • Stays LOCKED on market to recover");
 
       let stratTitle = "Hybrid 50/50 O/U × E/O";
       if (currentAccount === "acc2") stratTitle = "Pure Even / Odd";
@@ -1512,7 +1512,7 @@
           heroTag.innerHTML = `⚡ ${accNameShort} • ${stratTitle} (Group 3) Profit`;
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 5m stagger • 30m rest • 1HZ10V).`;
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 5m stagger • 30m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 5 & Team 6 (${recBehaviorDesc}).`;
@@ -1528,7 +1528,7 @@
           heroTag.innerHTML = `🎯 ${accNameShort} • ${stratTitle} (Group 2) Profit`;
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 5m stagger • 30m rest • 1HZ10V).`;
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 5m stagger • 30m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 3 & Team 4 (${recBehaviorDesc}).`;
@@ -1544,7 +1544,7 @@
           heroTag.innerHTML = `💰 ${accNameShort} • ${stratTitle} (Group 1) Profit`;
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 5m stagger • 30m rest • 1HZ10V).`;
+          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 12} bots • 5m stagger • 30m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 1 & Team 2 (${recBehaviorDesc}).`;
@@ -1768,13 +1768,13 @@
           fleetSubtitle = "BTC & ETH USDT Futures • 2-Step Switch • 5m Stagger • 20m Rest • $50 Daily Target";
         } else if (currentAccount === "acc3") {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Hybrid (Call/Put × Even/Odd) [Lock Recovery]`;
-          fleetSubtitle = `Hybrid Call/Put × Even/Odd • 2 Pairs (4 Trades Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Lock Recovery (1HZ10V)`;
+          fleetSubtitle = `Hybrid Call/Put × Even/Odd • 2 Pairs (4 Trades Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
         } else if (currentAccount === "acc2") {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Pure Even / Odd [Switch Recovery]`;
-          fleetSubtitle = `Pure Even / Odd • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Switch Recovery (1HZ10V)`;
+          fleetSubtitle = `Pure Even / Odd • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Switch Recovery (Vol 10, 25, 50, 75, 100)`;
         } else {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Hybrid (50/50 O/U × E/O) [Lock Recovery]`;
-          fleetSubtitle = `Hybrid 50/50 Over/Under × Even/Odd • 2 Pairs (4 Trades Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Lock Recovery (1HZ10V)`;
+          fleetSubtitle = `Hybrid 50/50 Over/Under × Even/Odd • 2 Pairs (4 Trades Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
         }
 
         // Calculate fleet peak stake & uptime across filtered bots
