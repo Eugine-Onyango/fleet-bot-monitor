@@ -744,7 +744,13 @@
           storedPeak = roundedProfit;
         }
 
-        peakProfit = Math.max(roundedProfit, storedPeak, serverPeak);
+        if (serverPeak !== -999999) {
+          peakProfit = Math.max(roundedProfit, serverPeak);
+        } else if (storedPeak !== -999999) {
+          peakProfit = Math.max(roundedProfit, storedPeak);
+        } else {
+          peakProfit = roundedProfit;
+        }
         if (peakProfit !== -999999 && !isNaN(peakProfit)) {
           localStorage.setItem(peakKey, peakProfit.toString());
         }
@@ -780,8 +786,9 @@
     function resetLocalPeaks() {
       const nowTs = Date.now();
       localStorage.setItem("peaks_manual_reset_ts", nowTs.toString());
+      localStorage.setItem("last_server_reset_ts", nowTs.toString());
       Object.keys(localStorage).forEach(k => {
-        if (k.startsWith("fleet_peak_") || k.startsWith("bot_peak_")) {
+        if (k.startsWith("fleet_peak_") || k.startsWith("bot_peak_") || k.startsWith("system_peak_")) {
           localStorage.removeItem(k);
         }
       });
@@ -803,6 +810,7 @@
               }
               (f.bots || []).forEach(b => {
                 b.peak_profit = b.profit || 0.0;
+                b.profit_drawdown = 0.0;
               });
             }
           });
@@ -1417,6 +1425,18 @@
     }
 
     function renderDashboard(data) {
+      if (data && data.reset_at) {
+        const payloadResetTs = new Date(data.reset_at).getTime();
+        const lastKnownResetTs = parseInt(localStorage.getItem("last_server_reset_ts") || "0");
+        if (payloadResetTs > lastKnownResetTs) {
+          localStorage.setItem("last_server_reset_ts", payloadResetTs.toString());
+          Object.keys(localStorage).forEach(k => {
+            if (k.startsWith("fleet_peak_") || k.startsWith("bot_peak_") || k.startsWith("system_peak_")) {
+              localStorage.removeItem(k);
+            }
+          });
+        }
+      }
       updateAccountSwitcherUI(data);
 
       // 1. Calculate isolated metrics for each system on the currently selected account
@@ -1819,7 +1839,13 @@
           } else if (activeAccKey === "acc1" && fleet.fleet_peak_profit !== undefined) {
             serverFPeak = parseFloat(fleet.fleet_peak_profit);
           }
-          fleetPeakProfit = Math.max(fleetProfit, storedFPeak, serverFPeak);
+          if (serverFPeak !== -999999) {
+            fleetPeakProfit = Math.max(fleetProfit, serverFPeak);
+          } else if (storedFPeak !== -999999) {
+            fleetPeakProfit = Math.max(fleetProfit, storedFPeak);
+          } else {
+            fleetPeakProfit = fleetProfit;
+          }
           if (fleetPeakProfit !== -999999 && !isNaN(fleetPeakProfit)) {
             localStorage.setItem(fleetPeakKey, fleetPeakProfit.toString());
           }
@@ -1888,7 +1914,13 @@
       if (botTrades > 0) {
         let storedBPeak = parseFloat(localStorage.getItem(botPeakKey) || "-999999");
         let serverBPeak = bot.peak_profit !== undefined ? parseFloat(bot.peak_profit) : -999999;
-        botPeakProfit = Math.max(bot.profit || 0, storedBPeak, serverBPeak);
+        if (serverBPeak !== -999999) {
+          botPeakProfit = Math.max(bot.profit || 0, serverBPeak);
+        } else if (storedBPeak !== -999999) {
+          botPeakProfit = Math.max(bot.profit || 0, storedBPeak);
+        } else {
+          botPeakProfit = bot.profit || 0;
+        }
         if (botPeakProfit !== -999999 && !isNaN(botPeakProfit)) {
           localStorage.setItem(botPeakKey, botPeakProfit.toString());
         }
