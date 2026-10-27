@@ -143,7 +143,7 @@ def load_config(verbose=False):
                 except ValueError:
                     pass
             elif os.getenv("STRATEGY_MODE", "EVEN_ODD").upper() == "OVER_UNDER":
-                CONFIG["initial_stake"] = 0.50
+                CONFIG["initial_stake"] = 0.35
             if os.getenv("SWITCH_MARKET_ON_LOSS"):
                 CONFIG["switch_market_on_loss"] = (os.getenv("SWITCH_MARKET_ON_LOSS").lower() == "true")
             if verbose:
@@ -278,7 +278,7 @@ def send_proposal(ws, contract_type, stake):
         "underlying_symbol": current_market
     }
     mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
-    if mode == "HYBRID_OU_EO":
+    if mode in ("HYBRID_OU_EO", "OVER_UNDER"):
         # 50/50 Over/Under barriers: Under 5 (digits 0-4) and Over 4 (digits 5-9)
         if contract_type == "DIGITUNDER":
             req["barrier"] = "5"
@@ -428,33 +428,30 @@ def on_message(ws, message):
                 "order_desc": order_desc
             }
         elif mode == "OVER_UNDER":
-            zeros = 0
-            nines = 0
+            unders = 0
+            overs = 0
             for p in prices:
                 s = f"{p:.{pip_size}f}"
                 d_val = int(s[-1])
-                if d_val == 0:
-                    zeros += 1
-                elif d_val == 9:
-                    nines += 1
+                if d_val < 5:
+                    unders += 1
+                else:
+                    overs += 1
             total = len(prices) if prices else 1
-            # Dominant: If fewer 9s have appeared, Under 9 has higher safety.
-            # If fewer 0s have appeared, Over 0 has higher safety.
-            if nines <= zeros:
+            if unders >= overs:
                 dominant = "DIGITUNDER"
-                safe_pct = ((total - nines) / total) * 100
-                bias = (zeros - nines + 1) / total
+                safe_pct = (unders / total) * 100
             else:
                 dominant = "DIGITOVER"
-                safe_pct = ((total - zeros) / total) * 100
-                bias = (nines - zeros + 1) / total
+                safe_pct = (overs / total) * 100
+            bias = abs(unders - overs) / total
                 
             scanner_results[sym] = {
                 "bias": bias,
                 "dominant": dominant,
                 "pct": safe_pct,
-                "nines": nines,
-                "zeros": zeros
+                "unders": unders,
+                "overs": overs
             }
         else:
             evens = 0
@@ -623,19 +620,9 @@ def on_message(ws, message):
                         STATE["max_cycle_loss"] = round(STATE["cycle_profit"], 2)
                         
                     init_stk = float(CONFIG.get("initial_stake", 0.35))
-                    if mode == "OVER_UNDER":
-                        # Target Recovery: calculate stake needed so that winning at ~9.5% net payout
-                        # recovers the entire cycle deficit PLUS target profit (init_stk * 0.10, e.g. $0.05)
-                        target_profit = round(max(0.02, init_stk * 0.10), 2)
-                        deficit_abs = abs(cycle_profit)
-                        # Net payout rate for Under 9 / Over 0 is approx 9.5% (0.095)
-                        net_payout_rate = float(CONFIG.get("ou_payout_rate", 0.095))
-                        calculated_stake = round((deficit_abs + target_profit) / net_payout_rate, 2)
-                        next_stake = max(init_stk, calculated_stake)
-                    else:
-                        # 2.1 Martingale Multiplier Step-Up for Even/Odd & Hybrid
-                        multiplier = CONFIG.get("martingale_multiplier", 2.1)
-                        next_stake = round(last_stake * multiplier, 2)
+                    # 2.1 Martingale Multiplier Step-Up for Even/Odd, 50/50 Over/Under & Hybrid
+                    multiplier = CONFIG.get("martingale_multiplier", 2.1)
+                    next_stake = round(last_stake * multiplier, 2)
 
                     STATE["cycle_stake"] = next_stake
                     save_state_unlocked()
@@ -863,7 +850,7 @@ def run_trade_cycle():
 def reset_bot_globals():
     global STATE, cycle_step, active_proposal_id, active_contract_id, ws_connection, is_trade_active, halted, last_cycle_won, scanner_results, scanner_targets
     mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
-    default_stk = 0.50 if mode == "OVER_UNDER" else 0.35
+    default_stk = 0.35
     if os.getenv("INITIAL_STAKE"):
         try:
             init_stk = float(os.getenv("INITIAL_STAKE"))
@@ -905,10 +892,15 @@ def reset_bot_globals():
 def run_multi_bot_scheduler(acc_mode):
     global BOT_NAME, START_TIME
     if acc_mode == "acc1":
-        os.environ["STRATEGY_MODE"] = "HYBRID_OU_EO"
+        os.environ["STRATEGY_MODE"] = "OVER_UNDER"
         os.environ.setdefault("INITIAL_STAKE", "0.35")
-        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
+        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "true")
+        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "true")
+        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "1")
     elif acc_mode == "acc2":
+        os.environ["STRATEGY_MODE"] = "EVEN_ODD"
+        os.environ.setdefault("INITIAL_STAKE", "0.35")
+        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "true")
         os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "true")
         os.environ.setdefault("MAX_TRADES_PER_CYCLE", "1")
     orig_stdout = sys.stdout
