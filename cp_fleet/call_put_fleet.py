@@ -339,10 +339,10 @@ def on_message(ws, message):
                 market_state["sequence"] = best_data["sequence"]
                 save_state_unlocked()
 
-            print(f"\n🔍 [HYBRID E/O × CALL/PUT SCANNER] Scanned {len(scanner_results)} basket markets:")
+            print(f"\n🔍 [CALL/PUT SCANNER] Scanned {len(scanner_results)} basket markets:")
             for s, d in sorted_mkts[:3]:
-                print(f"   • {s:<8}: Score={d['score']:.3f} -> Pair 1: {d['pair1']} [{d['order_desc']}] | Pair 2: {d['pair2']}")
-            print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with Hybrid Pairs -> Pair 1: {market_state['sequence'][:2]} | Pair 2 (Remaining): {market_state['sequence'][2:]}")
+                print(f"   • {s:<8}: Score={d['score']:.3f} -> Dominant: {d['dominant_cp']} ({d['cp_pct']:.1f}%)")
+            print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with {best_data['dominant_cp']} bias ({best_data['cp_pct']:.1f}%). Sequence: {market_state['sequence']}")
 
             stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
             contract_type = market_state["sequence"][0]
