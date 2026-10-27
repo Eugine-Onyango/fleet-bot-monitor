@@ -535,8 +535,17 @@ def on_message(ws, message):
     elif msg_type == "buy":
         buy = data.get("buy", {})
         active_contract_id = buy.get("contract_id")
-        print(f"   • Contract Purchased: ID {active_contract_id}. Subscribing to contract results...")
-        ws.send(json.dumps({"proposal_open_contract": 1, "contract_id": active_contract_id, "subscribe": 1}))
+        print(f"   • Contract Purchased: ID {active_contract_id}. Awaiting settlement...")
+        def poll_settlement_worker(target_id):
+            for _ in range(25):
+                time.sleep(1.0)
+                if trade_completed_event.is_set():
+                    break
+                try:
+                    ws.send(json.dumps({"proposal_open_contract": 1, "contract_id": target_id}))
+                except Exception:
+                    break
+        threading.Thread(target=poll_settlement_worker, args=(active_contract_id,), daemon=True).start()
 
     elif msg_type == "proposal_open_contract":
         contract = data.get("proposal_open_contract", {})
