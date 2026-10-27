@@ -210,16 +210,16 @@
           <span>Deriv Account Switcher (Live Multi-Account Comparison)</span>
         </span>
         <span id="activeAccountBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-          DOT91203477 • Hybrid (50/50 Over/Under × Even/Odd) • Lock Recovery
+          DOT91203477 • Pure 50/50 Over / Under • Switch Recovery
         </span>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
         <button onclick="switchAccount('acc1')" id="accBtn-acc1" class="w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
           <div class="flex items-center gap-1.5 min-w-0">
-            <span class="text-sm flex-shrink-0">🔒</span>
+            <span class="text-sm flex-shrink-0">🎯</span>
             <div class="text-left truncate">
-              <div class="truncate">Account 1 • Hybrid (50/50 O/U × E/O)</div>
-              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">50/50 Over/Under × Even/Odd • Lock Recovery • 36 Bots</div>
+              <div class="truncate">Account 1 • Pure Over / Under</div>
+              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Pure 50/50 Over/Under • Switch Recovery • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc1" class="px-2 py-0.5 rounded-lg text-[11px] bg-white/20 font-black flex-shrink-0">+$0.00</span>
@@ -240,8 +240,8 @@
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-sm flex-shrink-0">📈</span>
             <div class="text-left truncate">
-              <div class="truncate">Account 3 • Hybrid (Call/Put × E/O)</div>
-              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Hybrid Call/Put × Even/Odd • Lock Recovery • 36 Bots</div>
+              <div class="truncate">Account 3 • Pure Call / Put</div>
+              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Pure Call/Put (Rise/Fall) • Switch Recovery • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc3" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -455,14 +455,14 @@
         if (profAcc3) profAcc3.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
-          badge.innerText = "DOT91362122 • Hybrid (Call/Put × Even/Odd) • Lock Recovery";
+          badge.innerText = "DOT91362122 • Pure Call / Put • Switch Recovery";
         }
       } else {
         if (btnAcc1) btnAcc1.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-500/20";
         if (profAcc1) profAcc1.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
-          badge.innerText = "DOT91203477 • Hybrid (50/50 Over/Under × Even/Odd) • Lock Recovery";
+          badge.innerText = "DOT91203477 • Pure 50/50 Over / Under • Switch Recovery";
         }
       }
 
@@ -490,17 +490,17 @@
       }
 
       if (currentAccount === "acc3") {
-        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Hybrid C/P×E/O (Grp 1)</span><span class="hidden md:inline lg:hidden">C/P×E/O (G1)</span>`;
-        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Hybrid C/P×E/O (Grp 2)</span><span class="hidden md:inline lg:hidden">C/P×E/O (G2)</span>`;
-        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Hybrid C/P×E/O (Grp 3)</span><span class="hidden md:inline lg:hidden">C/P×E/O (G3)</span>`;
+        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Pure Call/Put (Grp 1)</span><span class="hidden md:inline lg:hidden">Pure C/P (G1)</span>`;
+        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Pure Call/Put (Grp 2)</span><span class="hidden md:inline lg:hidden">Pure C/P (G2)</span>`;
+        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Pure Call/Put (Grp 3)</span><span class="hidden md:inline lg:hidden">Pure C/P (G3)</span>`;
       } else if (currentAccount === "acc2") {
         if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Pure Even/Odd (Grp 1)</span><span class="hidden md:inline lg:hidden">Pure E/O (G1)</span>`;
         if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Pure Even/Odd (Grp 2)</span><span class="hidden md:inline lg:hidden">Pure E/O (G2)</span>`;
         if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Pure Even/Odd (Grp 3)</span><span class="hidden md:inline lg:hidden">Pure E/O (G3)</span>`;
       } else {
-        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Hybrid O/U×E/O (Grp 1)</span><span class="hidden md:inline lg:hidden">O/U×E/O (G1)</span>`;
-        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Hybrid O/U×E/O (Grp 2)</span><span class="hidden md:inline lg:hidden">O/U×E/O (G2)</span>`;
-        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Hybrid O/U×E/O (Grp 3)</span><span class="hidden md:inline lg:hidden">O/U×E/O (G3)</span>`;
+        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Pure Over/Under (Grp 1)</span><span class="hidden md:inline lg:hidden">Pure O/U (G1)</span>`;
+        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Pure Over/Under (Grp 2)</span><span class="hidden md:inline lg:hidden">Pure O/U (G2)</span>`;
+        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Pure Over/Under (Grp 3)</span><span class="hidden md:inline lg:hidden">Pure O/U (G3)</span>`;
       }
 
       if (data && data.fleets) {
@@ -523,9 +523,9 @@
           }
           const subEl = document.getElementById(`accSub-${accKey}`);
           if (subEl) {
-            if (accKey === "acc1") subEl.innerText = `Hybrid 50/50 O/U × E/O • Lock Recovery • ${bCount || 36} Bots`;
+            if (accKey === "acc1") subEl.innerText = `Pure 50/50 Over/Under • Switch Recovery • ${bCount || 36} Bots`;
             else if (accKey === "acc2") subEl.innerText = `Pure Even / Odd • Switch Recovery • ${bCount || 36} Bots`;
-            else if (accKey === "acc3") subEl.innerText = `Hybrid Call/Put × Even/Odd • Lock Recovery • ${bCount || 36} Bots`;
+            else if (accKey === "acc3") subEl.innerText = `Pure Call / Put • Switch Recovery • ${bCount || 36} Bots`;
           }
         });
       }
@@ -1189,11 +1189,11 @@
       }
 
       const acc = account || (rawName.startsWith("acc2") ? "acc2" : (rawName.startsWith("acc3") ? "acc3" : currentAccount));
-      let strat = "Hybrid 50/50 O/U×E/O";
+      let strat = "Pure 50/50 O/U";
       if (acc === "acc2") {
         strat = "Pure E/O";
       } else if (acc === "acc3") {
-        strat = "Hybrid C/P×E/O";
+        strat = "Pure C/P";
       }
 
       return `Team ${teamNum} (${strat}) • Bot #${num}`;
@@ -1495,16 +1495,16 @@
 
       const accNameShort = currentAccount === "acc2"
         ? "Account 2 (Pure E/O)"
-        : (currentAccount === "acc3" ? "Account 3 (Hybrid C/P×E/O)" : "Account 1 (Hybrid 50/50 O/U×E/O)");
+        : (currentAccount === "acc3" ? "Account 3 (Pure C/P)" : "Account 1 (Pure 50/50 O/U)");
       const recBehaviorDesc = currentAccount === "acc2"
-        ? "Pure Even/Odd • Switches to a new market on 2-step loss"
+        ? "Pure Even/Odd • Switches to a new market on loss"
         : (currentAccount === "acc3"
-          ? "Hybrid Call/Put × Even/Odd (2 Pairs Max) • Stays LOCKED on market to recover"
-          : "Hybrid 50/50 Over/Under × Even/Odd (2 Pairs Max) • Stays LOCKED on market to recover");
+          ? "Pure Call/Put (Rise/Fall) • Switches to a new market on loss"
+          : "Pure 50/50 Over/Under • Switches to a new market on loss");
 
-      let stratTitle = "Hybrid 50/50 O/U × E/O";
+      let stratTitle = "Pure 50/50 Over / Under";
       if (currentAccount === "acc2") stratTitle = "Pure Even / Odd";
-      else if (currentAccount === "acc3") stratTitle = "Hybrid Call/Put × Even/Odd";
+      else if (currentAccount === "acc3") stratTitle = "Pure Call / Put";
 
       if (currentSystem === "bybit") {
         if (heroTag) {
@@ -1631,7 +1631,7 @@
       const tabsBar = document.getElementById("fleetTabsBar");
       const isAcc3 = currentAccount === "acc3";
       const isAcc2 = currentAccount === "acc2";
-      const stratShort = isAcc3 ? "Hybrid C/P×E/O" : (isAcc2 ? "Pure E/O" : "Hybrid 50/50 O/U×E/O");
+      const stratShort = isAcc3 ? "Pure C/P" : (isAcc2 ? "Pure E/O" : "Pure 50/50 O/U");
       if (tabsBar) {
         if (currentSystem === "bybit") {
           tabsBar.innerHTML = `
@@ -1787,14 +1787,14 @@
           friendlyFleetName = "🚀 Team 1 • Bybit Futures (Long / Short)";
           fleetSubtitle = "BTC & ETH USDT Futures • 2-Step Switch • 5m Stagger • 20m Rest • $50 Daily Target";
         } else if (currentAccount === "acc3") {
-          friendlyFleetName = `${teamIcon} Team ${teamNum} • Hybrid (Call/Put × Even/Odd) [Lock Recovery]`;
-          fleetSubtitle = `Hybrid Call/Put × Even/Odd • 2 Pairs (4 Trades Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
+          friendlyFleetName = `${teamIcon} Team ${teamNum} • Pure Call / Put [Switch Recovery]`;
+          fleetSubtitle = `Pure Call / Put • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Switch Recovery (Vol 10, 25, 50, 75, 100)`;
         } else if (currentAccount === "acc2") {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Pure Even / Odd [Switch Recovery]`;
           fleetSubtitle = `Pure Even / Odd • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Switch Recovery (Vol 10, 25, 50, 75, 100)`;
         } else {
-          friendlyFleetName = `${teamIcon} Team ${teamNum} • Hybrid (50/50 O/U × E/O) [Lock Recovery]`;
-          fleetSubtitle = `Hybrid 50/50 Over/Under × Even/Odd • 2 Pairs (4 Trades Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
+          friendlyFleetName = `${teamIcon} Team ${teamNum} • Pure 50/50 Over / Under [Switch Recovery]`;
+          fleetSubtitle = `Pure 50/50 Over / Under • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 6} Bots • 5m Stagger • 30m Rest • Switch Recovery (Vol 10, 25, 50, 75, 100)`;
         }
 
         // Calculate fleet peak stake & uptime across filtered bots
