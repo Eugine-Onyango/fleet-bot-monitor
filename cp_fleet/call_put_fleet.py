@@ -684,8 +684,8 @@ def run_multi_bot_scheduler(acc_mode):
         os.environ["STRATEGY_MODE"] = "CALL_PUT"
         os.environ.setdefault("INITIAL_STAKE", "0.35")
         os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
-        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "false")
-        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "2")
+        os.environ["SINGLE_TRADE_PER_CYCLE"] = "true"
+        os.environ["MAX_TRADES_PER_CYCLE"] = "1"
     orig_stdout = sys.stdout
     orig_stderr = sys.stderr
     start_ts = time.time()

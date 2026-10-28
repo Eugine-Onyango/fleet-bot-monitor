@@ -1786,13 +1786,13 @@
           fleetSubtitle = "BTC & ETH USDT Futures • 2-Step Switch • 5m Stagger • 20m Rest • $50 Daily Target";
         } else if (currentAccount === "acc3") {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Pure Call / Put [Lock Recovery]`;
-          fleetSubtitle = `Pure Call / Put • 2-Trade Reversal Cycle • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
+          fleetSubtitle = `Pure Call / Put • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
         } else if (currentAccount === "acc2") {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Pure 50/50 Over / Under [Lock Recovery]`;
-          fleetSubtitle = `Pure 50/50 Over / Under • 2-Trade Reversal Cycle • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
+          fleetSubtitle = `Pure 50/50 Over / Under • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
         } else {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Pure Even / Odd [Lock Recovery]`;
-          fleetSubtitle = `Pure Even / Odd • 2-Trade Reversal Cycle • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
+          fleetSubtitle = `Pure Even / Odd • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
         }
 
         // Calculate fleet peak stake & uptime across filtered bots
