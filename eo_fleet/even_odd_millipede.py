@@ -705,33 +705,10 @@ def on_open(ws):
     
     mode = os.getenv("STRATEGY_MODE", "EVEN_ODD").upper()
     if is_locked:
-        if mode == "HYBRID_OU_EO":
-            print(f"🔒 [LOCKED HYBRID RECOVERY] Bot is locked on {current_market} @ ${stake:.2f}. Scanning recent ticks to select best hybrid sequence...")
-            scanner_targets = [current_market]
-            ws.send(json.dumps({"ticks_history": current_market, "end": "latest", "count": 50, "style": "ticks"}))
-        else:
-            # Bot is in recovery on its locked market -> place recovery trade directly
-            print(f"🔒 [LOCKED RECOVERY TRADE] Bot is locked on {current_market} @ ${stake:.2f}. Bypassing scanner.")
-            market_state = STATE["markets_state"].setdefault(current_market, {
-                "wins": 0,
-                "losses": 0,
-                "total_profit": 0.0,
-                "sequence": generate_paired_sequence(),
-                "payout_rates": {}
-            })
-            current_sequence = market_state.get("sequence", [])
-            is_ou = (mode == "OVER_UNDER")
-            valid = (current_sequence and len(current_sequence) >= 2)
-            if valid:
-                if is_ou and current_sequence[0] not in ("DIGITUNDER", "DIGITOVER"):
-                    valid = False
-                elif not is_ou and current_sequence[0] not in ("DIGITEVEN", "DIGITODD"):
-                    valid = False
-            if not valid:
-                current_sequence = generate_paired_sequence()
-                market_state["sequence"] = current_sequence
-            contract_type = current_sequence[0]
-            send_proposal(ws, contract_type, stake)
+        # Bot is locked on current_market -> scan recent ticks on current_market to pick dominant side
+        print(f"🔒 [LOCKED RECOVERY] Bot is locked on {current_market} @ ${stake:.2f}. Scanning recent ticks to select best sequence...")
+        scanner_targets = [current_market]
+        ws.send(json.dumps({"ticks_history": current_market, "end": "latest", "count": 50, "style": "ticks"}))
     else:
         # Fresh trade cycle -> Run Live Market Scanner across all basket markets
         basket = list(STATE.get("market_basket", []))
@@ -901,17 +878,17 @@ def reset_bot_globals():
 def run_multi_bot_scheduler(acc_mode):
     global BOT_NAME, START_TIME
     if acc_mode == "acc1":
-        os.environ["STRATEGY_MODE"] = "OVER_UNDER"
-        os.environ.setdefault("INITIAL_STAKE", "0.35")
-        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "true")
-        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "true")
-        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "1")
-    elif acc_mode == "acc2":
         os.environ["STRATEGY_MODE"] = "EVEN_ODD"
         os.environ.setdefault("INITIAL_STAKE", "0.35")
-        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "true")
-        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "true")
-        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "1")
+        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
+        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "false")
+        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "2")
+    elif acc_mode == "acc2":
+        os.environ["STRATEGY_MODE"] = "OVER_UNDER"
+        os.environ.setdefault("INITIAL_STAKE", "0.35")
+        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
+        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "false")
+        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "2")
     orig_stdout = sys.stdout
     orig_stderr = sys.stderr
     start_ts = time.time()
@@ -932,7 +909,7 @@ def run_multi_bot_scheduler(acc_mode):
 
     bots_schedule = []
     for t_prefix, d_prefix, base_offset in teams:
-        for i in range(1, 7):
+        for i in range(1, 13):
             b_name = f"{bot_prefix}-{t_prefix}-{i}"
             b_dir = f"/root/{d_prefix}_{i}" if acc_mode == "acc1" else f"/root/acc2_{d_prefix}_{i}"
             delay = base_offset + (i - 1) * 300
@@ -999,7 +976,7 @@ def run_multi_bot_scheduler(acc_mode):
                     in_deficit = STATE.get("cycle_profit", 0.0) < 0.0
                     last_won = last_cycle_won
                     if not last_won or in_deficit:
-                        cooldown = CONFIG.get("loss_cooldown_seconds", 1800)
+                        cooldown = CONFIG.get("loss_cooldown_seconds", 3600)
                         cd_m = cooldown // 60
                         next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
                         if CONFIG.get("switch_market_on_loss", False):
@@ -1007,7 +984,7 @@ def run_multi_bot_scheduler(acc_mode):
                         else:
                             print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
                     else:
-                        cooldown = CONFIG.get("win_cooldown_minutes", 30) * 60
+                        cooldown = CONFIG.get("win_cooldown_minutes", 60) * 60
                         cd_m = cooldown // 60
                         next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
                         print(f"✅ [{cd_m}m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
@@ -1052,7 +1029,7 @@ def main():
             last_won = last_cycle_won
             
         if not last_won or in_deficit:
-            cooldown = CONFIG.get("loss_cooldown_seconds", 1800)
+            cooldown = CONFIG.get("loss_cooldown_seconds", 3600)
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
             if CONFIG.get("switch_market_on_loss", False):
@@ -1060,7 +1037,7 @@ def main():
             else:
                 print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
         else:
-            cooldown = CONFIG.get("win_cooldown_minutes", 30) * 60
+            cooldown = CONFIG.get("win_cooldown_minutes", 60) * 60
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
             print(f"✅ [{cd_m}m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")

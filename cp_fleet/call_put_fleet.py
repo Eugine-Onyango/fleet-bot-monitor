@@ -683,9 +683,9 @@ def run_multi_bot_scheduler(acc_mode):
     if acc_mode == "acc3":
         os.environ["STRATEGY_MODE"] = "CALL_PUT"
         os.environ.setdefault("INITIAL_STAKE", "0.35")
-        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "true")
-        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "true")
-        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "1")
+        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
+        os.environ.setdefault("SINGLE_TRADE_PER_CYCLE", "false")
+        os.environ.setdefault("MAX_TRADES_PER_CYCLE", "2")
     orig_stdout = sys.stdout
     orig_stderr = sys.stderr
     start_ts = time.time()
@@ -703,7 +703,7 @@ def run_multi_bot_scheduler(acc_mode):
 
     bots_schedule = []
     for t_prefix, d_prefix, base_offset in teams:
-        for i in range(1, 7):
+        for i in range(1, 13):
             b_name = f"acc3-{t_prefix}-{i}"
             b_dir = f"/root/acc3_{d_prefix}_{i}"
             delay = base_offset + (i - 1) * 300
@@ -770,7 +770,7 @@ def run_multi_bot_scheduler(acc_mode):
                     in_deficit = STATE.get("cycle_profit", 0.0) < 0.0 or STATE.get("in_recovery", False)
                     last_won = last_cycle_won
                     if not last_won or in_deficit:
-                        cooldown = CONFIG.get("loss_cooldown_seconds", 1800)
+                        cooldown = CONFIG.get("loss_cooldown_seconds", 3600)
                         cd_m = cooldown // 60
                         next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
                         if CONFIG.get("switch_market_on_loss", False):
@@ -778,7 +778,7 @@ def run_multi_bot_scheduler(acc_mode):
                         else:
                             print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next Martingale recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
                     else:
-                        cooldown = CONFIG.get("win_cooldown_minutes", 30) * 60
+                        cooldown = CONFIG.get("win_cooldown_minutes", 60) * 60
                         cd_m = cooldown // 60
                         next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
                         print(f"✅ [{cd_m}m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
@@ -823,7 +823,7 @@ def main():
             last_won = last_cycle_won
             
         if not last_won or in_deficit:
-            cooldown = CONFIG.get("loss_cooldown_seconds", 1800)
+            cooldown = CONFIG.get("loss_cooldown_seconds", 3600)
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
             if CONFIG.get("switch_market_on_loss", False):
@@ -831,7 +831,7 @@ def main():
             else:
                 print(f"⏱️ [{cd_m}m RECOVERY COOLDOWN] Staying LOCKED on {STATE.get('current_market')} with {cd_m}m cooldown before next Martingale recovery @ ${STATE.get('cycle_stake', 0.35):.2f}. Next trade at {next_t}.")
         else:
-            cooldown = CONFIG.get("win_cooldown_minutes", 30) * 60
+            cooldown = CONFIG.get("win_cooldown_minutes", 60) * 60
             cd_m = cooldown // 60
             next_t = (datetime.datetime.now() + datetime.timedelta(seconds=cooldown)).strftime("%Y-%m-%d %H:%M:%S")
             print(f"✅ [{cd_m}m WIN COOLDOWN] Win achieved! Clean session profit ${STATE.get('total_profit', 0.0):.2f}. Cooldown of {cd_m}m active. Next trade scheduled at {next_t}.")
