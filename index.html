@@ -234,7 +234,7 @@
           <span>Deriv Account Switcher (Live Multi-Account Comparison)</span>
         </span>
         <span id="activeAccountBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-          DOT91203477 • Hybrid E/O × 50/50 O/U • Lock Recovery
+          DOT91203477 • Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • Lock Recovery
         </span>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
@@ -242,8 +242,8 @@
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-sm flex-shrink-0">🔄</span>
             <div class="text-left truncate">
-              <div class="truncate">Account 1 • Hybrid E/O × O/U</div>
-              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Hybrid E/O × 50/50 O/U • Lock Recovery • 72 Bots</div>
+              <div class="truncate">Account 1 • Triple Hybrid</div>
+              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • 72 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc1" class="px-2 py-0.5 rounded-lg text-[11px] bg-white/20 font-black flex-shrink-0">+$0.00</span>
@@ -253,8 +253,8 @@
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-sm flex-shrink-0">🎯</span>
             <div class="text-left truncate">
-              <div class="truncate">Account 2 • Hybrid C/P × E/O</div>
-              <div id="accSub-acc2" class="text-[10px] opacity-75 font-semibold truncate">Hybrid C/P × E/O • Lock Recovery • 72 Bots</div>
+              <div class="truncate">Account 2 • Triple Hybrid</div>
+              <div id="accSub-acc2" class="text-[10px] opacity-75 font-semibold truncate">Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • 72 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc2" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -264,8 +264,8 @@
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-sm flex-shrink-0">📈</span>
             <div class="text-left truncate">
-              <div class="truncate">Account 3 • Under 9 / Over 0</div>
-              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Under 9 / Over 0 (90% Win Prob) • Lock Recovery • 72 Bots</div>
+              <div class="truncate">Account 3 • Triple Hybrid</div>
+              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • 72 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc3" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -473,21 +473,21 @@
         if (profAcc2) profAcc2.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800";
-          badge.innerText = "DOT93845070 • Hybrid C/P × E/O • Lock Recovery";
+          badge.innerText = "DOT93845070 • Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • Lock Recovery";
         }
       } else if (currentAccount === "acc3") {
         if (btnAcc3) btnAcc3.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-amber-600 text-white shadow-md shadow-amber-500/20";
         if (profAcc3) profAcc3.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
-          badge.innerText = "DOT91362122 • Under 9 / Over 0 (90% Win Prob) • Single Trade • Lock Recovery";
+          badge.innerText = "DOT91362122 • Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • Lock Recovery";
         }
       } else {
         if (btnAcc1) btnAcc1.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-500/20";
         if (profAcc1) profAcc1.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
-          badge.innerText = "DOT91203477 • Hybrid E/O × 50/50 O/U • Lock Recovery";
+          badge.innerText = "DOT91203477 • Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • Lock Recovery";
         }
       }
 
@@ -514,19 +514,9 @@
         }
       }
 
-      if (currentAccount === "acc3") {
-        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Under 9 / Over 0 (Grp 1)</span><span class="hidden md:inline lg:hidden">U9/O0 (G1)</span>`;
-        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Under 9 / Over 0 (Grp 2)</span><span class="hidden md:inline lg:hidden">U9/O0 (G2)</span>`;
-        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Under 9 / Over 0 (Grp 3)</span><span class="hidden md:inline lg:hidden">U9/O0 (G3)</span>`;
-      } else if (currentAccount === "acc2") {
-        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Hybrid C/P × E/O (Grp 1)</span><span class="hidden md:inline lg:hidden">Hybrid C/P×E/O (G1)</span>`;
-        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Hybrid C/P × E/O (Grp 2)</span><span class="hidden md:inline lg:hidden">Hybrid C/P×E/O (G2)</span>`;
-        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Hybrid C/P × E/O (Grp 3)</span><span class="hidden md:inline lg:hidden">Hybrid C/P×E/O (G3)</span>`;
-      } else {
-        if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Hybrid E/O × O/U (Grp 1)</span><span class="hidden md:inline lg:hidden">Hybrid E/O×O/U (G1)</span>`;
-        if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Hybrid E/O × O/U (Grp 2)</span><span class="hidden md:inline lg:hidden">Hybrid E/O×O/U (G2)</span>`;
-        if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Hybrid E/O × O/U (Grp 3)</span><span class="hidden md:inline lg:hidden">Hybrid E/O×O/U (G3)</span>`;
-      }
+      if (sysLabelEO) sysLabelEO.innerHTML = `<span class="md:hidden lg:inline">Triple Hybrid (Grp 1)</span><span class="hidden md:inline lg:hidden">Triple (G1)</span>`;
+      if (sysLabelOU) sysLabelOU.innerHTML = `<span class="md:hidden lg:inline">Triple Hybrid (Grp 2)</span><span class="hidden md:inline lg:hidden">Triple (G2)</span>`;
+      if (sysLabelCP) sysLabelCP.innerHTML = `<span class="md:hidden lg:inline">Triple Hybrid (Grp 3)</span><span class="hidden md:inline lg:hidden">Triple (G3)</span>`;
 
       if (data && data.fleets) {
         ["acc1", "acc2", "acc3"].forEach(accKey => {
@@ -548,9 +538,7 @@
           }
           const subEl = document.getElementById(`accSub-${accKey}`);
           if (subEl) {
-            if (accKey === "acc1") subEl.innerText = `Hybrid E/O × 50/50 O/U • Lock Recovery • ${bCount || 72} Bots`;
-            else if (accKey === "acc2") subEl.innerText = `Hybrid C/P × E/O • Lock Recovery • ${bCount || 72} Bots`;
-            else if (accKey === "acc3") subEl.innerText = `Under 9 / Over 0 (90% Win Prob) • Lock Recovery • ${bCount || 72} Bots`;
+            subEl.innerText = `Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • ${bCount || 72} Bots`;
           }
         });
       }
@@ -1640,17 +1628,10 @@
       if (lblPeakStake) lblPeakStake.innerText = isCyberMode ? "MAX EXPOSURE ⚡" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
 
       const accNameShort = currentAccount === "acc2"
-        ? "Account 2 (Hybrid C/P × E/O)"
-        : (currentAccount === "acc3" ? "Account 3 (Under 9 / Over 0)" : "Account 1 (Hybrid E/O × O/U)");
-      const recBehaviorDesc = currentAccount === "acc2"
-        ? "Hybrid C/P × E/O • Lock on market recovery"
-        : (currentAccount === "acc3"
-          ? "Under 9 / Over 0 (90% Win Prob) • Single Trade • Lock on market recovery"
-          : "Hybrid E/O × 50/50 O/U • Lock on market recovery");
-
-      let stratTitle = "Hybrid E/O × 50/50 O/U";
-      if (currentAccount === "acc2") stratTitle = "Hybrid C/P × E/O";
-      else if (currentAccount === "acc3") stratTitle = "Under 9 / Over 0 (90% Win Prob)";
+        ? "Account 2 (Triple Hybrid)"
+        : (currentAccount === "acc3" ? "Account 3 (Triple Hybrid)" : "Account 1 (Triple Hybrid)");
+      const recBehaviorDesc = "Triple Hybrid (E/O × O/U × C/P) • 3 Hybrids (6 Trades Max) • Lock on 1HZ10V";
+      let stratTitle = "Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s";
 
       if (currentSystem === "bybit") {
         if (heroTag) {
@@ -1684,7 +1665,7 @@
         if (peaceText) {
           peaceText.innerHTML = isCyberMode
             ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
-            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 5 & Team 6 (${recBehaviorDesc}).`;
@@ -1704,7 +1685,7 @@
         if (peaceText) {
           peaceText.innerHTML = isCyberMode
             ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
-            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 3 & Team 4 (${recBehaviorDesc}).`;
@@ -1724,7 +1705,7 @@
         if (peaceText) {
           peaceText.innerHTML = isCyberMode
             ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
-            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 1 & Team 2 (${recBehaviorDesc}).`;
@@ -1947,15 +1928,9 @@
         if (fleet.fleet_name.toLowerCase().includes("bybit")) {
           friendlyFleetName = "🚀 Team 1 • Bybit Futures (Long / Short)";
           fleetSubtitle = "BTC & ETH USDT Futures • 2-Step Switch • 5m Stagger • 20m Rest • $50 Daily Target";
-        } else if (currentAccount === "acc3") {
-          friendlyFleetName = `${teamIcon} Team ${teamNum} • Under 9 / Over 0 (90% Win Prob) [Lock Recovery]`;
-          fleetSubtitle = `Under 9 / Over 0 (90% Win Prob) • Single-Trade Cycle (1 Trade Max) • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
-        } else if (currentAccount === "acc2") {
-          friendlyFleetName = `${teamIcon} Team ${teamNum} • Hybrid C/P × E/O [Lock Recovery]`;
-          fleetSubtitle = `Hybrid C/P × E/O • 4-Trade Cycle (Pair 1 -> Pair 2) • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
         } else {
-          friendlyFleetName = `${teamIcon} Team ${teamNum} • Hybrid E/O × 50/50 O/U [Lock Recovery]`;
-          fleetSubtitle = `Hybrid E/O × 50/50 O/U • 4-Trade Cycle (Pair 1 -> Pair 2) • ${fleet.bots.length || 12} Bots • 5m Stagger • 60m Rest • Lock Recovery (Vol 10, 25, 50, 75, 100)`;
+          friendlyFleetName = `${teamIcon} Team ${teamNum} • Triple Hybrid (E/O × O/U × C/P) [1HZ10V]`;
+          fleetSubtitle = `Triple Hybrid (E/O × 50/50 O/U × C/P) • 3 Hybrids (6 Trades Max) • ${fleet.bots.length || 12} Bots • 5m Cadence • 60m Rest • Lock Recovery (Fast Vol 10s)`;
         }
 
         // Calculate fleet peak stake & uptime across filtered bots
