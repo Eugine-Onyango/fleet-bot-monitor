@@ -41,20 +41,49 @@ def get_opposite_side(side):
     if side == "DIGITODD": return "DIGITEVEN"
     return side
 
-def is_valid_cp_sequence(seq):
-    return isinstance(seq, list) and len(seq) >= 1 and seq[0] in ("CALL", "PUT")
+def is_valid_hybrid_sequence(seq):
+    if not isinstance(seq, list) or len(seq) < 4:
+        return False
+    eo_types = {"DIGITEVEN", "DIGITODD"}
+    cp_types = {"CALL", "PUT"}
+    s1, s2, s3, s4 = seq[0], seq[1], seq[2], seq[3]
+    # Pair 1 must be cross-family
+    pair1_valid = (s1 in eo_types and s2 in cp_types) or (s1 in cp_types and s2 in eo_types)
+    # Pair 2 must be the exact opposite remaining breed
+    pair2_valid = (s3 == get_opposite_side(s1) and s4 == get_opposite_side(s2))
+    return pair1_valid and pair2_valid
 
-is_valid_hybrid_sequence = is_valid_cp_sequence
-
-def generate_paired_sequence(dominant_cp=None, **kwargs):
+def generate_paired_sequence(dominant_eo=None, dominant_cp=None, first_family=None, **kwargs):
+    # Family 1: Even / Odd
+    if dominant_eo in ("DIGITEVEN", "DIGITODD"):
+        eo = dominant_eo
+    else:
+        eo = random.choice(["DIGITEVEN", "DIGITODD"])
+        
+    # Family 2: Call / Put
     if dominant_cp in ("CALL", "PUT"):
         cp = dominant_cp
     else:
         cp = random.choice(["CALL", "PUT"])
-    opp = "PUT" if cp == "CALL" else "CALL"
-    return [cp, opp]
+        
+    # Pair 1: Most suitable breed
+    if first_family == "EO":
+        pair1 = [eo, cp]
+    elif first_family == "CP":
+        pair1 = [cp, eo]
+    else:
+        pair1 = [eo, cp] if random.random() < 0.5 else [cp, eo]
+        
+    # Pair 2: Remaining unused breed (complementary opposite family members)
+    pair2 = [get_opposite_side(pair1[0]), get_opposite_side(pair1[1])]
+    
+    # Full 4-trade sequence: Pair 1 followed immediately by Pair 2
+    return pair1 + pair2
 
 def get_max_trades_per_cycle():
+    mode = os.getenv("STRATEGY_MODE", "HYBRID_CP_EO").upper()
+    if mode == "HYBRID_CP_EO":
+        return 4
     val = os.getenv("MAX_TRADES_PER_CYCLE")
     if val is not None:
         try:
@@ -63,7 +92,7 @@ def get_max_trades_per_cycle():
             pass
     if os.getenv("SINGLE_TRADE_PER_CYCLE", "false").lower() == "true":
         return 1
-    return 2
+    return 4
 
 def get_side_description(contract_type):
     if contract_type == "CALL":
@@ -255,8 +284,14 @@ def send_proposal(ws, contract_type, stake):
         save_state_unlocked()
 
     side_desc = get_side_description(contract_type)
-    max_trades = get_max_trades_per_cycle()
-    print(f"   • [Trade {cycle_step}/{max_trades}] Requesting {contract_type} ({side_desc}) on {current_market} @ ${stake:.2f}...")
+    mode = os.getenv("STRATEGY_MODE", "HYBRID_CP_EO").upper()
+    if mode == "HYBRID_CP_EO":
+        pair_num = 1 if cycle_step <= 2 else 2
+        step_in_pair = 1 if cycle_step in (1, 3) else 2
+        print(f"   • [Pair {pair_num}/2 • Trade {step_in_pair}/2 (Overall {cycle_step}/4)] Requesting {contract_type} ({side_desc}) on {current_market} @ ${stake:.2f}...")
+    else:
+        max_trades = get_max_trades_per_cycle()
+        print(f"   • [Trade {cycle_step}/{max_trades}] Requesting {contract_type} ({side_desc}) on {current_market} @ ${stake:.2f}...")
     ws.send(json.dumps(req))
 
 def send_buy(ws, proposal_id, stake):
@@ -295,7 +330,22 @@ def on_message(ws, message):
         pip_size = int(data.get("pip_size", 3))
         
         if prices and len(prices) >= 2:
-            # Call / Put momentum & trend
+            # 1. Even / Odd digit distribution
+            evens = 0
+            odds = 0
+            for p in prices:
+                s = f"{p:.{pip_size}f}"
+                d_val = int(s[-1])
+                if d_val % 2 == 0:
+                    evens += 1
+                else:
+                    odds += 1
+            total_digits = len(prices)
+            dominant_eo = "DIGITEVEN" if evens >= odds else "DIGITODD"
+            eo_pct = (max(evens, odds) / total_digits) * 100
+            eo_bias = abs(evens - odds) / total_digits
+
+            # 2. Call / Put momentum & trend
             start_p = float(prices[0])
             end_p = float(prices[-1])
             max_p = max(prices)
@@ -312,14 +362,30 @@ def on_message(ws, message):
             cp_pct = cp_momentum * 100
             cp_bias = (abs(end_p - start_p) / rng) * 0.5 + (cp_momentum - 0.5) * 0.5
 
-            sequence = [dominant_cp, "PUT" if dominant_cp == "CALL" else "CALL"]
+            overall_score = eo_bias + max(0.0, cp_bias)
+
+            # Prioritize stronger family for Pair 1
+            if eo_pct >= cp_pct:
+                pair1 = [dominant_eo, dominant_cp]
+                order_desc = f"{dominant_eo} ({eo_pct:.1f}%) > {dominant_cp} ({cp_pct:.1f}%)"
+            else:
+                pair1 = [dominant_cp, dominant_eo]
+                order_desc = f"{dominant_cp} ({cp_pct:.1f}%) > {dominant_eo} ({eo_pct:.1f}%)"
+
+            # Pair 2: Remaining unused breed (complementary opposite family members)
+            pair2 = [get_opposite_side(pair1[0]), get_opposite_side(pair1[1])]
+            full_sequence = pair1 + pair2
 
             scanner_results[sym] = {
-                "score": cp_bias,
-                "sequence": sequence,
+                "score": overall_score,
+                "sequence": full_sequence,
+                "pair1": pair1,
+                "pair2": pair2,
+                "dominant_eo": dominant_eo,
                 "dominant_cp": dominant_cp,
+                "eo_pct": eo_pct,
                 "cp_pct": cp_pct,
-                "order_desc": f"{dominant_cp} ({cp_pct:.1f}%)"
+                "order_desc": order_desc
             }
     
         # When all targets are scanned, pick #1 best hybrid market and proceed to trade
@@ -339,10 +405,10 @@ def on_message(ws, message):
                 market_state["sequence"] = best_data["sequence"]
                 save_state_unlocked()
 
-            print(f"\n🔍 [CALL/PUT SCANNER] Scanned {len(scanner_results)} basket markets:")
+            print(f"\n🔍 [HYBRID E/O × CALL/PUT SCANNER] Scanned {len(scanner_results)} basket markets:")
             for s, d in sorted_mkts[:3]:
-                print(f"   • {s:<8}: Score={d['score']:.3f} -> Dominant: {d['dominant_cp']} ({d['cp_pct']:.1f}%)")
-            print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with {best_data['dominant_cp']} bias ({best_data['cp_pct']:.1f}%). Sequence: {market_state['sequence']}")
+                print(f"   • {s:<8}: Score={d['score']:.3f} -> Pair 1: {d['pair1']} [{d['order_desc']}] | Pair 2: {d['pair2']}")
+            print(f"🎯 [BEST MARKET SELECTED] #{best_sym} with Hybrid Pairs -> Pair 1: {market_state['sequence'][:2]} | Pair 2 (Remaining): {market_state['sequence'][2:]}")
 
             stake = STATE.get("cycle_stake", CONFIG.get("initial_stake", 0.35))
             contract_type = market_state["sequence"][0]
@@ -417,8 +483,9 @@ def on_message(ws, message):
                 if STATE["total_profit"] < STATE.get("max_drawdown", 0.0):
                     STATE["max_drawdown"] = round(STATE["total_profit"], 2)
 
-                max_trades = get_max_trades_per_cycle()
-                print(f"   📊 [Trade {cycle_step}/{max_trades}] Settled ({contract_type}): {status.upper()} (Profit/Loss: {'+' if profit >= 0 else ''}${profit:.2f})")
+                pair_num = 1 if cycle_step <= 2 else 2
+                step_in_pair = 1 if cycle_step in (1, 3) else 2
+                print(f"   📊 [Pair {pair_num}/2 • Trade {step_in_pair}/2 (Overall {cycle_step}/4)] Settled ({contract_type}): {status.upper()} (Profit/Loss: {'+' if profit >= 0 else ''}${profit:.2f})")
 
                 if status == "won":
                     STATE["wins"] += 1
@@ -434,7 +501,7 @@ def on_message(ws, message):
                     advance_market_on_win()
                     
                     print("\n" + "="*60)
-                    print(f"🎉 CYCLE RESULT: WIN (Call/Put Trade Won on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 0.35):.2f}) [{BOT_NAME}]")
+                    print(f"🎉 CYCLE RESULT: WIN (Hybrid Recovery Complete at Pair {pair_num}/2 Trade {step_in_pair}/2 on {current_market} -> Reset Stake to ${CONFIG.get('initial_stake', 0.35):.2f}) [{BOT_NAME}]")
                     print(f"   • Net Trade Profit: +${profit:.2f}")
                     print(f"   • Market Unlocked: Will live scan fresh best market on next cycle")
                     print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
@@ -463,25 +530,26 @@ def on_message(ws, message):
                     STATE["cycle_stake"] = next_stake
                     save_state_unlocked()
                     
+                    max_trades = get_max_trades_per_cycle()
                     if cycle_step >= max_trades:
                         last_cycle_won = False
                         STATE["consecutive_cycle_losses"] = STATE.get("consecutive_cycle_losses", 0) + 1
                         market_state["sequence"] = generate_paired_sequence()
 
-                        recovery_cd = CONFIG.get("loss_cooldown_seconds", 1800)
+                        recovery_cd = CONFIG.get("loss_cooldown_seconds", 3600)
                         cd_m = recovery_cd // 60
-                        switch_on_loss = CONFIG.get("switch_market_on_loss", True)
+                        switch_on_loss = CONFIG.get("switch_market_on_loss", False)
 
                         if switch_on_loss:
                             advance_market_on_loss()
                             print("\n" + "="*60)
-                            print(f"❌ CYCLE RESULT: LOSS (Trade Lost on {current_market}) [{BOT_NAME}]")
+                            print(f"❌ CYCLE RESULT: LOSS (All 4 Hybrid Trades / Both Pairs Lost on {current_market}) [{BOT_NAME}]")
                             print(f"🔄 [MARKET-SWITCH 2.1 MARTINGALE RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Switching to a DIFFERENT market after {cd_m}m cooldown!")
                             print(f"   • Previous Market Left: {current_market} (Will scan remaining basket on next wakeup)")
                         else:
                             STATE["in_recovery"] = True
                             print("\n" + "="*60)
-                            print(f"❌ CYCLE RESULT: LOSS (Trade Lost on {current_market}) [{BOT_NAME}]")
+                            print(f"❌ CYCLE RESULT: LOSS (All 4 Hybrid Trades / Both Pairs Lost on {current_market}) [{BOT_NAME}]")
                             print(f"🔒 [MARKET LOCKED FOR 2.1 MARTINGALE RECOVERY] Stepping up to ${next_stake:.2f} (x{multiplier}) -> Staying LOCKED on {current_market} with {cd_m}m cooldown!")
                             print(f"   • Active Recovery Market: {current_market}")
                         print(f"   • Peak Stake Reached Overall: ${STATE.get('max_stake', CONFIG['initial_stake']):.2f} (on {STATE.get('max_stake_market', 'N/A')})")
@@ -500,7 +568,14 @@ def on_message(ws, message):
                         
                         next_type = current_sequence[cycle_step - 1]
                         next_desc = get_side_description(next_type)
-                        print(f"\n⚠️ Trade {cycle_step - 1} lost. 2.1 Martingale step-up to ${next_stake:.2f}. Initiating [Trade {cycle_step}/{max_trades}] immediately on {current_market} ({next_type} • {next_desc})...")
+                        next_pair_num = 1 if cycle_step <= 2 else 2
+                        next_step_in_pair = 1 if cycle_step in (1, 3) else 2
+                        
+                        if cycle_step == 3:
+                            print(f"\n⚠️ Pair 1 ({current_sequence[0]} + {current_sequence[1]}) failed both trades! Unused remaining breed Pair 2 ({current_sequence[2]} + {current_sequence[3]}) takes over IMMEDIATELY with no cooldown.")
+                            print(f"   2.1 Martingale step-up to ${next_stake:.2f}. Executing [Pair 2/2 • Trade 1/2 (Overall 3/4)] on {current_market} ({next_type} • {next_desc})...")
+                        else:
+                            print(f"\n⚠️ Trade {cycle_step - 1} lost. 2.1 Martingale step-up to ${next_stake:.2f}. Initiating [Pair {next_pair_num}/2 • Trade {next_step_in_pair}/2 (Overall {cycle_step}/4)] immediately on {current_market} ({next_type} • {next_desc})...")
                         send_proposal(ws, next_type, next_stake)
 
 def on_error(ws, error):
@@ -680,12 +755,18 @@ def reset_bot_globals():
 
 def run_multi_bot_scheduler(acc_mode):
     global BOT_NAME, START_TIME
-    if acc_mode == "acc3":
-        os.environ["STRATEGY_MODE"] = "CALL_PUT"
+    if acc_mode == "acc2":
+        os.environ["STRATEGY_MODE"] = "HYBRID_CP_EO"
         os.environ.setdefault("INITIAL_STAKE", "0.35")
         os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
-        os.environ["SINGLE_TRADE_PER_CYCLE"] = "true"
-        os.environ["MAX_TRADES_PER_CYCLE"] = "1"
+        os.environ["SINGLE_TRADE_PER_CYCLE"] = "false"
+        os.environ["MAX_TRADES_PER_CYCLE"] = "4"
+    elif acc_mode == "acc3":
+        os.environ["STRATEGY_MODE"] = "HYBRID_CP_EO"
+        os.environ.setdefault("INITIAL_STAKE", "0.35")
+        os.environ.setdefault("SWITCH_MARKET_ON_LOSS", "false")
+        os.environ["SINGLE_TRADE_PER_CYCLE"] = "false"
+        os.environ["MAX_TRADES_PER_CYCLE"] = "4"
     orig_stdout = sys.stdout
     orig_stderr = sys.stderr
     start_ts = time.time()
@@ -701,11 +782,14 @@ def run_multi_bot_scheduler(acc_mode):
         ("even-odd-fleet3-bot",   "even_odd_fleet3_bot",    240),
     ]
 
+    bot_prefix = "acc2" if acc_mode == "acc2" else ("my" if acc_mode == "acc1" else "acc3")
+    dir_prefix_root = "/root/acc2" if acc_mode == "acc2" else ("/root" if acc_mode == "acc1" else "/root/acc3")
+
     bots_schedule = []
     for t_prefix, d_prefix, base_offset in teams:
         for i in range(1, 13):
-            b_name = f"acc3-{t_prefix}-{i}"
-            b_dir = f"/root/acc3_{d_prefix}_{i}"
+            b_name = f"{bot_prefix}-{t_prefix}-{i}"
+            b_dir = f"{dir_prefix_root}_{d_prefix}_{i}" if acc_mode != "acc1" else f"/root/{d_prefix}_{i}"
             delay = base_offset + (i - 1) * 300
             os.makedirs(b_dir, exist_ok=True)
             meta_path = os.path.join(b_dir, "bot_meta.json")
