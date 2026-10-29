@@ -57,15 +57,15 @@
     }
   </script>
   <script src="config.js"></script>
-  <!-- Google Fonts for Kids Mode -->
+  <!-- Google Fonts: Inter & JetBrains Mono for Cyber Matrix Mode (CV_WEB aesthetic) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* Warm, gentle font rendering */
+    /* Base typography & smooth scrolling */
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
       transition: background-color 0.3s ease, color 0.3s ease;
     }
@@ -86,48 +86,69 @@
       box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
     }
 
-    /* 🍭 Kids / Playful GUI Mode */
-    body.gui-kids {
-      font-family: 'Fredoka', 'Comic Neue', cursive, sans-serif !important;
-      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 25%, #ecfdf5 50%, #f0fdf4 75%, #fdf2f8 100%) !important;
-      letter-spacing: 0.02em;
+    /* ⚡ Cyber Matrix GUI Mode (Inspired by CV_WEB Chat ID 515383cf-ee23-4737-81ce-0a13465d63db) */
+    body.gui-cyber {
+      font-family: 'Inter', system-ui, sans-serif !important;
+      background: #090d16 !important;
+      color: #e2e8f0 !important;
+      letter-spacing: 0.015em;
     }
-    body.gui-kids.dark {
-      background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 50%, #0f172a 100%) !important;
+    body.gui-cyber::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 95%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 95%);
     }
-    body.gui-kids header {
-      border-bottom: 4px solid #fde047 !important;
-      background: rgba(255, 255, 255, 0.95) !important;
-      box-shadow: 0 8px 20px -4px rgba(250, 204, 21, 0.3) !important;
+    body.gui-cyber header {
+      background: rgba(10, 15, 29, 0.88) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border-bottom: 2px solid rgba(6, 182, 212, 0.45) !important;
+      box-shadow: 0 4px 25px -4px rgba(6, 182, 212, 0.25) !important;
     }
-    body.gui-kids.dark header {
-      background: rgba(30, 27, 75, 0.95) !important;
-      border-bottom: 4px solid #818cf8 !important;
+    body.gui-cyber .card-shadow,
+    body.gui-cyber .cheerful-shadow {
+      background: rgba(15, 23, 42, 0.85) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      border-radius: 1.5rem !important;
+      border: 1px solid rgba(6, 182, 212, 0.3) !important;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(6, 182, 212, 0.1), inset 0 0 16px rgba(6, 182, 212, 0.04) !important;
+      transition: all 0.25s ease !important;
     }
-    body.gui-kids .card-shadow,
-    body.gui-kids .cheerful-shadow {
-      border-radius: 2rem !important;
-      border-width: 3px !important;
-      box-shadow: 0 14px 28px -4px rgba(245, 158, 11, 0.22), 0 8px 16px -4px rgba(236, 72, 153, 0.15) !important;
+    body.gui-cyber .card-shadow:hover,
+    body.gui-cyber .cheerful-shadow:hover {
+      border-color: rgba(6, 182, 212, 0.65) !important;
+      box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.6), 0 0 28px rgba(6, 182, 212, 0.25) !important;
     }
-    body.gui-kids button {
-      font-weight: 700 !important;
-      border-radius: 9999px !important;
-      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    body.gui-cyber button {
+      border-radius: 0.85rem !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
-    body.gui-kids button:active {
-      transform: scale(0.94) !important;
+    body.gui-cyber .tab-btn {
+      border-radius: 1rem !important;
+      border-width: 1.5px !important;
     }
-    body.gui-kids .tab-btn {
-      border-radius: 9999px !important;
-      border-width: 2.5px !important;
+    body.gui-cyber .cyber-glow {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
     }
-    @keyframes bounce-slow {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
+    body.gui-cyber .cyber-accent-text {
+      color: #06b6d4 !important;
+      text-shadow: 0 0 12px rgba(6, 182, 212, 0.45);
     }
-    .animate-bounce-slow {
-      animation: bounce-slow 2.5s infinite ease-in-out;
+    @keyframes pulse-cyan {
+      0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 6px #00f5ff); }
+      50% { opacity: 0.6; transform: scale(0.95); filter: drop-shadow(0 0 2px #06b6d4); }
+    }
+    .animate-pulse-cyan {
+      animation: pulse-cyan 2.2s infinite ease-in-out;
     }
     /* Clean horizontal scroll without visible scrollbars */
     .no-scrollbar::-webkit-scrollbar {
@@ -139,10 +160,13 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-[#0f172a] dark:text-slate-100 min-h-screen flex flex-col antialiased">
+<body class="bg-slate-50 text-slate-800 dark:bg-[#0f172a] dark:text-slate-100 min-h-screen flex flex-col antialiased relative">
+
+  <!-- Cyber Nebula & Particle Canvas (CV_WEB / Cybersecurity Aesthetic) -->
+  <canvas id="cyberParticleCanvas" class="fixed inset-0 pointer-events-none z-0 hidden"></canvas>
 
   <!-- Friendly Top Bar -->
-  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#1e293b]/95 backdrop-blur sticky top-0 z-30 transition-colors">
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#1e293b]/95 backdrop-blur sticky top-0 z-30 transition-colors relative">
     <div class="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
       
       <!-- Logo & App Name -->
@@ -171,8 +195,8 @@
           🌙
         </button>
 
-        <!-- GUI Mode Switcher (Friendly Simple / Tech / Kids) -->
-        <button id="viewModeBtn" onclick="cycleViewMode()" class="px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-emerald-200 dark:border-slate-700 text-xs font-black text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5 shadow-sm" title="Change GUI Display Mode (Simple • Tech • Kids)">
+        <!-- GUI Mode Switcher (Friendly Simple / Tech / Cyber) -->
+        <button id="viewModeBtn" onclick="cycleViewMode()" class="px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-emerald-200 dark:border-slate-700 text-xs font-black text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5 shadow-sm" title="Change GUI Display Mode (Simple • Tech • Cyber)">
           <span id="viewModeIcon">😊</span>
           <span id="viewModeLabel" class="hidden sm:inline">Simple</span>
         </button>
@@ -200,7 +224,7 @@
   </header>
 
   <!-- Main Content -->
-  <main class="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-5 w-full flex-1 space-y-4">
+  <main class="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-5 w-full flex-1 space-y-4 relative z-10">
 
     <!-- Multi-Account Switcher (Account 1 Lock Recovery vs Account 2 E/O Switch vs Account 3 C/P Switch) -->
     <div id="accountSwitcherBar" class="bg-white dark:bg-[#1e293b] p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -397,7 +421,8 @@
     let REFRESH_SECONDS = parseInt(localStorage.getItem("fleet_refresh_interval") || "30");
     let countdown = REFRESH_SECONDS;
     let guiMode = localStorage.getItem("fleet_gui_mode") || (localStorage.getItem("fleet_simple_mode") === "false" ? "tech" : "simple");
-    let isSimpleMode = guiMode !== "tech";
+    if (guiMode === "kids") guiMode = "cyber";
+    let isSimpleMode = guiMode !== "tech" && guiMode !== "cyber";
     let currentTheme = localStorage.getItem("fleet_theme") || "dark"; // Default dark mode
     let currentSystem = window.location.hash.includes("bybit")
       ? "bybit"
@@ -559,11 +584,11 @@
       if (guiMode === "simple") {
         guiMode = "tech";
       } else if (guiMode === "tech") {
-        guiMode = "kids";
+        guiMode = "cyber";
       } else {
         guiMode = "simple";
       }
-      isSimpleMode = guiMode !== "tech";
+      isSimpleMode = guiMode !== "tech" && guiMode !== "cyber";
       localStorage.setItem("fleet_gui_mode", guiMode);
       localStorage.setItem("fleet_simple_mode", isSimpleMode);
       applyGuiMode();
@@ -577,14 +602,14 @@
       const icon = document.getElementById("viewModeIcon");
       const btn = document.getElementById("viewModeBtn");
 
-      document.body.classList.toggle("gui-kids", guiMode === "kids");
+      document.body.classList.toggle("gui-cyber", guiMode === "cyber");
       document.body.classList.toggle("gui-tech", guiMode === "tech");
 
-      if (guiMode === "kids") {
-        if (label) label.innerText = "Kids";
-        if (icon) icon.innerText = "🍭";
+      if (guiMode === "cyber") {
+        if (label) label.innerText = "Cyber";
+        if (icon) icon.innerText = "⚡";
         if (btn) {
-          btn.className = "px-3 py-1.5 rounded-2xl bg-pink-100 hover:bg-pink-200 dark:bg-pink-950 dark:hover:bg-pink-900 border-2 border-pink-300 dark:border-pink-700 text-xs font-black text-pink-700 dark:text-pink-300 transition flex items-center gap-1.5 shadow-sm";
+          btn.className = "px-3 py-1.5 rounded-2xl bg-cyan-950/90 hover:bg-cyan-900 border-2 border-cyan-400 text-xs font-black text-cyan-300 transition flex items-center gap-1.5 shadow-[0_0_15px_rgba(6,182,212,0.35)]";
         }
       } else if (guiMode === "tech") {
         if (label) label.innerText = "Tech";
@@ -599,6 +624,122 @@
           btn.className = "px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-emerald-200 dark:border-slate-700 text-xs font-black text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5 shadow-sm";
         }
       }
+      initCyberCanvas();
+    }
+
+    let cyberCanvasAnimId = null;
+    function initCyberCanvas() {
+      const canvas = document.getElementById("cyberParticleCanvas");
+      if (!canvas) return;
+      if (guiMode !== "cyber") {
+        canvas.classList.add("hidden");
+        if (cyberCanvasAnimId) {
+          cancelAnimationFrame(cyberCanvasAnimId);
+          cyberCanvasAnimId = null;
+        }
+        return;
+      }
+      canvas.classList.remove("hidden");
+      if (cyberCanvasAnimId) return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      let width = (canvas.width = window.innerWidth);
+      let height = (canvas.height = window.innerHeight);
+      let nebulaTime = 0;
+
+      const handleResize = () => {
+        if (!canvas) return;
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      };
+      window.removeEventListener("resize", handleResize);
+      window.addEventListener("resize", handleResize);
+
+      const ACCENT_COLORS = ['#00f5ff', '#06b6d4', '#38bdf8'];
+      const particleCount = 70;
+      const starCount = 65;
+
+      const particles = Array.from({ length: particleCount }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2.2 + 0.6,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: -Math.random() * 0.6 - 0.2,
+        alpha: Math.random() * 0.6 + 0.2,
+        color: ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)],
+        isAccent: Math.random() > 0.45,
+      }));
+
+      const stars = Array.from({ length: starCount }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 1.8 + 0.5,
+        alpha: Math.random() * 0.65 + 0.2,
+        twinkleSpeed: Math.random() * 0.025 + 0.008,
+        isColored: Math.random() > 0.5,
+      }));
+
+      const drawNebula = () => {
+        nebulaTime += 0.008;
+        const cx1 = width * 0.5 + Math.sin(nebulaTime) * 60;
+        const cy1 = height * 0.4 + Math.cos(nebulaTime * 0.8) * 40;
+        const grad1 = ctx.createRadialGradient(cx1, cy1, 10, cx1, cy1, Math.max(width, height) * 0.42);
+        grad1.addColorStop(0, 'rgba(0, 240, 255, 0.09)');
+        grad1.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)');
+        grad1.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad1;
+        ctx.fillRect(0, 0, width, height);
+
+        const cx2 = width * 0.5 - Math.cos(nebulaTime * 0.7) * 70;
+        const cy2 = height * 0.68 + Math.sin(nebulaTime * 0.9) * 50;
+        const grad2 = ctx.createRadialGradient(cx2, cy2, 20, cx2, cy2, Math.max(width, height) * 0.46);
+        grad2.addColorStop(0, 'rgba(6, 182, 212, 0.08)');
+        grad2.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, width, height);
+      };
+
+      const renderLoop = () => {
+        if (guiMode !== "cyber") {
+          canvas.classList.add("hidden");
+          cancelAnimationFrame(cyberCanvasAnimId);
+          cyberCanvasAnimId = null;
+          return;
+        }
+        ctx.clearRect(0, 0, width, height);
+        drawNebula();
+
+        for (const s of stars) {
+          s.alpha += Math.sin(nebulaTime * 2 + s.x) * s.twinkleSpeed;
+          if (s.alpha < 0.15) s.alpha = 0.15;
+          if (s.alpha > 0.9) s.alpha = 0.9;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          ctx.fillStyle = s.isColored ? '#00f0ff' : '#ffffff';
+          ctx.globalAlpha = s.alpha * 0.65;
+          ctx.fill();
+        }
+
+        for (const p of particles) {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.y < -10) p.y = height + 10;
+          if (p.x < -10) p.x = width + 10;
+          if (p.x > width + 10) p.x = -10;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.isAccent ? p.color : 'rgba(255, 255, 255, 0.45)';
+          ctx.globalAlpha = p.alpha;
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+        cyberCanvasAnimId = requestAnimationFrame(renderLoop);
+      };
+
+      cyberCanvasAnimId = requestAnimationFrame(renderLoop);
     }
 
     function switchSystem(sys) {
@@ -1018,132 +1159,135 @@
       };
     }
 
-    // Playful Kids Story Translator
-    function translateToKids(line) {
+    // Cyber Matrix Neural Stream Translator (Inspired by CV_WEB / Cybersecurity Aesthetic)
+    function translateToCyber(line) {
       const lower = line.toLowerCase();
       const plusMoneyMatch = line.match(/\+\$([0-9.]+)/) || line.match(/won.*?\$?([0-9.]+)/i);
       const minusMoneyMatch = line.match(/-\$([0-9.]+)/) || line.match(/lost.*?\$?([0-9.]+)/i);
       const stakeMatch = line.match(/@\s*\$([0-9.]+)/) || line.match(/step-up to \$([0-9.]+)/i) || line.match(/at \$([0-9.]+)/i);
 
-      if (lower.includes("fibonacci recovery complete") || (lower.includes("cycle result: win") && lower.includes("fibonacci"))) {
+      if (lower.includes("recovery complete") || (lower.includes("cycle result: win") && (lower.includes("martingale") || lower.includes("hybrid") || lower.includes("target")))) {
         return {
-          icon: "🎈",
-          color: "text-emerald-700 dark:text-emerald-300 font-bold",
-          text: "Woohoo! Mission accomplished! Resetting safely back to Level 1! ✨"
+          icon: "⚡",
+          color: "text-cyan-400 font-mono font-bold",
+          tag: "RECOVERY_OK",
+          text: `[PROTOCOL_CLEARED] Target sequence complete. Stake recalibrated to baseline ($0.35).`
         };
       }
 
-      if (lower.includes("win step-back") || lower.includes("stepped back from fib")) {
-        const m = line.match(/won\s*\+?\$([0-9.]+)/i);
-        const amt = m ? `+$${m[1]}` : "Coins";
-        return {
-          icon: "🍭",
-          color: "text-emerald-700 dark:text-emerald-300 font-bold",
-          text: `Yaaay! Won ${amt} candy coins! Stepping back down to safe play! 🛡️`
-        };
-      }
-
-      if (lower.includes("locked for fibonacci recovery") || lower.includes("stepped forward to fib")) {
-        const m = line.match(/fib\s*(\d+).*?\$([0-9.]+)/i);
-        const lvl = m ? `Level ${m[1]}` : "Next Level";
-        return {
-          icon: "🛡️",
-          color: "text-amber-800 dark:text-amber-300 font-bold",
-          text: `Super shield activated! Stepping forward to ${lvl} for gentle recovery! 🚀`
-        };
-      }
-
-      if (lower.includes("market-switch") || lower.includes("switching to a different market") || lower.includes("switching to a new market") || lower.includes("market switch on loss")) {
+      if (lower.includes("failed both trades") || lower.includes("takes over immediately")) {
         return {
           icon: "🔄",
-          color: "text-violet-700 dark:text-violet-300 font-bold",
-          text: "Hopping to a brand new playground to win our coins back! 🎠✨"
+          color: "text-cyan-300 font-mono font-bold",
+          tag: "BREED_HANDOVER",
+          text: `[BREED_HANDOVER] Pair 1 exhausted -> Remaining Pair 2 takes over immediately with no cooldown!`
+        };
+      }
+
+      if (lower.includes("market locked") || lower.includes("staying locked on")) {
+        const m = line.match(/locked on ([a-z0-9_]+)/i);
+        const mkt = m ? m[1] : "Target Node";
+        return {
+          icon: "🔒",
+          color: "text-amber-400 font-mono font-bold",
+          tag: "GRID_LOCKED",
+          text: `[VECTOR_LOCK] Staying locked on ${mkt} for 60m thermal cooldown before next recovery stake.`
+        };
+      }
+
+      if (lower.includes("switching to a different market") || lower.includes("switching to a new market")) {
+        return {
+          icon: "🔄",
+          color: "text-sky-400 font-mono font-bold",
+          tag: "RE_ROUTING",
+          text: `[MARKET_REROUTE] Leaving current vector after sequence loss. Next cycle will live scan remaining basket.`
         };
       }
 
       if (lower.includes("won") || (lower.includes("settled") && lower.includes("profit/loss: +"))) {
-        const amt = plusMoneyMatch ? `+$${plusMoneyMatch[1]}` : "Coins";
+        const amt = plusMoneyMatch ? `+$${plusMoneyMatch[1]}` : "+Gain";
         return {
-          icon: "🎉",
-          color: "text-emerald-700 dark:text-emerald-300 font-bold",
-          text: `Woohoo! Won <strong class="text-emerald-600 dark:text-emerald-400 font-black">${amt}</strong> shiny coins for the piggy bank! 🐷`
+          icon: "🟢",
+          color: "text-emerald-400 font-mono font-bold",
+          tag: "CONFIRMED_GAIN",
+          text: `[CONFIRMED_GAIN] Contract settled positive <span class="text-cyan-300 font-black">${amt}</span>. Vault credited.`
         };
       }
 
       if (lower.includes("lost") || (lower.includes("settled") && lower.includes("profit/loss: -"))) {
         const amt = minusMoneyMatch ? `-$${minusMoneyMatch[1]}` : "";
         return {
-          icon: "💪",
-          color: "text-amber-800 dark:text-amber-300 font-bold",
-          text: `Small bump (${amt})! Friendly robot dusting off and protecting profits! 🛡️`
+          icon: "🔴",
+          color: "text-rose-400 font-mono font-bold",
+          tag: "CIRCUIT_BREAKER",
+          text: `[DEFENSE_ENGAGED] Contract missed (${amt}). Defensive Martingale step-up active.`
         };
       }
 
-      if (lower.includes("under 5") || lower.includes("digitunder")) {
-        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+      if (lower.includes("under 9") || lower.includes("over 0") || lower.includes("digitunder") || lower.includes("digitover")) {
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.50";
+        const side = lower.includes("digitunder") ? "DIGITUNDER (Barrier 9)" : "DIGITOVER (Barrier 0)";
         return {
-          icon: "🎲",
-          color: "text-indigo-700 dark:text-indigo-300 font-bold",
-          text: `Fun turn: Guessing <strong class="text-indigo-600 dark:text-indigo-400 font-black">Under 5</strong> with ${amt}! 🎈`
+          icon: "🎯",
+          color: "text-cyan-400 font-mono font-medium",
+          tag: "DISPATCH",
+          text: `[CONTRACT_DISPATCH] Placed 90% Win Prob ${side} @ ${amt}.`
         };
       }
 
-      if (lower.includes("over 4") || lower.includes("digitover")) {
-        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
-        return {
-          icon: "🎲",
-          color: "text-indigo-700 dark:text-indigo-300 font-bold",
-          text: `Fun turn: Guessing <strong class="text-indigo-600 dark:text-indigo-400 font-black">Over 4</strong> with ${amt}! 🎈`
-        };
-      }
-
-      if (lower.includes("martingale step-up") || lower.includes("initiating trade") || lower.includes("initiating opposite trade")) {
+      if (lower.includes("martingale step-up") || lower.includes("initiating trade") || lower.includes("pair 2 takes over")) {
         const amt = stakeMatch ? `$${stakeMatch[1]}` : "";
         return {
           icon: "⚡",
-          color: "text-sky-700 dark:text-sky-300 font-bold",
-          text: `Powering up to <strong class="text-sky-600 dark:text-sky-400 font-black">${amt}</strong> to bounce right back! 🚀`
+          color: "text-sky-400 font-mono font-bold",
+          tag: "STEP_UP",
+          text: `[MARTINGALE_STEP] Elevating stake to <span class="text-cyan-300 font-black">${amt}</span>. Executing next hybrid vector.`
         };
       }
 
       if (lower.includes("executing buy") || lower.includes("contract purchased")) {
-        const amt = stakeMatch ? `$${stakeMatch[1]}` : "$0.35";
+        const amt = stakeMatch ? `$${stakeMatch[1]}` : "";
         return {
-          icon: "🌟",
-          color: "text-indigo-700 dark:text-indigo-300 font-bold",
-          text: `Placed friendly turn for <strong class="text-indigo-600 dark:text-indigo-400 font-black">${amt}</strong>! ✨`
+          icon: "🛰️",
+          color: "text-cyan-300 font-mono font-medium",
+          tag: "BUY_ORDER",
+          text: `[TRANSMIT_BUY] Order confirmed on gateway @ ${amt || 'Base'}. Neural settlement stream active.`
         };
       }
 
       if (lower.includes("basket advance") || lower.includes("remaining in basket")) {
         return {
           icon: "🏆",
-          color: "text-purple-700 dark:text-purple-300 font-bold",
-          text: "Star goal reached! Moving to the next exciting level! 🚀"
+          color: "text-cyan-400 font-mono font-bold",
+          tag: "BASKET_CYCLE",
+          text: `[BASKET_CYCLE] Market node cycle cleared with profit! Vector dispatched to next candidate.`
         };
       }
 
-      if (lower.includes("best market selected") || lower.includes("dominant")) {
+      if (lower.includes("best market selected") || lower.includes("hybrid scanner") || lower.includes("dominant")) {
         return {
           icon: "🔍",
-          color: "text-slate-600 dark:text-slate-400 font-bold",
-          text: "Found the happiest playground to play in today! 🎪"
+          color: "text-sky-300 font-mono",
+          tag: "GRID_SCAN",
+          text: `[SCAN_COMPLETE] Live tick evaluation finished across basket -> Selected highest probability node.`
         };
       }
 
       if (lower.includes("cooldown") || lower.includes("waiting") || lower.includes("stagger")) {
         return {
-          icon: "😴",
-          color: "text-amber-700 dark:text-amber-300 font-bold",
-          text: "Taking a cozy nap to keep our treasure safe! 💤"
+          icon: "⏱️",
+          color: "text-cyan-400 font-mono font-medium",
+          tag: "THERMAL_WAIT",
+          text: `[THERMAL_REST] 60-minute cooldown active. Node standing by with capital secured.`
         };
       }
 
       if (lower.includes("requesting") && lower.includes("proposal")) {
         return {
-          icon: "👀",
-          color: "text-slate-600 dark:text-slate-400 font-bold",
-          text: "Looking around for fun toys and games... 🎈"
+          icon: "📡",
+          color: "text-slate-400 font-mono",
+          tag: "QUERY",
+          text: `[PROPOSAL_QUERY] Polling price and payout proposal...`
         };
       }
 
@@ -1152,8 +1296,9 @@
       }
 
       return {
-        icon: "🤖",
-        color: "text-slate-600 dark:text-slate-400 font-bold",
+        icon: "⚡",
+        color: "text-slate-300 font-mono",
+        tag: "STREAM",
         text: cleanTechNoise(line)
       };
     }
@@ -1475,8 +1620,9 @@
               : (isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
       }`;
 
-      const isKidsMode = guiMode === "kids";
+      const isCyberMode = guiMode === "cyber";
       const isTechMode = guiMode === "tech";
+      const isSimpleMode = guiMode === "simple";
 
       const heroTag = document.getElementById("heroCardTag");
       const peaceText = document.getElementById("peaceOfMindText");
@@ -1488,10 +1634,10 @@
       const lblPeakProfit = document.getElementById("lblPeakProfit");
       const lblPeakStake = document.getElementById("lblPeakStake");
 
-      if (lblActiveBots) lblActiveBots.innerText = isKidsMode ? "Friendly Robots 🤖" : (isTechMode ? "ACTIVE THREADS" : "Bots Working");
-      if (lblWinRate) lblWinRate.innerText = isKidsMode ? "Star Score ⭐" : (isTechMode ? "WIN / LOSS RATIO" : "Winning Rate");
-      if (lblPeakProfit) lblPeakProfit.innerText = isKidsMode ? "Gold Trophy 🏆" : (isTechMode ? "PEAK PROFIT" : "Peak Profit");
-      if (lblPeakStake) lblPeakStake.innerText = isKidsMode ? "Super Power ⚡" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
+      if (lblActiveBots) lblActiveBots.innerText = isCyberMode ? "QUANTUM NODES ⚡" : (isTechMode ? "ACTIVE THREADS" : "Bots Working");
+      if (lblWinRate) lblWinRate.innerText = isCyberMode ? "EFFICIENCY RATIO 📊" : (isTechMode ? "WIN / LOSS RATIO" : "Winning Rate");
+      if (lblPeakProfit) lblPeakProfit.innerText = isCyberMode ? "PEAK TELEMETRY 🏆" : (isTechMode ? "PEAK PROFIT" : "Peak Profit");
+      if (lblPeakStake) lblPeakStake.innerText = isCyberMode ? "MAX EXPOSURE ⚡" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
 
       const accNameShort = currentAccount === "acc2"
         ? "Account 2 (Hybrid C/P × E/O)"
@@ -1508,70 +1654,84 @@
 
       if (currentSystem === "bybit") {
         if (heroTag) {
-          heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-300 border border-sky-300 dark:border-sky-800 mb-2.5";
-          heroTag.innerHTML = isKidsMode ? "🚀 Bybit Rocket Playground" : (isTechMode ? "🚀 BYBIT LONG/SHORT TELEMETRY" : "🚀 Bybit Long/Short Fleet Profit");
+          heroTag.className = isCyberMode
+            ? "inline-flex items-center text-xs font-mono font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.3)] mb-2.5"
+            : "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-300 border border-sky-300 dark:border-sky-800 mb-2.5";
+          heroTag.innerHTML = isCyberMode ? "⚡ CYBER BYBIT DUAL-VECTOR TELEMETRY" : (isTechMode ? "🚀 BYBIT LONG/SHORT TELEMETRY" : "🚀 Bybit Long/Short Fleet Profit");
         }
         if (peaceText) {
-          peaceText.innerHTML = isKidsMode
-            ? '<span class="text-base">🎈</span> Rocket robots trading Long & Short every 5m with $50 daily goal!'
+          peaceText.innerHTML = isCyberMode
+            ? '<span class="text-base">⚡</span> Quantum Dual-Vector Stream • Long & Short 5m Cadence • $50 Daily TP Target.'
             : '<span class="text-base">🛡️</span> Bybit Bots • 5m Stagger • 20m Cooldown • $50/Day Target.';
         }
         if (comfortingNotice) {
-          comfortingNotice.innerText = isKidsMode
-            ? "Your Bybit rocket robots are trading crypto safely in Demo mode!"
+          comfortingNotice.innerText = isCyberMode
+            ? "Bybit Node Stream: Dual-Vector 2-Step Switch • 20m Standby • Capital Protected."
             : "Active Bybit Fleet: Long/Short 2-Step Switch • 20m Rest • $50 Daily TP.";
         }
         if (heroContainer) {
-          heroContainer.className = isKidsMode
-            ? "bg-gradient-to-br from-sky-50 via-cyan-50 to-indigo-50 dark:from-[#0c243c] dark:via-[#1e293b] dark:to-[#0f172a] border-4 border-sky-300 dark:border-sky-700 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all"
+          heroContainer.className = isCyberMode
+            ? "bg-[#0b1220]/95 border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(6,182,212,0.2),inset_0_0_20px_rgba(6,182,212,0.04)] rounded-3xl p-6 sm:p-7 relative overflow-hidden transition-all backdrop-blur-xl"
             : "bg-gradient-to-br from-white via-sky-50/50 to-cyan-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#0c243c] border-2 border-sky-200 dark:border-sky-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
         }
       } else if (currentSystem === "cp") {
         if (heroTag) {
-          heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 mb-2.5";
-          heroTag.innerHTML = `⚡ ${accNameShort} • ${stratTitle} (Group 3) Profit`;
+          heroTag.className = isCyberMode
+            ? "inline-flex items-center text-xs font-mono font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.3)] mb-2.5"
+            : "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 mb-2.5";
+          heroTag.innerHTML = `⚡ ${accNameShort} • ${stratTitle} (Group 3)`;
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
+          peaceText.innerHTML = isCyberMode
+            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 5 & Team 6 (${recBehaviorDesc}).`;
         }
         if (heroContainer) {
-          heroContainer.className = isKidsMode
-            ? "bg-gradient-to-br from-amber-50 via-orange-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#2e1d10] dark:to-[#1e293b] border-4 border-amber-300 dark:border-amber-700 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all"
+          heroContainer.className = isCyberMode
+            ? "bg-[#0b1220]/95 border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(6,182,212,0.2),inset_0_0_20px_rgba(6,182,212,0.04)] rounded-3xl p-6 sm:p-7 relative overflow-hidden transition-all backdrop-blur-xl"
             : "bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#2e1d10] border-2 border-amber-200 dark:border-amber-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
         }
       } else if (currentSystem === "ou") {
         if (heroTag) {
-          heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 mb-2.5";
-          heroTag.innerHTML = `🎯 ${accNameShort} • ${stratTitle} (Group 2) Profit`;
+          heroTag.className = isCyberMode
+            ? "inline-flex items-center text-xs font-mono font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.3)] mb-2.5"
+            : "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 mb-2.5";
+          heroTag.innerHTML = `🎯 ${accNameShort} • ${stratTitle} (Group 2)`;
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
+          peaceText.innerHTML = isCyberMode
+            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 3 & Team 4 (${recBehaviorDesc}).`;
         }
         if (heroContainer) {
-          heroContainer.className = isKidsMode
-            ? "bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-[#1e1b4b] dark:via-[#1a1c36] dark:to-[#1e293b] border-4 border-indigo-300 dark:border-indigo-700 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all"
+          heroContainer.className = isCyberMode
+            ? "bg-[#0b1220]/95 border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(6,182,212,0.2),inset_0_0_20px_rgba(6,182,212,0.04)] rounded-3xl p-6 sm:p-7 relative overflow-hidden transition-all backdrop-blur-xl"
             : "bg-gradient-to-br from-white via-indigo-50/50 to-purple-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#1a1c36] border-2 border-indigo-200 dark:border-indigo-800/60 rounded-3xl p-6 sm:p-7 card-shadow relative overflow-hidden transition-all";
         }
       } else {
         if (heroTag) {
-          heroTag.className = "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5";
-          heroTag.innerHTML = `💰 ${accNameShort} • ${stratTitle} (Group 1) Profit`;
+          heroTag.className = isCyberMode
+            ? "inline-flex items-center text-xs font-mono font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.3)] mb-2.5"
+            : "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5";
+          heroTag.innerHTML = `⚡ ${accNameShort} • ${stratTitle} (Group 1)`;
         }
         if (peaceText) {
-          peaceText.innerHTML = `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
+          peaceText.innerHTML = isCyberMode
+            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Standard Volatilities: Vol 10, 25, 50, 75, 100).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 1 & Team 2 (${recBehaviorDesc}).`;
         }
         if (heroContainer) {
-          heroContainer.className = isKidsMode
-            ? "bg-gradient-to-br from-emerald-50 via-teal-50 to-yellow-50 dark:from-[#1e1b4b] dark:via-[#162032] dark:to-[#1e293b] border-4 border-emerald-300 dark:border-emerald-700 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all"
+          heroContainer.className = isCyberMode
+            ? "bg-[#0b1220]/95 border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(6,182,212,0.2),inset_0_0_20px_rgba(6,182,212,0.04)] rounded-3xl p-6 sm:p-7 relative overflow-hidden transition-all backdrop-blur-xl"
             : "bg-gradient-to-br from-white via-emerald-50/50 to-teal-50/30 dark:from-[#1e293b] dark:via-[#1e293b] dark:to-[#162032] border-2 border-emerald-200 dark:border-emerald-800/60 rounded-3xl p-6 sm:p-7 cheerful-shadow relative overflow-hidden transition-all";
         }
       }
@@ -1593,9 +1753,12 @@
       const statPeakProfitDiff = document.getElementById("statPeakProfitDiff");
 
       if (peakBadge) {
-        peakBadge.innerText = isKidsMode 
-          ? `🏆 Best Treasure: +$${activeMetrics.peakProfit.toFixed(2)}`
+        peakBadge.innerText = isCyberMode 
+          ? `⚡ ATH RECORD: +$${activeMetrics.peakProfit.toFixed(2)}`
           : (isTechMode ? `PEAK: +$${activeMetrics.peakProfit.toFixed(2)}` : `🏆 Peak: +$${activeMetrics.peakProfit.toFixed(2)}`);
+        if (isCyberMode) {
+          peakBadge.className = "inline-flex items-center text-[11px] font-mono font-bold tracking-wide px-3 py-1 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)]";
+        }
       }
 
       if (statPeakProfit) {
@@ -1852,8 +2015,12 @@
           localStorage.removeItem(fleetPeakKey);
         }
 
+        const fleetCardClasses = isCyberMode
+          ? "bg-[#0b1220]/95 border border-cyan-500/35 shadow-[0_0_25px_rgba(6,182,212,0.12)] rounded-3xl p-5 sm:p-6 space-y-4 backdrop-blur-md"
+          : "bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 card-shadow space-y-4";
+
         html += `
-          <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 card-shadow space-y-4">
+          <div class="${fleetCardClasses}">
             
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
               <div>
@@ -1899,7 +2066,7 @@
       const peakInfo = extractPeakAndMarket(bot);
       const botUptime = extractUptime(bot);
 
-      const isKidsMode = guiMode === "kids";
+      const isCyberMode = guiMode === "cyber";
       const isTechMode = guiMode === "tech";
       const isSimpleMode = guiMode === "simple";
 
@@ -1929,10 +2096,10 @@
 
       let logsHtml = "";
       if (bot.logs && bot.logs.length > 0) {
-        if (isKidsMode) {
+        if (isCyberMode) {
           const translatedList = [];
           for (let i = bot.logs.length - 1; i >= 0; i--) {
-            const parsed = translateToKids(bot.logs[i]);
+            const parsed = translateToCyber(bot.logs[i]);
             if (parsed) {
               translatedList.push(parsed);
               if (translatedList.length >= 3) break;
@@ -1940,11 +2107,11 @@
           }
 
           if (translatedList.length === 0) {
-            logsHtml = '<div class="py-2 text-xs text-slate-500 dark:text-slate-400 font-bold">💤 Sleeping soundly in the cozy robot bed... 🌙</div>';
+            logsHtml = '<div class="py-2 text-xs font-mono text-cyan-400/70">[STANDBY] Node idling in thermal sleep... Cooldown active.</div>';
           } else {
             logsHtml = translatedList.map(item => `
-              <div class="py-1.5 flex items-start gap-2 text-xs border-b border-pink-100 dark:border-slate-800/80 last:border-0">
-                <span class="text-base flex-shrink-0">${item.icon}</span>
+              <div class="py-1 flex items-start gap-2 text-xs border-b border-cyan-950/80 last:border-0 font-mono">
+                <span class="text-sm flex-shrink-0">${item.icon}</span>
                 <div class="flex-1 leading-snug">
                   <span class="${item.color}">${item.text}</span>
                 </div>
@@ -1981,32 +2148,32 @@
           `).join("");
         }
       } else {
-        logsHtml = isKidsMode
-          ? '<div class="py-2 text-xs text-slate-400 font-bold">Waiting for the next fun game... 🎈</div>'
+        logsHtml = isCyberMode
+          ? '<div class="py-2 text-xs font-mono text-cyan-400/60">[INIT] Node online. Awaiting telemetry stream...</div>'
           : '<div class="py-2 text-xs text-slate-400">Waiting for next action...</div>';
       }
 
-      const cardAvatar = isKidsMode ? "🧸" : "🤖";
-      const cardHeaderTitle = isKidsMode ? friendlyName.replace("Helper", "Buddy") : friendlyName;
-      const cardStatus = isKidsMode
-        ? `<span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span> Playing • ${botUptime}`
+      const cardAvatar = isCyberMode ? "⚡" : "🤖";
+      const cardHeaderTitle = isCyberMode ? friendlyName.replace("Helper", "Node").replace("Bot", "Node") : friendlyName;
+      const cardStatus = isCyberMode
+        ? `<span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f5ff] animate-pulse"></span> Online • ${botUptime}`
         : `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Running • ${botUptime}`;
 
-      const earnedTitle = isKidsMode ? "🍬 Piggy Bank" : (isTechMode ? "NET PNL" : "Earned");
-      const peakTitle = isKidsMode ? "🏆 Best" : (isTechMode ? "MAX PEAK" : "🏆 Max");
+      const earnedTitle = isCyberMode ? "NET YIELD" : (isTechMode ? "NET PNL" : "Earned");
+      const peakTitle = isCyberMode ? "ATH PEAK" : (isTechMode ? "MAX PEAK" : "🏆 Max");
 
-      const col1Title = isKidsMode ? "⭐ Stars" : (isTechMode ? "RECORD" : "Record");
-      const col1Val = isKidsMode ? `${bot.wins}W • ${bot.losses}L` : `${bot.wins}W • ${bot.losses}L`;
+      const col1Title = isCyberMode ? "EXEC RATIO" : (isTechMode ? "RECORD" : "Record");
+      const col1Val = `${bot.wins}W • ${bot.losses}L`;
 
-      const col2Title = isKidsMode ? "🎯 Next Play" : (isTechMode ? "NEXT STAKE" : "Next Trade");
-      const col3Title = isKidsMode ? "⚡ Super Power" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
-      const col4Title = isKidsMode ? "🎪 Playground" : (isTechMode ? "MARKET" : "Market");
+      const col2Title = isCyberMode ? "DISPATCH" : (isTechMode ? "NEXT STAKE" : "Next Trade");
+      const col3Title = isCyberMode ? "MAX EXPOSURE" : (isTechMode ? "PEAK STAKE" : "Peak Stake");
+      const col4Title = isCyberMode ? "TARGET VECTOR" : (isTechMode ? "MARKET" : "Market");
 
-      const activityTitle = isKidsMode ? "🎮 Robot Adventure Diary" : (isSimpleMode ? "Recent Actions (Plain English)" : "Technical Log");
-      const activityTag = isKidsMode ? "Kids Story ✨" : (isSimpleMode ? "Human View" : "Raw");
+      const activityTitle = isCyberMode ? "⚡ Neural Telemetry Stream" : (isSimpleMode ? "Recent Actions (Plain English)" : "Technical Log");
+      const activityTag = isCyberMode ? "CYBER MATRIX" : (isSimpleMode ? "Human View" : "Raw");
 
-      const cardClasses = isKidsMode
-        ? "bg-white/95 dark:bg-[#1a1b35] border-2 border-amber-200/90 dark:border-indigo-700/80 rounded-3xl p-4 flex flex-col justify-between transition hover:border-pink-300 dark:hover:border-indigo-500 shadow-md"
+      const cardClasses = isCyberMode
+        ? "bg-[#0b1220]/90 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.12),inset_0_0_12px_rgba(6,182,212,0.03)] rounded-3xl p-4 flex flex-col justify-between transition-all hover:border-cyan-400 hover:shadow-[0_0_28px_rgba(6,182,212,0.25)] backdrop-blur-md"
         : "bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between transition hover:border-emerald-300 dark:hover:border-slate-700";
 
       return `
@@ -2015,12 +2182,12 @@
             <!-- Bot Header -->
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-2xl ${isKidsMode ? 'bg-pink-100 dark:bg-pink-950 border-2 border-pink-300 dark:border-pink-700 text-lg' : 'bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 text-base'} flex items-center justify-center">
+                <div class="w-9 h-9 rounded-2xl ${isCyberMode ? 'bg-cyan-950/90 border-2 border-cyan-400/60 shadow-[0_0_14px_rgba(6,182,212,0.4)] text-cyan-300 text-base' : 'bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 text-base'} flex items-center justify-center">
                   ${cardAvatar}
                 </div>
                 <div>
                   <h4 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white">${cardHeaderTitle}</h4>
-                  <span class="text-[10px] ${isKidsMode ? 'text-pink-600 dark:text-pink-400' : 'text-emerald-600 dark:text-emerald-400'} font-bold flex items-center gap-1">
+                  <span class="text-[10px] ${isCyberMode ? 'text-cyan-400 font-mono' : 'text-emerald-600 dark:text-emerald-400'} font-bold flex items-center gap-1">
                     ${cardStatus}
                   </span>
                 </div>
@@ -2029,24 +2196,24 @@
               <!-- Money Badge -->
               <div class="text-right">
                 <span class="text-[10px] text-slate-400 uppercase font-bold block">${earnedTitle}</span>
-                <span class="text-sm sm:text-base font-black ${isProfitable ? (isKidsMode ? 'text-pink-600 dark:text-pink-400' : 'text-emerald-600 dark:text-emerald-400') : 'text-rose-600 dark:text-rose-400'}">
+                <span class="text-sm sm:text-base font-black ${isProfitable ? (isCyberMode ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' : 'text-emerald-600 dark:text-emerald-400') : 'text-rose-600 dark:text-rose-400'}">
                   ${isProfitable ? '+' : ''}$${bot.profit.toFixed(2)}
                 </span>
-                <span class="text-[10px] font-bold block mt-0.5 ${botDrawdown > 0 ? 'text-amber-600 dark:text-amber-400' : (isKidsMode ? 'text-pink-600 dark:text-pink-400' : 'text-emerald-600 dark:text-emerald-400')}">
+                <span class="text-[10px] font-bold block mt-0.5 ${botDrawdown > 0 ? 'text-amber-600 dark:text-amber-400' : (isCyberMode ? 'text-cyan-400/90 font-mono' : 'text-emerald-600 dark:text-emerald-400')}">
                   ${peakTitle}: +$${botPeakProfit.toFixed(2)}${botDrawdown > 0 ? ` <span class="text-rose-500 font-bold">(-$${botDrawdown.toFixed(2)})</span>` : ''}
                 </span>
               </div>
             </div>
 
             <!-- Stats Ribbon (4 Cards) -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white dark:bg-[#1e293b] rounded-xl p-2.5 text-center text-xs mb-3 border border-slate-200 dark:border-slate-800">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 ${isCyberMode ? 'bg-[#060c18] border border-cyan-500/25 shadow-inner font-mono' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800'} rounded-xl p-2.5 text-center text-xs mb-3">
               <div>
                 <span class="block text-[10px] text-slate-400 font-bold uppercase">${col1Title}</span>
                 <span class="font-black text-slate-800 dark:text-slate-100">${col1Val}</span>
               </div>
               <div>
                 <span class="block text-[10px] text-slate-400 font-bold uppercase">${col2Title}</span>
-                <span class="font-black text-sky-600 dark:text-sky-400">$${bot.current_stake > 0 ? bot.current_stake.toFixed(2) : '0.35'}</span>
+                <span class="font-black ${isCyberMode ? 'text-cyan-400' : 'text-sky-600 dark:text-sky-400'}">$${bot.current_stake > 0 ? bot.current_stake.toFixed(2) : '0.35'}</span>
               </div>
               <div>
                 <span class="block text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase">${col3Title}</span>
@@ -2061,9 +2228,9 @@
             <!-- Activity Box -->
             <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
               <span>${activityTitle}</span>
-              <span class="text-[10px] text-slate-400">${activityTag}</span>
+              <span class="text-[10px] ${isCyberMode ? 'text-cyan-400 font-mono' : 'text-slate-400'}">${activityTag}</span>
             </div>
-            <div class="bg-white dark:bg-[#162032] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 min-h-[85px] max-h-40 overflow-y-auto custom-scroll">
+            <div class="${isCyberMode ? 'bg-[#060c18] border border-cyan-500/25 text-cyan-300 font-mono' : 'bg-white dark:bg-[#162032] border border-slate-200 dark:border-slate-800'} rounded-xl p-2.5 min-h-[85px] max-h-40 overflow-y-auto custom-scroll">
               ${logsHtml}
             </div>
           </div>
