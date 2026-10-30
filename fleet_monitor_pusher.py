@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 # You can also pass them via environment variables: GIST_ID and GITHUB_TOKEN
 GIST_ID = os.getenv("GIST_ID", "e89e6db2da1433214922b69f101e15aa")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "YOUR_GITHUB_TOKEN_HERE")
-UPDATE_INTERVAL_SECONDS = 30  # Update every 30 seconds
+UPDATE_INTERVAL_SECONDS = 45  # Update every 30 seconds
 # =================================================
 
 PEAK_FILE = os.getenv("PEAK_FILE", "/root/fleet_peak_profits.json" if os.name != "nt" else "fleet_peak_profits.json")
