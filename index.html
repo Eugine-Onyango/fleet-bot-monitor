@@ -55,6 +55,256 @@
         }
       }
     }
+
+    let hedgeTimerInterval = null;
+
+    function renderHedgeLab(hedgeData) {
+      const container = document.getElementById("fleetsContainer");
+      const heroTag = document.getElementById("heroCardTag");
+      const profitEl = document.getElementById("statTotalProfit");
+      const peaceText = document.getElementById("peaceOfMindText");
+      const peakBadge = document.getElementById("peakBadge");
+
+      const isCyberMode = guiMode === "cyber";
+      const isTechMode = guiMode === "tech";
+
+      const h = hedgeData || {
+        status: "INITIALIZING",
+        market: "1HZ10V",
+        stake: 0.35,
+        cooldown_minutes: 10,
+        current_round: 1,
+        countdown_seconds: 600,
+        next_round_plan: {
+          acc1_side: "DIGITOVER",
+          acc1_barrier: "4",
+          acc2_side: "DIGITUNDER",
+          acc2_barrier: "5"
+        },
+        summary: {
+          total_rounds: 0,
+          acc1_profit: 0.0,
+          acc1_wins: 0,
+          acc1_losses: 0,
+          acc2_profit: 0.0,
+          acc2_wins: 0,
+          acc2_losses: 0,
+          net_combined_profit: 0.0
+        },
+        recent_trades: []
+      };
+
+      const netProfit = (h.summary && typeof h.summary.net_combined_profit === 'number') ? h.summary.net_combined_profit : 0.0;
+      const isProfitable = netProfit >= 0;
+
+      if (profitEl) {
+        profitEl.innerText = `${isProfitable ? '+' : ''}$${netProfit.toFixed(2)}`;
+        profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${isProfitable ? 'text-purple-600 dark:text-purple-400' : 'text-rose-500'}`;
+      }
+      if (heroTag) {
+        heroTag.className = isCyberMode
+          ? "inline-flex items-center text-xs font-mono font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-purple-950/80 text-purple-300 border border-purple-400/60 shadow-[0_0_12px_rgba(168,85,247,0.3)] mb-2.5"
+          : "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800 mb-2.5";
+        heroTag.innerHTML = `🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070)`;
+      }
+      if (peaceText) {
+        peaceText.innerHTML = `Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • 10m Cooldown • Alternating Sides • <b>Existing Fleet Bots Untouched</b>`;
+      }
+      if (peakBadge) {
+        peakBadge.innerText = `Rounds: ${h.summary ? h.summary.total_rounds : 0}`;
+      }
+
+      const plan = h.next_round_plan || {
+        acc1_side: "DIGITOVER", acc1_barrier: "4",
+        acc2_side: "DIGITUNDER", acc2_barrier: "5"
+      };
+
+      const formatSide = (s, b) => {
+        if (s === "DIGITOVER") return `OVER ${b} (Digits 5-9)`;
+        if (s === "DIGITUNDER") return `UNDER ${b} (Digits 0-4)`;
+        return `${s} ${b}`;
+      };
+
+      const trades = (h.recent_trades || []).slice(0, 15);
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <!-- Active Stance Dual Bridge Card -->
+          <div class="bg-gradient-to-br from-slate-900 via-[#131722] to-slate-900 border-2 border-purple-500/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-white">
+            <div class="absolute -top-12 -right-12 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              
+              <!-- Account 1 Leg -->
+              <div class="w-full md:w-5/12 bg-slate-800/80 border border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-black text-xs sm:text-sm tracking-wide text-emerald-300">ACCOUNT 1 (DOT91203477)</span>
+                  </div>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300">Stake $${h.stake.toFixed(2)}</span>
+                </div>
+                <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-xl ${plan.acc1_side === 'DIGITOVER' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40'}">
+                    ${formatSide(plan.acc1_side, plan.acc1_barrier)}
+                  </span>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
+                  <span>Cumulative Leg Yield:</span>
+                  <span class="font-mono font-bold ${h.summary.acc1_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                    ${h.summary.acc1_profit >= 0 ? '+' : ''}$${h.summary.acc1_profit.toFixed(2)} (${h.summary.acc1_wins}W / ${h.summary.acc1_losses}L)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Center Bridge & Cooldown Timer -->
+              <div class="w-full md:w-2/12 flex flex-col items-center justify-center text-center px-2">
+                <div class="w-12 h-12 rounded-2xl bg-purple-600/30 border border-purple-400 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20 mb-2">
+                  ⇄
+                </div>
+                <div class="text-xs font-black uppercase tracking-wider text-purple-300">100% Hedge</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-0.5">${h.market} (Fast 10s)</div>
+                
+                <div class="mt-3 w-full bg-slate-800/90 border border-purple-500/30 rounded-xl px-3 py-2 text-center">
+                  <div class="text-[10px] text-purple-300 uppercase font-black tracking-widest">Cooldown Timer</div>
+                  <div id="hedgeLiveTimer" class="text-lg font-mono font-black text-white tracking-widest">
+                    ${formatHedgeTime(h.countdown_seconds || 0)}
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">Switch side in ${h.cooldown_minutes}m</div>
+                </div>
+              </div>
+
+              <!-- Account 2 Leg -->
+              <div class="w-full md:w-5/12 bg-slate-800/80 border border-indigo-500/40 rounded-2xl p-4 sm:p-5 relative">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                    <span class="font-black text-xs sm:text-sm tracking-wide text-indigo-300">ACCOUNT 2 (DOT93845070)</span>
+                  </div>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950 border border-indigo-700 text-indigo-300">Stake $${h.stake.toFixed(2)}</span>
+                </div>
+                <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-xl ${plan.acc2_side === 'DIGITOVER' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40'}">
+                    ${formatSide(plan.acc2_side, plan.acc2_barrier)}
+                  </span>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
+                  <span>Cumulative Leg Yield:</span>
+                  <span class="font-mono font-bold ${h.summary.acc2_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                    ${h.summary.acc2_profit >= 0 ? '+' : ''}$${h.summary.acc2_profit.toFixed(2)} (${h.summary.acc2_wins}W / ${h.summary.acc2_losses}L)
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Hedge Architecture Badges -->
+            <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-700 text-purple-300 font-bold">10-Minute Cooldown</span>
+                <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-blue-700 text-blue-300 font-bold">Auto Side Rotation</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 text-emerald-300 font-bold">Zero Fleet Interference</span>
+              </div>
+              <div class="font-mono text-purple-300">
+                Next Execution: Round #${h.current_round}
+              </div>
+            </div>
+          </div>
+
+          <!-- Execution Stream Table -->
+          <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <span>⚡</span> Dual-Leg Hedge Execution Stream
+              </h3>
+              <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                ${trades.length} Rounds Recorded
+              </span>
+            </div>
+
+            ${trades.length === 0 ? `
+              <div class="text-center py-12 text-slate-400">
+                <div class="animate-pulse text-2xl mb-2">⏳</div>
+                <div class="text-sm font-semibold">Waiting for Round 1 execution...</div>
+                <div class="text-xs text-slate-500 mt-1">Both accounts are synchronized and ready to trigger simultaneously.</div>
+              </div>
+            ` : `
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-mono uppercase text-[10px]">
+                      <th class="py-2.5 px-3">Round</th>
+                      <th class="py-2.5 px-3">Time</th>
+                      <th class="py-2.5 px-3">Market</th>
+                      <th class="py-2.5 px-3">Acc 1 Leg (DOT91203477)</th>
+                      <th class="py-2.5 px-3">Acc 2 Leg (DOT93845070)</th>
+                      <th class="py-2.5 px-3 text-right">Net Round P/L</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+                    ${trades.map(t => {
+                      const netP = t.net_round_profit || 0.0;
+                      const a1 = t.acc1 || {};
+                      const a2 = t.acc2 || {};
+                      const a1Won = (a1.profit || 0) > 0;
+                      const a2Won = (a2.profit || 0) > 0;
+                      return `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td class="py-3 px-3 font-bold text-slate-700 dark:text-slate-300">#${t.round}</td>
+                          <td class="py-3 px-3 text-slate-400">${t.timestamp.replace(/^[0-9]+-/, '')}</td>
+                          <td class="py-3 px-3"><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">${t.market}</span></td>
+                          <td class="py-3 px-3">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded ${a1Won ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                              ${a1.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} • ${a1Won ? '+$' + a1.profit.toFixed(2) : '-$' + (a1.stake || 0.35).toFixed(2)}
+                            </span>
+                          </td>
+                          <td class="py-3 px-3">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded ${a2Won ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                              ${a2.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} • ${a2Won ? '+$' + a2.profit.toFixed(2) : '-$' + (a2.stake || 0.35).toFixed(2)}
+                            </span>
+                          </td>
+                          <td class="py-3 px-3 text-right font-black ${netP >= 0 ? 'text-emerald-500' : 'text-slate-400'}">
+                            ${netP >= 0 ? '+' : ''}$${netP.toFixed(2)}
+                          </td>
+                        </tr>
+                      `;
+                    }).join("")}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+
+      startHedgeTimer(h.next_run_ts);
+    }
+
+    function formatHedgeTime(secs) {
+      if (secs <= 0) return "EXECUTING...";
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function startHedgeTimer(nextRunTs) {
+      if (hedgeTimerInterval) clearInterval(hedgeTimerInterval);
+      const timerEl = document.getElementById("hedgeLiveTimer");
+      if (!timerEl) return;
+
+      hedgeTimerInterval = setInterval(() => {
+        const el = document.getElementById("hedgeLiveTimer");
+        if (!el) {
+          clearInterval(hedgeTimerInterval);
+          return;
+        }
+        const now = Math.floor(Date.now() / 1000);
+        const rem = Math.max(0, nextRunTs - now);
+        el.innerText = formatHedgeTime(rem);
+      }, 1000);
+    }
+
   </script>
   <script src="config.js"></script>
   <!-- Google Fonts: Inter & JetBrains Mono for Cyber Matrix Mode (CV_WEB aesthetic) -->
@@ -295,6 +545,11 @@
         <span class="truncate">Bybit Fleet</span>
         <span id="sysCount-bybit" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">4</span>
       </button>
+          <button onclick="switchSystem('hedge')" id="sysBtn-hedge" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
+        <span class="text-base flex-shrink-0">🧪</span>
+        <span id="sysLabel-hedge" class="truncate">Hedge Lab</span>
+        <span id="sysCount-hedge" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold flex-shrink-0">TEST</span>
+      </button>
     </div>
 
     <!-- Piggy Bank Hero Card -->
@@ -501,12 +756,12 @@
       if (currentAccount === "acc1") {
         if (btnBybit) btnBybit.classList.remove("hidden");
         if (sysGrid) {
-          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 md:grid-cols-4 items-center gap-1.5";
+          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 items-center gap-1.5";
         }
       } else {
         if (btnBybit) btnBybit.classList.add("hidden");
         if (sysGrid) {
-          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-1 sm:grid-cols-3 items-center gap-1.5";
+          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 sm:grid-cols-4 items-center gap-1.5";
         }
         if (currentSystem === "bybit") {
           currentSystem = "eo";
@@ -733,7 +988,7 @@
     function switchSystem(sys) {
       currentSystem = sys;
       localStorage.setItem("fleet_active_system", sys);
-      const hash = sys === "bybit" ? "#bybit" : (sys === "cp" ? "#call-put" : (sys === "ou" ? "#over-under" : "#even-odd"));
+      const hash = sys === "bybit" ? "#bybit" : (sys === "cp" ? "#call-put" : (sys === "ou" ? "#over-under" : (sys === "hedge" ? "#hedge-lab" : "#even-odd")));
       if (history.pushState) {
         history.pushState(null, null, hash);
       } else {
@@ -751,10 +1006,12 @@
       const btnOU = document.getElementById("sysBtn-ou");
       const btnCP = document.getElementById("sysBtn-cp");
       const btnBybit = document.getElementById("sysBtn-bybit");
+      const btnHedge = document.getElementById("sysBtn-hedge");
       const countEO = document.getElementById("sysCount-eo");
       const countOU = document.getElementById("sysCount-ou");
       const countCP = document.getElementById("sysCount-cp");
       const countBybit = document.getElementById("sysCount-bybit");
+      const countHedge = document.getElementById("sysCount-hedge");
 
       const inactiveBtn = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60";
       const inactiveBadge = "px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0";
@@ -764,10 +1021,12 @@
       if (btnOU) btnOU.className = inactiveBtn;
       if (btnCP) btnCP.className = inactiveBtn;
       if (btnBybit) btnBybit.className = inactiveBtn + (currentAccount !== "acc1" ? " hidden" : "");
+      if (btnHedge) btnHedge.className = inactiveBtn;
       if (countEO) countEO.className = inactiveBadge;
       if (countOU) countOU.className = inactiveBadge;
       if (countCP) countCP.className = inactiveBadge;
       if (countBybit) countBybit.className = inactiveBadge;
+      if (countHedge) countHedge.className = "px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold flex-shrink-0";
 
       if (currentSystem === "bybit") {
         if (btnBybit) btnBybit.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-sky-600 text-white shadow-md shadow-sky-500/20";
@@ -778,6 +1037,9 @@
       } else if (currentSystem === "ou") {
         if (btnOU) btnOU.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-indigo-600 text-white shadow-md shadow-indigo-500/20";
         if (countOU) countOU.className = activeBadge;
+      } else if (currentSystem === "hedge") {
+        if (btnHedge) btnHedge.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30";
+        if (countHedge) countHedge.className = activeBadge;
       } else {
         if (btnEO) btnEO.className = "w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 bg-emerald-500 text-white shadow-md shadow-emerald-500/20";
         if (countEO) countEO.className = activeBadge;
@@ -1824,6 +2086,14 @@
 
       // 5. Fleets Container
       const container = document.getElementById("fleetsContainer");
+      const fleetTabsBar = document.getElementById("fleetTabsBar");
+
+      if (currentSystem === "hedge") {
+        if (fleetTabsBar) fleetTabsBar.innerHTML = "";
+        renderHedgeLab(data.hedge_lab);
+        return;
+      }
+
       if (!data.fleets || data.fleets.length === 0) {
         container.innerHTML = `
           <div class="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-3xl">

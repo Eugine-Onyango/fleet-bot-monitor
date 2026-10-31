@@ -495,7 +495,17 @@ def build_payload():
 
     save_peaks(peaks)
 
+    hedge_lab_file = "/root/hedge_lab/hedge_state.json" if os.name != "nt" else "hedge_lab_local/hedge_state.json"
+    hedge_lab_data = None
+    if os.path.exists(hedge_lab_file):
+        try:
+            with open(hedge_lab_file, "r", encoding="utf-8") as hf:
+                hedge_lab_data = json.load(hf)
+        except Exception:
+            pass
+
     return {
+        "hedge_lab": hedge_lab_data,
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "reset_at": peaks.get("reset_at", datetime.now(timezone.utc).isoformat()),
         "total_active_bots": total_active_bots,
