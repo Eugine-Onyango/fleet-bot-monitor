@@ -72,9 +72,9 @@
         status: "INITIALIZING",
         market: "1HZ10V",
         stake: 0.35,
-        cooldown_minutes: 10,
+        cooldown_minutes: 3,
         current_round: 1,
-        countdown_seconds: 600,
+        countdown_seconds: 180,
         next_round_plan: {
           acc1_side: "DIGITOVER",
           acc1_barrier: "4",
@@ -108,7 +108,7 @@
         heroTag.innerHTML = `🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070)`;
       }
       if (peaceText) {
-        peaceText.innerHTML = `Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • 10m Cooldown • Alternating Sides • <b>Existing Fleet Bots Untouched</b>`;
+        peaceText.innerHTML = `Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • 3m Cooldown • Alternating Sides • <b>Existing Fleet Bots Untouched</b>`;
       }
       if (peakBadge) {
         peakBadge.innerText = `Rounds: ${h.summary ? h.summary.total_rounds : 0}`;
@@ -171,7 +171,7 @@
                   <div id="hedgeLiveTimer" class="text-lg font-mono font-black text-white tracking-widest">
                     ${formatHedgeTime(h.countdown_seconds || 0)}
                   </div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">Switch side in ${h.cooldown_minutes}m</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">Switch side in 3m</div>
                 </div>
               </div>
 
@@ -202,7 +202,7 @@
             <!-- Hedge Architecture Badges -->
             <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
               <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-700 text-purple-300 font-bold">10-Minute Cooldown</span>
+                <span class="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-700 text-purple-300 font-bold">3-Minute Cooldown</span>
                 <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-blue-700 text-blue-300 font-bold">Auto Side Rotation</span>
                 <span class="px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 text-emerald-300 font-bold">Zero Fleet Interference</span>
               </div>
@@ -487,7 +487,7 @@
           DOT91203477 • Best of 6 (C/E/U/P/O/O) • Single Side • Lock Recovery
         </span>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1.5">
         <button onclick="switchAccount('acc1')" id="accBtn-acc1" class="w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-sm flex-shrink-0">🔄</span>
@@ -520,6 +520,16 @@
           </div>
           <span id="accProfit-acc3" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
         </button>
+        <button onclick="switchAccount('hedge')" id="accBtn-hedge" class="w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-sm flex-shrink-0">🧪</span>
+            <div class="text-left truncate">
+              <div class="truncate">🧪 Hedge Lab (Acc 1 & 2)</div>
+              <div id="accSub-hedge" class="text-[10px] opacity-75 font-semibold truncate">Over/Under 50/50 Hedge • 3m Rest</div>
+            </div>
+          </div>
+          <span id="accProfit-hedge" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
+        </button>
       </div>
     </div>
 
@@ -544,11 +554,6 @@
         <span class="text-base flex-shrink-0">🚀</span>
         <span class="truncate">Bybit Fleet</span>
         <span id="sysCount-bybit" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-slate-300 dark:bg-slate-700 font-bold flex-shrink-0">4</span>
-      </button>
-          <button onclick="switchSystem('hedge')" id="sysBtn-hedge" class="w-full min-w-0 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/60">
-        <span class="text-base flex-shrink-0">🧪</span>
-        <span id="sysLabel-hedge" class="truncate">Hedge Lab</span>
-        <span id="sysCount-hedge" class="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold flex-shrink-0">TEST</span>
       </button>
     </div>
 
@@ -692,7 +697,7 @@
     function switchAccount(acc) {
       currentAccount = acc;
       localStorage.setItem("fleet_active_account", acc);
-      if (currentSystem === "bybit") {
+      if (currentSystem === "bybit" && acc !== "acc1") {
         currentSystem = "eo";
         localStorage.setItem("fleet_active_system", "eo");
       }
@@ -707,10 +712,13 @@
       const btnAcc1 = document.getElementById("accBtn-acc1");
       const btnAcc2 = document.getElementById("accBtn-acc2");
       const btnAcc3 = document.getElementById("accBtn-acc3");
+      const btnAccHedge = document.getElementById("accBtn-hedge");
       const profAcc1 = document.getElementById("accProfit-acc1");
       const profAcc2 = document.getElementById("accProfit-acc2");
       const profAcc3 = document.getElementById("accProfit-acc3");
+      const profAccHedge = document.getElementById("accProfit-hedge");
       const badge = document.getElementById("activeAccountBadge");
+      const sysGrid = document.getElementById("systemSwitcherGrid");
 
       const inactiveBtn = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60";
       const inactiveProf = "px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0";
@@ -719,11 +727,22 @@
       if (btnAcc1) btnAcc1.className = inactiveBtn;
       if (btnAcc2) btnAcc2.className = inactiveBtn;
       if (btnAcc3) btnAcc3.className = inactiveBtn;
+      if (btnAccHedge) btnAccHedge.className = inactiveBtn;
       if (profAcc1) profAcc1.className = inactiveProf;
       if (profAcc2) profAcc2.className = inactiveProf;
       if (profAcc3) profAcc3.className = inactiveProf;
+      if (profAccHedge) profAccHedge.className = inactiveProf;
 
-      if (currentAccount === "acc2") {
+      if (currentAccount === "hedge") {
+        if (btnAccHedge) btnAccHedge.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25";
+        if (profAccHedge) profAccHedge.className = activeProf;
+        if (badge) {
+          badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
+          badge.innerText = "🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070) • 3m Cooldown • Alternating Sides";
+        }
+        if (sysGrid) sysGrid.classList.add("hidden");
+      } else if (currentAccount === "acc2") {
+        if (sysGrid) sysGrid.classList.remove("hidden");
         if (btnAcc2) btnAcc2.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-indigo-600 text-white shadow-md shadow-indigo-500/20";
         if (profAcc2) profAcc2.className = activeProf;
         if (badge) {
@@ -731,6 +750,7 @@
           badge.innerText = "DOT93845070 • Best of 6 (C/E/U/P/O/O) • Single Side • Lock Recovery";
         }
       } else if (currentAccount === "acc3") {
+        if (sysGrid) sysGrid.classList.remove("hidden");
         if (btnAcc3) btnAcc3.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-amber-600 text-white shadow-md shadow-amber-500/20";
         if (profAcc3) profAcc3.className = activeProf;
         if (badge) {
@@ -738,6 +758,7 @@
           badge.innerText = "DOT91362122 • Best of 6 (C/E/U/P/O/O) • Single Side • Lock Recovery";
         }
       } else {
+        if (sysGrid) sysGrid.classList.remove("hidden");
         if (btnAcc1) btnAcc1.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-emerald-600 text-white shadow-md shadow-emerald-500/20";
         if (profAcc1) profAcc1.className = activeProf;
         if (badge) {
@@ -751,17 +772,16 @@
       const sysLabelOU = document.getElementById("sysLabel-ou");
       const sysLabelCP = document.getElementById("sysLabel-cp");
       const btnBybit = document.getElementById("sysBtn-bybit");
-      const sysGrid = document.getElementById("systemSwitcherGrid");
 
       if (currentAccount === "acc1") {
         if (btnBybit) btnBybit.classList.remove("hidden");
         if (sysGrid) {
-          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 items-center gap-1.5";
+          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 md:grid-cols-4 items-center gap-1.5";
         }
-      } else {
+      } else if (currentAccount !== "hedge") {
         if (btnBybit) btnBybit.classList.add("hidden");
         if (sysGrid) {
-          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-2 sm:grid-cols-4 items-center gap-1.5";
+          sysGrid.className = "bg-slate-200/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm grid grid-cols-1 sm:grid-cols-3 items-center gap-1.5";
         }
         if (currentSystem === "bybit") {
           currentSystem = "eo";
@@ -796,6 +816,15 @@
             subEl.innerText = `Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • ${bCount || 72} Bots`;
           }
         });
+      }
+
+      // Populate Hedge Lab Profit Badge
+      if (data && data.hedge_lab && data.hedge_lab.summary) {
+        const netH = Number(data.hedge_lab.summary.net_combined_profit) || 0.0;
+        const pEl = document.getElementById("accProfit-hedge");
+        if (pEl) {
+          pEl.innerText = `${netH >= 0 ? '+' : ''}$${netH.toFixed(2)}`;
+        }
       }
     }
 
@@ -1176,6 +1205,7 @@
 
     function resetLocalPeaks() {
       const nowTs = Date.now();
+      localStorage.setItem("hedge_lab_peak", "0.00");
       localStorage.setItem("peaks_manual_reset_ts", nowTs.toString());
       localStorage.setItem("last_server_reset_ts", nowTs.toString());
       Object.keys(localStorage).forEach(k => {
@@ -1820,6 +1850,115 @@
     }
 
     function renderDashboard(data) {
+      const isCyberMode = guiMode === "cyber";
+      const isTechMode = guiMode === "tech";
+      const isSimpleMode = guiMode === "simple";
+
+      // If user is viewing independent Hedge Lab
+      if (currentAccount === "hedge") {
+        updateAccountSwitcherUI(data);
+
+        const sysGrid = document.getElementById("systemSwitcherGrid");
+        if (sysGrid) sysGrid.classList.add("hidden");
+
+        const fleetTabsBar = document.getElementById("fleetTabsBar");
+        if (fleetTabsBar) fleetTabsBar.innerHTML = "";
+
+        const hl = data.hedge_lab || {
+          status: "RUNNING",
+          market: "1HZ10V",
+          stake: 0.35,
+          cooldown_minutes: 3,
+          current_round: 1,
+          countdown_seconds: 0,
+          next_round_plan: {
+            acc1_side: "DIGITOVER", acc1_barrier: "4",
+            acc2_side: "DIGITUNDER", acc2_barrier: "5"
+          },
+          summary: {
+            total_rounds: 0,
+            acc1_profit: 0.0, acc1_wins: 0, acc1_losses: 0,
+            acc2_profit: 0.0, acc2_wins: 0, acc2_losses: 0,
+            net_combined_profit: 0.0
+          },
+          recent_trades: []
+        };
+        const hSummary = hl.summary || {};
+        const netProfit = Number(hSummary.net_combined_profit) || 0.0;
+        const totalRounds = Number(hSummary.total_rounds) || 0;
+
+        // Peak tracking: isolated hedge_lab_peak starting cleanly from $0.00
+        let hPeak = parseFloat(localStorage.getItem("hedge_lab_peak") || "0.00");
+        if (netProfit > hPeak) {
+          hPeak = netProfit;
+          localStorage.setItem("hedge_lab_peak", hPeak.toFixed(2));
+        }
+
+        // Hero Card
+        const profitEl = document.getElementById("statTotalProfit");
+        if (profitEl) {
+          profitEl.innerText = `${netProfit >= 0 ? '+' : ''}$${netProfit.toFixed(2)}`;
+          profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${netProfit >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-rose-500'}`;
+        }
+        const peakBadge = document.getElementById("peakBadge");
+        if (peakBadge) {
+          peakBadge.innerText = `🏆 Peak: +$${hPeak.toFixed(2)}`;
+          peakBadge.className = "inline-flex items-center text-xs font-black px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700 shadow-sm";
+        }
+        const heroTag = document.getElementById("heroCardTag");
+        if (heroTag) {
+          heroTag.className = isCyberMode
+            ? "inline-flex items-center text-xs font-mono font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-purple-950/80 text-purple-300 border border-purple-400/60 shadow-[0_0_12px_rgba(168,85,247,0.3)] mb-2.5"
+            : "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800 mb-2.5";
+          heroTag.innerHTML = "🧪 DUAL-ACCOUNT HEDGE TEST LAB";
+        }
+        const peaceText = document.getElementById("peaceOfMindText");
+        if (peaceText) {
+          peaceText.innerHTML = "Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • 3m Cooldown • Alternating Sides • <b>Existing Fleet Bots Untouched</b>";
+        }
+
+        // Hero 4 stat boxes
+        const statActive = document.getElementById("statActiveBots");
+        const lblActive = document.getElementById("lblActiveBots");
+        if (statActive) statActive.innerText = "2 / 2";
+        if (lblActive) lblActive.innerText = isCyberMode ? "QUANTUM LEGS ⚡" : "ACTIVE LEGS";
+
+        const statWin = document.getElementById("statWinRate");
+        const lblWin = document.getElementById("lblWinRate");
+        if (statWin) statWin.innerText = `${totalRounds} Rounds`;
+        if (lblWin) lblWin.innerText = isCyberMode ? "EFFICIENCY RATIO 📊" : "ROUNDS RUN";
+
+        const statPeak = document.getElementById("statPeakProfit");
+        const lblPeak = document.getElementById("lblPeakProfit");
+        if (statPeak) statPeak.innerText = `+$${hPeak.toFixed(2)}`;
+        if (lblPeak) lblPeak.innerText = isCyberMode ? "PEAK TELEMETRY 🏆" : "PEAK PROFIT";
+
+        const statExposure = document.getElementById("statPeakStake");
+        const lblExposure = document.getElementById("lblPeakStake");
+        if (statExposure) statExposure.innerText = `$${(hl.stake || 0.35).toFixed(2)}`;
+        if (lblExposure) lblExposure.innerText = isCyberMode ? "LEG STAKE ⚡" : "LEG EXPOSURE";
+
+        // Middle Banner
+        const comfortingNotice = document.getElementById("comfortingNotice");
+        if (comfortingNotice) {
+          comfortingNotice.classList.remove("hidden");
+          comfortingNotice.innerHTML = `
+            <div class="flex items-center justify-between gap-3 text-xs sm:text-sm font-black text-purple-900 dark:text-purple-200">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🧪</span>
+                <span>Hedge Lab: Acc 1 (DOT91203477) ⇄ Acc 2 (DOT93845070) • Fast Vol 10s • 3m Cooldown</span>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                ${hl.status || "RUNNING"}
+              </span>
+            </div>
+          `;
+        }
+
+        renderHedgeLab(data.hedge_lab);
+        return;
+      }
+
       if (data && data.reset_at) {
         const payloadResetTs = new Date(data.reset_at).getTime();
         const lastKnownResetTs = parseInt(localStorage.getItem("last_server_reset_ts") || "0");
