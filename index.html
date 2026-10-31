@@ -108,7 +108,7 @@
         heroTag.innerHTML = `🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070)`;
       }
       if (peaceText) {
-        peaceText.innerHTML = `Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • 3m Cooldown • Alternating Sides • <b>Existing Fleet Bots Untouched</b>`;
+        peaceText.innerHTML = `Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • Dual-Win Gated Cooldown (Fast Switch) • <b>Existing Fleet Bots Untouched</b>`;
       }
       if (peakBadge) {
         peakBadge.innerText = `Rounds: ${h.summary ? h.summary.total_rounds : 0}`;
@@ -171,11 +171,11 @@
                 <div class="text-[11px] text-slate-400 font-mono mt-0.5">${h.market} (Fast 10s)</div>
                 
                 <div class="mt-3 w-full bg-slate-800/90 border border-purple-500/30 rounded-xl px-3 py-2 text-center">
-                  <div class="text-[10px] text-purple-300 uppercase font-black tracking-widest">Cooldown Timer</div>
+                  <div class="text-[10px] ${h.cooldown_type === "fast_switch" ? "text-amber-300 animate-pulse font-black" : "text-purple-300 font-black"} uppercase tracking-widest">${h.cooldown_type === "fast_switch" ? "⚡ FAST SWITCH" : "🎉 DUAL-WIN 3M REST"}</div>
                   <div id="hedgeLiveTimer" class="text-lg font-mono font-black text-white tracking-widest">
                     ${formatHedgeTime(h.countdown_seconds || 0)}
                   </div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">Switch side in 3m</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">${h.cooldown_type === "fast_switch" ? (h.cycle && h.cycle.target ? h.cycle.target : "Fast Re-Arm") : (h.cycle && h.cycle.target ? h.cycle.target : "3m rest until next cycle")}</div>
                 </div>
               </div>
 
@@ -210,7 +210,7 @@
             <!-- Hedge Architecture Badges -->
             <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
               <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-700 text-purple-300 font-bold">3-Minute Cooldown</span>
+                <span class="px-2 py-0.5 rounded ${h.cooldown_type === "fast_switch" ? "bg-amber-900/60 border border-amber-500 text-amber-300 animate-pulse" : "bg-purple-900/60 border border-purple-700 text-purple-300"} font-bold">${h.cooldown_type === "fast_switch" ? "⚡ Dual-Win Hunt (Fast Switch 4s)" : "🎉 Dual-Win Complete (3m Rest)"}</span><span class="px-2 py-0.5 rounded bg-indigo-900/60 border border-indigo-700 text-indigo-300 font-bold">Cycle #${(h.cycle && h.cycle.cycle_number) || 1}: ${(h.cycle && h.cycle.acc1_won) ? "Acc 1 ✅" : "Acc 1 ⏳"} | ${(h.cycle && h.cycle.acc2_won) ? "Acc 2 ✅" : "Acc 2 ⏳"}</span>
                 <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-blue-700 text-blue-300 font-bold">Auto Side Rotation</span>
                 <span class="px-2 py-0.5 rounded bg-rose-900/60 border border-rose-700 text-rose-300 font-bold">⚡ Uncapped 2.1x Martingale</span>
                 <span class="px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 text-emerald-300 font-bold">Zero Fleet Interference</span>
@@ -253,14 +253,14 @@
                   </thead>
                   <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
                     ${trades.map(t => {
-                      const netP = t.net_round_profit || 0.0;
+                      const netP = (t.net_profit !== undefined) ? t.net_profit : (t.net_round_profit !== undefined ? t.net_round_profit : 0.0);
                       const a1 = t.acc1 || {};
                       const a2 = t.acc2 || {};
                       const a1Won = (a1.profit || 0) > 0;
                       const a2Won = (a2.profit || 0) > 0;
                       return `
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                          <td class="py-3 px-3 font-bold text-slate-700 dark:text-slate-300">#${t.round}</td>
+                          <td class="py-3 px-3 font-bold text-slate-700 dark:text-slate-300">#${t.round}${t.cycle ? ' <span class="text-[9px] text-purple-400 font-normal">(C' + t.cycle + ')</span>' : ''}</td>
                           <td class="py-3 px-3 text-slate-400">${t.timestamp.replace(/^[0-9]+-/, '')}</td>
                           <td class="py-3 px-3"><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">${t.market}</span></td>
                           <td class="py-3 px-3">
@@ -1932,7 +1932,7 @@
         }
         const peaceText = document.getElementById("peaceOfMindText");
         if (peaceText) {
-          peaceText.innerHTML = "Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • 3m Cooldown • Alternating Sides • <b>Existing Fleet Bots Untouched</b>";
+          peaceText.innerHTML = "Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • Dual-Win Gated Cooldown (Fast Switch) • <b>Existing Fleet Bots Untouched</b>";
         }        // Hide fleet drawdown notice (leak from other 216 bots)
         const ddNotice = document.getElementById("drawdownNotice");
         if (ddNotice) ddNotice.classList.add("hidden");
