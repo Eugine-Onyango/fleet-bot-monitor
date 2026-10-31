@@ -1916,9 +1916,14 @@
         const peaceText = document.getElementById("peaceOfMindText");
         if (peaceText) {
           peaceText.innerHTML = "Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • 3m Cooldown • Alternating Sides • <b>Existing Fleet Bots Untouched</b>";
-        }
+        }        // Hide fleet drawdown notice (leak from other 216 bots)
+        const ddNotice = document.getElementById("drawdownNotice");
+        if (ddNotice) ddNotice.classList.add("hidden");
 
-        // Hero 4 stat boxes
+        const plan = hl.next_round_plan || {};
+        const maxLegStake = Math.max(plan.acc1_stake || 0.35, plan.acc2_stake || 0.35);
+
+        // Hero 4 stat boxes strictly for Hedge Lab
         const statActive = document.getElementById("statActiveBots");
         const lblActive = document.getElementById("lblActiveBots");
         if (statActive) statActive.innerText = "2 / 2";
@@ -1926,20 +1931,29 @@
 
         const statWin = document.getElementById("statWinRate");
         const lblWin = document.getElementById("lblWinRate");
+        const statWinLoss = document.getElementById("statWinLossRecord");
         if (statWin) statWin.innerText = `${totalRounds} Rounds`;
         if (lblWin) lblWin.innerText = isCyberMode ? "EFFICIENCY RATIO 📊" : "ROUNDS RUN";
+        if (statWinLoss) statWinLoss.innerText = "100% Complementary";
 
         const statPeak = document.getElementById("statPeakProfit");
         const lblPeak = document.getElementById("lblPeakProfit");
+        const statPeakDiff = document.getElementById("statPeakProfitDiff");
         if (statPeak) statPeak.innerText = `+$${hPeak.toFixed(2)}`;
         if (lblPeak) lblPeak.innerText = isCyberMode ? "PEAK TELEMETRY 🏆" : "PEAK PROFIT";
+        if (statPeakDiff) statPeakDiff.innerText = "Max Reached";
 
-        const statExposure = document.getElementById("statPeakStake");
+        const statExposure = document.getElementById("statOverallPeak");
         const lblExposure = document.getElementById("lblPeakStake");
-        if (statExposure) statExposure.innerText = `$${(hl.stake || 0.35).toFixed(2)}`;
+        const statExposureMkt = document.getElementById("statOverallPeakMarket");
+        if (statExposure) statExposure.innerText = `$${maxLegStake.toFixed(2)}`;
         if (lblExposure) lblExposure.innerText = isCyberMode ? "LEG STAKE ⚡" : "LEG EXPOSURE";
+        if (statExposureMkt) statExposureMkt.innerText = "Fast Vol 10s (Base $0.35)";
 
         // Middle Banner
+        const uptimeEl = document.getElementById("fleetUptimeVal");
+        if (uptimeEl) uptimeEl.innerText = `Round #${totalRounds} Live (3m Rest)`;
+
         const comfortingNotice = document.getElementById("comfortingNotice");
         if (comfortingNotice) {
           comfortingNotice.classList.remove("hidden");
