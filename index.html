@@ -143,7 +143,7 @@
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span class="font-black text-xs sm:text-sm tracking-wide text-emerald-300">ACCOUNT 1 (DOT91203477)</span>
                   </div>
-                  <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300">Stake $${h.stake.toFixed(2)}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded ${plan.acc1_streak > 0 ? 'bg-amber-950 border-amber-500 text-amber-300 font-bold animate-pulse' : 'bg-emerald-950 border-emerald-700 text-emerald-300'} border">Stake $${(plan.acc1_stake || 0.35).toFixed(2)}${plan.acc1_streak > 0 ? ' (Step ' + plan.acc1_streak + ')' : ''}</span>
                 </div>
                 <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
                   <span class="px-2.5 py-1 rounded-xl ${plan.acc1_side === 'DIGITOVER' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40'}">
@@ -182,7 +182,7 @@
                     <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span>
                     <span class="font-black text-xs sm:text-sm tracking-wide text-indigo-300">ACCOUNT 2 (DOT93845070)</span>
                   </div>
-                  <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950 border border-indigo-700 text-indigo-300">Stake $${h.stake.toFixed(2)}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded ${plan.acc2_streak > 0 ? 'bg-amber-950 border-amber-500 text-amber-300 font-bold animate-pulse' : 'bg-indigo-950 border-indigo-700 text-indigo-300'} border">Stake $${(plan.acc2_stake || 0.35).toFixed(2)}${plan.acc2_streak > 0 ? ' (Step ' + plan.acc2_streak + ')' : ''}</span>
                 </div>
                 <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
                   <span class="px-2.5 py-1 rounded-xl ${plan.acc2_side === 'DIGITOVER' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40'}">
@@ -204,6 +204,7 @@
               <div class="flex items-center gap-2">
                 <span class="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-700 text-purple-300 font-bold">3-Minute Cooldown</span>
                 <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-blue-700 text-blue-300 font-bold">Auto Side Rotation</span>
+                <span class="px-2 py-0.5 rounded bg-amber-900/60 border border-amber-700 text-amber-300 font-bold">⚡ Independent Martingale</span>
                 <span class="px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 text-emerald-300 font-bold">Zero Fleet Interference</span>
               </div>
               <div class="font-mono text-purple-300">
@@ -256,12 +257,12 @@
                           <td class="py-3 px-3"><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">${t.market}</span></td>
                           <td class="py-3 px-3">
                             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded ${a1Won ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                              ${a1.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} • ${a1Won ? '+$' + a1.profit.toFixed(2) : '-$' + (a1.stake || 0.35).toFixed(2)}
+                              ${a1.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} @ $${(a1.stake || 0.35).toFixed(2)} • ${a1Won ? '+$' + a1.profit.toFixed(2) : '-$' + (a1.stake || 0.35).toFixed(2)}
                             </span>
                           </td>
                           <td class="py-3 px-3">
                             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded ${a2Won ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                              ${a2.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} • ${a2Won ? '+$' + a2.profit.toFixed(2) : '-$' + (a2.stake || 0.35).toFixed(2)}
+                              ${a2.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} @ $${(a2.stake || 0.35).toFixed(2)} • ${a2Won ? '+$' + a2.profit.toFixed(2) : '-$' + (a2.stake || 0.35).toFixed(2)}
                             </span>
                           </td>
                           <td class="py-3 px-3 text-right font-black ${netP >= 0 ? 'text-emerald-500' : 'text-slate-400'}">
