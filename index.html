@@ -1896,6 +1896,15 @@
         const netProfit = Number(hSummary.net_combined_profit) || 0.0;
         const totalRounds = Number(hSummary.total_rounds) || 0;
 
+        // Auto-wipe stored peak on fresh clean start
+        if (hl.started_at && localStorage.getItem("hedge_last_started_at") !== hl.started_at) {
+          localStorage.setItem("hedge_last_started_at", hl.started_at);
+          localStorage.setItem("hedge_lab_peak", "0.00");
+        }
+        if (totalRounds === 0) {
+          localStorage.setItem("hedge_lab_peak", "0.00");
+        }
+
         // Peak tracking: isolated hedge_lab_peak starting cleanly from $0.00
         let hPeak = parseFloat(localStorage.getItem("hedge_lab_peak") || "0.00");
         if (netProfit > hPeak) {
