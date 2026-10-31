@@ -156,6 +156,10 @@
                     ${h.summary.acc1_profit >= 0 ? '+' : ''}$${h.summary.acc1_profit.toFixed(2)} (${h.summary.acc1_wins}W / ${h.summary.acc1_losses}L)
                   </span>
                 </div>
+                <div class="mt-1.5 flex items-center justify-between text-xs text-slate-400">
+                  <span>Account 1 Peak Stake:</span>
+                  <span class="font-mono font-bold text-amber-300">$${Number(h.summary.acc1_peak_stake || 0.35).toFixed(2)}</span>
+                </div>
               </div>
 
               <!-- Center Bridge & Cooldown Timer -->
@@ -195,6 +199,10 @@
                     ${h.summary.acc2_profit >= 0 ? '+' : ''}$${h.summary.acc2_profit.toFixed(2)} (${h.summary.acc2_wins}W / ${h.summary.acc2_losses}L)
                   </span>
                 </div>
+                <div class="mt-1.5 flex items-center justify-between text-xs text-slate-400">
+                  <span>Account 2 Peak Stake:</span>
+                  <span class="font-mono font-bold text-amber-300">$${Number(h.summary.acc2_peak_stake || 0.35).toFixed(2)}</span>
+                </div>
               </div>
 
             </div>
@@ -204,7 +212,7 @@
               <div class="flex items-center gap-2">
                 <span class="px-2 py-0.5 rounded bg-purple-900/60 border border-purple-700 text-purple-300 font-bold">3-Minute Cooldown</span>
                 <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-blue-700 text-blue-300 font-bold">Auto Side Rotation</span>
-                <span class="px-2 py-0.5 rounded bg-amber-900/60 border border-amber-700 text-amber-300 font-bold">⚡ Independent Martingale</span>
+                <span class="px-2 py-0.5 rounded bg-rose-900/60 border border-rose-700 text-rose-300 font-bold">⚡ Uncapped 2.1x Martingale</span>
                 <span class="px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 text-emerald-300 font-bold">Zero Fleet Interference</span>
               </div>
               <div class="font-mono text-purple-300">
@@ -1943,16 +1951,27 @@
         if (lblPeak) lblPeak.innerText = isCyberMode ? "PEAK TELEMETRY 🏆" : "PEAK PROFIT";
         if (statPeakDiff) statPeakDiff.innerText = "Max Reached";
 
+        const overallPeak = Number(hSummary.overall_peak_stake || Math.max(hSummary.acc1_peak_stake || 0.35, hSummary.acc2_peak_stake || 0.35, maxLegStake));
         const statExposure = document.getElementById("statOverallPeak");
         const lblExposure = document.getElementById("lblPeakStake");
         const statExposureMkt = document.getElementById("statOverallPeakMarket");
-        if (statExposure) statExposure.innerText = `$${maxLegStake.toFixed(2)}`;
-        if (lblExposure) lblExposure.innerText = isCyberMode ? "LEG STAKE ⚡" : "LEG EXPOSURE";
-        if (statExposureMkt) statExposureMkt.innerText = "Fast Vol 10s (Base $0.35)";
+        if (statExposure) statExposure.innerText = `$${overallPeak.toFixed(2)}`;
+        if (lblExposure) lblExposure.innerText = isCyberMode ? "PEAK LEG STAKE ⚡" : "PEAK LEG STAKE";
+        if (statExposureMkt) statExposureMkt.innerText = `Current Leg: $${maxLegStake.toFixed(2)}`;
 
-        // Middle Banner
+        // Middle Banner & Runtime
+        let uptimeStr = `Round #${totalRounds} Live (3m Rest)`;
+        if (hl.started_at) {
+          const startTs = new Date(hl.started_at).getTime();
+          if (!isNaN(startTs)) {
+            const diffSecs = Math.max(0, Math.floor((Date.now() - startTs) / 1000));
+            const hrs = Math.floor(diffSecs / 3600);
+            const mins = Math.floor((diffSecs % 3600) / 60);
+            uptimeStr = hrs > 0 ? `${hrs}h ${mins}m (Round #${totalRounds})` : `${mins}m (Round #${totalRounds})`;
+          }
+        }
         const uptimeEl = document.getElementById("fleetUptimeVal");
-        if (uptimeEl) uptimeEl.innerText = `Round #${totalRounds} Live (3m Rest)`;
+        if (uptimeEl) uptimeEl.innerText = uptimeStr;
 
         const comfortingNotice = document.getElementById("comfortingNotice");
         if (comfortingNotice) {
