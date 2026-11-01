@@ -108,7 +108,7 @@
         heroTag.innerHTML = `🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070)`;
       }
       if (peaceText) {
-        peaceText.innerHTML = `Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • Dual-Win Gated Cooldown (Fast Switch) • <b>Existing Fleet Bots Untouched</b>`;
+        peaceText.innerHTML = `Triple Hedge Trinity (O/U ⇄ C/P ⇄ E/O) • Fast 1s Markets Rotation • 1m Cooldown • <b>Existing Fleet Bots Untouched</b>`;
       }
       if (peakBadge) {
         peakBadge.innerText = `Rounds: ${h.summary ? h.summary.total_rounds : 0}`;
@@ -122,7 +122,24 @@
       const formatSide = (s, b) => {
         if (s === "DIGITOVER") return `OVER ${b} (Digits 5-9)`;
         if (s === "DIGITUNDER") return `UNDER ${b} (Digits 0-4)`;
-        return `${s} ${b}`;
+        if (s === "CALL") return `CALL (Rise ▲)`;
+        if (s === "PUT") return `PUT (Fall ▼)`;
+        if (s === "DIGITEVEN") return `EVEN (Digits 0,2,4,6,8)`;
+        if (s === "DIGITODD") return `ODD (Digits 1,3,5,7,9)`;
+        return b ? `${s} ${b}` : `${s}`;
+      };
+
+      const formatLeg = (leg) => {
+        if (!leg) return "";
+        const s = leg.side || "";
+        const b = leg.barrier;
+        if (s === "DIGITOVER") return "OVER 4";
+        if (s === "DIGITUNDER") return "UNDER 5";
+        if (s === "CALL") return "CALL ▲";
+        if (s === "PUT") return "PUT ▼";
+        if (s === "DIGITEVEN") return "EVEN";
+        if (s === "DIGITODD") return "ODD";
+        return b ? `${s} ${b}` : s;
       };
 
       const trades = (h.recent_trades || []).slice(0, 15);
@@ -168,10 +185,10 @@
                   ⇄
                 </div>
                 <div class="text-xs font-black uppercase tracking-wider text-purple-300">100% Hedge</div>
-                <div class="text-[11px] text-slate-400 font-mono mt-0.5">${h.market} (Fast 10s)</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-0.5">${h.market} • <span class="text-purple-300 font-bold">${h.system || (h.cycle && h.cycle.current_system) || "O/U"}</span></div>
                 
                 <div class="mt-3 w-full bg-slate-800/90 border border-purple-500/30 rounded-xl px-3 py-2 text-center">
-                  <div class="text-[10px] ${h.cooldown_type === "fast_switch" ? "text-amber-300 animate-pulse font-black" : "text-purple-300 font-black"} uppercase tracking-widest">${h.cooldown_type === "fast_switch" ? "⚡ FAST SWITCH" : "🎉 DUAL-WIN 3M REST"}</div>
+                  <div class="text-[10px] ${h.cooldown_type === "fast_switch" ? "text-amber-300 animate-pulse font-black" : "text-purple-300 font-black"} uppercase tracking-widest">${h.cooldown_type === "fast_switch" ? "⚡ FAST SWITCH" : "🎉 DUAL-WIN 1M REST"}</div>
                   <div id="hedgeLiveTimer" class="text-lg font-mono font-black text-white tracking-widest">
                     ${formatHedgeTime(h.countdown_seconds || 0)}
                   </div>
@@ -262,15 +279,15 @@
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                           <td class="py-3 px-3 font-bold text-slate-700 dark:text-slate-300">#${t.round}${t.cycle ? ' <span class="text-[9px] text-purple-400 font-normal">(C' + t.cycle + ')</span>' : ''}</td>
                           <td class="py-3 px-3 text-slate-400">${t.timestamp.replace(/^[0-9]+-/, '')}</td>
-                          <td class="py-3 px-3"><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">${t.market}</span></td>
+                          <td class="py-3 px-3"><span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">${t.market}</span> <span class="px-1 py-0.5 rounded bg-purple-900/60 border border-purple-700 text-purple-300 font-bold text-[10px]">${t.system || "O/U"}</span></td>
                           <td class="py-3 px-3">
                             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded ${a1Won ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                              ${a1.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} @ $${(a1.stake || 0.35).toFixed(2)} • ${a1Won ? '+$' + a1.profit.toFixed(2) : '-$' + (a1.stake || 0.35).toFixed(2)}
+                              ${formatLeg(a1)} @ $${(a1.stake || 0.35).toFixed(2)} • ${a1Won ? '+$' + a1.profit.toFixed(2) : '-$' + (a1.stake || 0.35).toFixed(2)}
                             </span>
                           </td>
                           <td class="py-3 px-3">
                             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded ${a2Won ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                              ${a2.side === 'DIGITOVER' ? 'OVER 4' : 'UNDER 5'} @ $${(a2.stake || 0.35).toFixed(2)} • ${a2Won ? '+$' + a2.profit.toFixed(2) : '-$' + (a2.stake || 0.35).toFixed(2)}
+                              ${formatLeg(a2)} @ $${(a2.stake || 0.35).toFixed(2)} • ${a2Won ? '+$' + a2.profit.toFixed(2) : '-$' + (a2.stake || 0.35).toFixed(2)}
                             </span>
                           </td>
                           <td class="py-3 px-3 text-right font-black ${netP >= 0 ? 'text-emerald-500' : 'text-slate-400'}">
@@ -1932,7 +1949,7 @@
         }
         const peaceText = document.getElementById("peaceOfMindText");
         if (peaceText) {
-          peaceText.innerHTML = "Simultaneous 50/50 Over/Under Hedge • Fast Vol 10s • Dual-Win Gated Cooldown (Fast Switch) • <b>Existing Fleet Bots Untouched</b>";
+          peaceText.innerHTML = "Triple Hedge Trinity (O/U ⇄ C/P ⇄ E/O) • Fast 1s Markets Rotation • 1m Cooldown • <b>Existing Fleet Bots Untouched</b>";
         }        // Hide fleet drawdown notice (leak from other 216 bots)
         const ddNotice = document.getElementById("drawdownNotice");
         if (ddNotice) ddNotice.classList.add("hidden");
