@@ -72,7 +72,7 @@
         status: "INITIALIZING",
         market: "1HZ10V",
         stake: 0.35,
-        cooldown_minutes: 5,
+        cooldown_minutes: 10,
         current_round: 1,
         countdown_seconds: 180,
         next_round_plan: {
@@ -108,7 +108,7 @@
         heroTag.innerHTML = `🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070)`;
       }
       if (peaceText) {
-        peaceText.innerHTML = `Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • 24 All-Market Rotation • 5m Cooldown • <b>Existing Fleet Bots Untouched</b>`;
+        peaceText.innerHTML = `Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • 24 All-Market Rotation • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>`;
       }
       if (peakBadge) {
         peakBadge.innerText = `Rounds: ${h.summary ? h.summary.total_rounds : 0}`;
@@ -188,11 +188,11 @@
                 <div class="text-[11px] text-slate-400 font-mono mt-0.5">${h.market} • <span class="text-purple-300 font-bold">${h.system || (h.cycle && h.cycle.current_system) || "O/U"}</span></div>
                 
                 <div class="mt-3 w-full bg-slate-800/90 border border-purple-500/30 rounded-xl px-3 py-2 text-center">
-                  <div class="text-[10px] ${h.cooldown_type === "fast_switch" ? "text-amber-300 animate-pulse font-black" : "text-purple-300 font-black"} uppercase tracking-widest">${h.cooldown_type === "fast_switch" ? "⚡ FAST SWITCH" : "🎉 DUAL-WIN 5M REST"}</div>
+                  <div class="text-[10px] ${h.cooldown_type === "fast_switch" ? "text-amber-300 animate-pulse font-black" : "text-purple-300 font-black"} uppercase tracking-widest">${h.cooldown_type === "fast_switch" ? "⚡ FAST SWITCH" : "🎉 DUAL-WIN 10M REST"}</div>
                   <div id="hedgeLiveTimer" class="text-lg font-mono font-black text-white tracking-widest">
                     ${formatHedgeTime(h.countdown_seconds || 0)}
                   </div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">${h.cooldown_type === "fast_switch" ? (h.cycle && h.cycle.target ? h.cycle.target : "Fast Re-Arm") : (h.cycle && h.cycle.target ? h.cycle.target : "5m rest until next cycle")}</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">${h.cooldown_type === "fast_switch" ? (h.cycle && h.cycle.target ? h.cycle.target : "Fast Re-Arm") : (h.cycle && h.cycle.target ? h.cycle.target : "10m rest until next cycle")}</div>
                 </div>
               </div>
 
@@ -227,7 +227,7 @@
             <!-- Hedge Architecture Badges -->
             <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
               <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded ${h.cooldown_type === "fast_switch" ? "bg-amber-900/60 border border-amber-500 text-amber-300 animate-pulse" : "bg-purple-900/60 border border-purple-700 text-purple-300"} font-bold">${h.cooldown_type === "fast_switch" ? "⚡ Dual-Win Hunt (Fast Switch 4s)" : "🎉 Dual-Win Complete (3m Rest)"}</span><span class="px-2 py-0.5 rounded bg-indigo-900/60 border border-indigo-700 text-indigo-300 font-bold">Cycle #${(h.cycle && h.cycle.cycle_number) || 1}: ${(h.cycle && h.cycle.acc1_won) ? "Acc 1 ✅" : "Acc 1 ⏳"} | ${(h.cycle && h.cycle.acc2_won) ? "Acc 2 ✅" : "Acc 2 ⏳"}</span>
+                <span class="px-2 py-0.5 rounded ${h.cooldown_type === "fast_switch" ? "bg-amber-900/60 border border-amber-500 text-amber-300 animate-pulse" : "bg-purple-900/60 border border-purple-700 text-purple-300"} font-bold">${h.cooldown_type === "fast_switch" ? "⚡ Dual-Win Hunt (Fast Switch 4s)" : "🎉 Dual-Win Complete (10m Rest)"}</span><span class="px-2 py-0.5 rounded bg-indigo-900/60 border border-indigo-700 text-indigo-300 font-bold">Cycle #${(h.cycle && h.cycle.cycle_number) || 1}: ${(h.cycle && h.cycle.acc1_won) ? "Acc 1 ✅" : "Acc 1 ⏳"} | ${(h.cycle && h.cycle.acc2_won) ? "Acc 2 ✅" : "Acc 2 ⏳"}</span>
                 <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-blue-700 text-blue-300 font-bold">Auto Side Rotation</span>
                 <span class="px-2 py-0.5 rounded bg-rose-900/60 border border-rose-700 text-rose-300 font-bold">⚡ Isolated 2.1x Family Stakes</span>
                 <span class="px-2 py-0.5 rounded bg-emerald-900/60 border border-emerald-700 text-emerald-300 font-bold">Zero Fleet Interference</span>
@@ -582,7 +582,7 @@
             <span class="text-sm flex-shrink-0">🧪</span>
             <div class="text-left truncate">
               <div class="truncate">🧪 Hedge Lab (Acc 1 & 2)</div>
-              <div id="accSub-hedge" class="text-[10px] opacity-75 font-semibold truncate">Triple Call/Put (C/P ⇄ C/P ⇄ C/P) • 5m Rest</div>
+              <div id="accSub-hedge" class="text-[10px] opacity-75 font-semibold truncate">Triple Call/Put (C/P ⇄ C/P ⇄ C/P) • 10m Rest</div>
             </div>
           </div>
           <span id="accProfit-hedge" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -795,7 +795,7 @@
         if (profAccHedge) profAccHedge.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
-          badge.innerText = "🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070) • 5m Cooldown • Alternating Sides";
+          badge.innerText = "🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070) • 10m Cooldown • Alternating Sides";
         }
         if (sysGrid) sysGrid.classList.add("hidden");
       } else if (currentAccount === "acc2") {
@@ -1925,7 +1925,7 @@
           status: "RUNNING",
           market: "1HZ10V",
           stake: 0.35,
-          cooldown_minutes: 5,
+          cooldown_minutes: 10,
           current_round: 1,
           countdown_seconds: 0,
           next_round_plan: {
@@ -1980,7 +1980,7 @@
         }
         const peaceText = document.getElementById("peaceOfMindText");
         if (peaceText) {
-          peaceText.innerHTML = "Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • 24 All-Market Rotation • 5m Cooldown • <b>Existing Fleet Bots Untouched</b>";
+          peaceText.innerHTML = "Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • 24 All-Market Rotation • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>";
         }        // Hide fleet drawdown notice (leak from other 216 bots)
         const ddNotice = document.getElementById("drawdownNotice");
         if (ddNotice) ddNotice.classList.add("hidden");
@@ -2037,7 +2037,7 @@
             <div class="flex items-center justify-between gap-3 text-xs sm:text-sm font-black text-purple-900 dark:text-purple-200">
               <div class="flex items-center gap-2">
                 <span class="text-base">🧪</span>
-                <span>Hedge Lab: Acc 1 (DOT91203477) ⇄ Acc 2 (DOT93845070) • Fast Vol 10s • 5m Cooldown</span>
+                <span>Hedge Lab: Acc 1 (DOT91203477) ⇄ Acc 2 (DOT93845070) • 24 Markets • 10m Cooldown</span>
               </div>
               <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
                 ${hl.status || "RUNNING"}
