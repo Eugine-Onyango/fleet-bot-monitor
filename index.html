@@ -550,7 +550,7 @@
             <span class="text-sm flex-shrink-0">🔄</span>
             <div class="text-left truncate">
               <div class="truncate">Account 1 • Best of 6</div>
-              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Best of 6 (Call/Even/Under/Put/Odd/Over) • Single Best Side • 72 Bots</div>
+              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Best of 6 (Call/Even/Under/Put/Odd/Over) • Single Best Side • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc1" class="px-2 py-0.5 rounded-lg text-[11px] bg-white/20 font-black flex-shrink-0">+$0.00</span>
@@ -561,7 +561,7 @@
             <span class="text-sm flex-shrink-0">🎯</span>
             <div class="text-left truncate">
               <div class="truncate">Account 2 • Best of 6</div>
-              <div id="accSub-acc2" class="text-[10px] opacity-75 font-semibold truncate">Best of 6 (Call/Even/Under/Put/Odd/Over) • Single Best Side • 72 Bots</div>
+              <div id="accSub-acc2" class="text-[10px] opacity-75 font-semibold truncate">Best of 6 (Call/Even/Under/Put/Odd/Over) • Single Best Side • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc2" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -572,7 +572,7 @@
             <span class="text-sm flex-shrink-0">📈</span>
             <div class="text-left truncate">
               <div class="truncate">Account 3 • Best of 6</div>
-              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Best of 6 (Call/Even/Under/Put/Odd/Over) • Single Best Side • 72 Bots</div>
+              <div id="accSub-acc3" class="text-[10px] opacity-75 font-semibold truncate">Best of 6 (Call/Even/Under/Put/Odd/Over) • Single Best Side • 36 Bots</div>
             </div>
           </div>
           <span id="accProfit-acc3" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -870,7 +870,7 @@
           }
           const subEl = document.getElementById(`accSub-${accKey}`);
           if (subEl) {
-            subEl.innerText = `Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • ${bCount || 72} Bots`;
+            subEl.innerText = `Triple Hybrid (E/O × O/U × C/P) • Fast Vol 10s • ${bCount || 36} Bots`;
           }
         });
       }
@@ -2154,8 +2154,8 @@
         }
         if (peaceText) {
           peaceText.innerHTML = isCyberMode
-            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
-            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
+            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 36} nodes • 10m stagger • 60m thermal rest).`
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 36} bots • 10m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 5 & Team 6 (${recBehaviorDesc}).`;
@@ -2174,8 +2174,8 @@
         }
         if (peaceText) {
           peaceText.innerHTML = isCyberMode
-            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
-            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
+            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 36} nodes • 10m stagger • 60m thermal rest).`
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 36} bots • 10m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 3 & Team 4 (${recBehaviorDesc}).`;
@@ -2194,8 +2194,8 @@
         }
         if (peaceText) {
           peaceText.innerHTML = isCyberMode
-            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 72} nodes • 5m stagger • 60m thermal rest).`
-            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 72} bots • 5m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
+            ? `<span class="text-base">⚡</span> Quantum Sentinel Stream • ${recBehaviorDesc} (${activeMetrics.totalBots || 36} nodes • 10m stagger • 60m thermal rest).`
+            : `<span class="text-base">🛡️</span> ${recBehaviorDesc} (${activeMetrics.totalBots || 36} bots • 10m stagger • 60m rest • Fast Vol 10 (1s) [1HZ10V]).`;
         }
         if (comfortingNotice) {
           comfortingNotice.innerText = `${accNameShort}: Team 1 & Team 2 (${recBehaviorDesc}).`;
@@ -2428,7 +2428,7 @@
           fleetSubtitle = "BTC & ETH USDT Futures • 2-Step Switch • 5m Stagger • 20m Rest • $50 Daily Target";
         } else {
           friendlyFleetName = `${teamIcon} Team ${teamNum} • Best of 6 (Single Side) [1HZ10V]`;
-          fleetSubtitle = `Best of 6 (Call, Even, Under, Put, Odd, Over) • Single Best Side (1 Trade Max) • ${fleet.bots.length || 12} Bots • 5m Cadence • 60m Rest • Lock Recovery (Fast Vol 10s)`;
+          fleetSubtitle = `Best of 6 (Call, Even, Under, Put, Odd, Over) • Single Best Side (1 Trade Max) • ${fleet.bots.length || 6} Bots • 10m Cadence • 60m Rest • Lock Recovery (Fast Vol 10s)`;
         }
 
         // Calculate fleet peak stake & uptime across filtered bots
