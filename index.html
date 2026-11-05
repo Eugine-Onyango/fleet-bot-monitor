@@ -457,6 +457,56 @@
     .animate-pulse-cyan {
       animation: pulse-cyan 2.2s infinite ease-in-out;
     }
+    /* 😊 Simple Mode: Cozy Zen & Firefly Bokeh Aesthetic */
+    body.gui-simple::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(16, 185, 129, 0.07), transparent 45%),
+        radial-gradient(circle at 82% 75%, rgba(245, 158, 11, 0.06), transparent 45%),
+        radial-gradient(circle at 52% 48%, rgba(14, 165, 233, 0.05), transparent 55%);
+    }
+    body.gui-simple .card-shadow,
+    body.gui-simple .cheerful-shadow {
+      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease !important;
+    }
+    body.gui-simple .card-shadow:hover,
+    body.gui-simple .cheerful-shadow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -6px rgba(16, 185, 129, 0.16), 0 6px 14px -4px rgba(14, 165, 233, 0.1) !important;
+    }
+
+    /* 📊 Tech Mode: Quantum Constellation & Blueprint Telemetry Aesthetic */
+    body.gui-tech::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image: radial-gradient(rgba(99, 102, 241, 0.18) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(circle at center, black 45%, transparent 95%);
+      -webkit-mask-image: radial-gradient(circle at center, black 45%, transparent 95%);
+    }
+    body.gui-tech header {
+      border-bottom: 1.5px solid rgba(99, 102, 241, 0.35) !important;
+      box-shadow: 0 4px 20px -4px rgba(99, 102, 241, 0.15) !important;
+    }
+    body.gui-tech .card-shadow,
+    body.gui-tech .cheerful-shadow {
+      border: 1px solid rgba(99, 102, 241, 0.25) !important;
+      box-shadow: 0 8px 26px -4px rgba(15, 23, 42, 0.18), 0 0 16px rgba(99, 102, 241, 0.08) !important;
+      transition: all 0.22s ease !important;
+    }
+    body.gui-tech .card-shadow:hover,
+    body.gui-tech .cheerful-shadow:hover {
+      border-color: rgba(99, 102, 241, 0.55) !important;
+      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.28), 0 0 24px rgba(99, 102, 241, 0.18) !important;
+    }
+
     /* Clean horizontal scroll without visible scrollbars */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -933,6 +983,7 @@
 
       document.body.classList.toggle("gui-cyber", guiMode === "cyber");
       document.body.classList.toggle("gui-tech", guiMode === "tech");
+      document.body.classList.toggle("gui-simple", guiMode === "simple");
 
       if (guiMode === "cyber") {
         if (label) label.innerText = "Cyber";
@@ -944,64 +995,117 @@
         if (label) label.innerText = "Tech";
         if (icon) icon.innerText = "📊";
         if (btn) {
-          btn.className = "px-3 py-1.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-indigo-200 dark:border-slate-700 text-xs font-black text-indigo-800 dark:text-indigo-300 transition flex items-center gap-1.5 shadow-sm";
+          btn.className = "px-3 py-1.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/80 dark:hover:bg-indigo-900/80 border-2 border-indigo-400/70 dark:border-indigo-400 text-xs font-black text-indigo-800 dark:text-indigo-300 transition flex items-center gap-1.5 shadow-[0_0_14px_rgba(99,102,241,0.28)]";
         }
       } else {
         if (label) label.innerText = "Simple";
         if (icon) icon.innerText = "😊";
         if (btn) {
-          btn.className = "px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-emerald-200 dark:border-slate-700 text-xs font-black text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5 shadow-sm";
+          btn.className = "px-3 py-1.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/70 border-2 border-emerald-400/60 dark:border-emerald-500/70 text-xs font-black text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.22)]";
         }
       }
-      initCyberCanvas();
+      initModeCanvas();
     }
 
-    let cyberCanvasAnimId = null;
-    function initCyberCanvas() {
+    let modeCanvasAnimId = null;
+    let activeCanvasMode = null;
+    let modeResizeHandler = null;
+
+    function initModeCanvas() {
       const canvas = document.getElementById("cyberParticleCanvas");
       if (!canvas) return;
-      if (guiMode !== "cyber") {
-        canvas.classList.add("hidden");
-        if (cyberCanvasAnimId) {
-          cancelAnimationFrame(cyberCanvasAnimId);
-          cyberCanvasAnimId = null;
-        }
+      canvas.classList.remove("hidden");
+
+      if (modeCanvasAnimId && activeCanvasMode === guiMode) {
         return;
       }
-      canvas.classList.remove("hidden");
-      if (cyberCanvasAnimId) return;
+      if (modeCanvasAnimId) {
+        cancelAnimationFrame(modeCanvasAnimId);
+        modeCanvasAnimId = null;
+      }
+      activeCanvasMode = guiMode;
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
       let width = (canvas.width = window.innerWidth);
       let height = (canvas.height = window.innerHeight);
-      let nebulaTime = 0;
+      let animTime = 0;
 
-      const handleResize = () => {
+      if (modeResizeHandler) {
+        window.removeEventListener("resize", modeResizeHandler);
+      }
+      modeResizeHandler = () => {
         if (!canvas) return;
         width = canvas.width = window.innerWidth;
         height = canvas.height = window.innerHeight;
       };
-      window.removeEventListener("resize", handleResize);
-      window.addEventListener("resize", handleResize);
+      window.addEventListener("resize", modeResizeHandler);
 
-      const ACCENT_COLORS = ['#00f5ff', '#06b6d4', '#38bdf8'];
-      const particleCount = 70;
-      const starCount = 65;
+      // =========================================================================
+      // MODE 1: SIMPLE MODE 😊 — Cozy Zen Fireflies, Pastel Bokeh Orbs & Sparkles
+      // =========================================================================
+      const simpleBokeh = Array.from({ length: 18 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 38 + 20,
+        speedX: (Math.random() - 0.5) * 0.22,
+        speedY: -Math.random() * 0.25 - 0.08,
+        phase: Math.random() * Math.PI * 2,
+        colorIdx: Math.floor(Math.random() * 4),
+      }));
 
-      const particles = Array.from({ length: particleCount }, () => ({
+      const simpleFireflies = Array.from({ length: 48 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2.8 + 1.2,
+        baseSpeedY: -Math.random() * 0.45 - 0.15,
+        swayAmp: Math.random() * 0.6 + 0.2,
+        swayFreq: Math.random() * 0.025 + 0.01,
+        phase: Math.random() * Math.PI * 2,
+        colorIdx: Math.floor(Math.random() * 4),
+        isSparkle: Math.random() > 0.62,
+      }));
+
+      // =========================================================================
+      // MODE 2: TECH MODE 📊 — Quantum Constellation Network, Telemetry Pulses & Glyphs
+      // =========================================================================
+      const techNodes = Array.from({ length: 46 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.55,
+        vy: (Math.random() - 0.5) * 0.55,
+        radius: Math.random() * 2.2 + 1.4,
+        isHub: Math.random() > 0.78,
+        pulsePhase: Math.random() * Math.PI * 2,
+        colorIdx: Math.floor(Math.random() * 4),
+      }));
+
+      const TECH_GLYPHS = ["01", "10", "▲", "▼", "◊", "∑", "+0.31", "1HZ", "⚡", "◈"];
+      const techGlyphParticles = Array.from({ length: 18 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        speedY: -Math.random() * 0.4 - 0.15,
+        text: TECH_GLYPHS[Math.floor(Math.random() * TECH_GLYPHS.length)],
+        alpha: Math.random() * 0.35 + 0.12,
+      }));
+
+      // =========================================================================
+      // MODE 3: CYBER MODE ⚡ — Cyber Nebula, Twinkling Stars & Rising Matrix Stream
+      // =========================================================================
+      const CYBER_COLORS = ['#00f5ff', '#06b6d4', '#38bdf8'];
+      const cyberParticles = Array.from({ length: 70 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
         size: Math.random() * 2.2 + 0.6,
         speedX: (Math.random() - 0.5) * 0.4,
         speedY: -Math.random() * 0.6 - 0.2,
         alpha: Math.random() * 0.6 + 0.2,
-        color: ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)],
+        color: CYBER_COLORS[Math.floor(Math.random() * CYBER_COLORS.length)],
         isAccent: Math.random() > 0.45,
       }));
 
-      const stars = Array.from({ length: starCount }, () => ({
+      const cyberStars = Array.from({ length: 65 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
         size: Math.random() * 1.8 + 0.5,
@@ -1010,65 +1114,265 @@
         isColored: Math.random() > 0.5,
       }));
 
-      const drawNebula = () => {
-        nebulaTime += 0.008;
-        const cx1 = width * 0.5 + Math.sin(nebulaTime) * 60;
-        const cy1 = height * 0.4 + Math.cos(nebulaTime * 0.8) * 40;
-        const grad1 = ctx.createRadialGradient(cx1, cy1, 10, cx1, cy1, Math.max(width, height) * 0.42);
-        grad1.addColorStop(0, 'rgba(0, 240, 255, 0.09)');
-        grad1.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)');
-        grad1.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad1;
-        ctx.fillRect(0, 0, width, height);
-
-        const cx2 = width * 0.5 - Math.cos(nebulaTime * 0.7) * 70;
-        const cy2 = height * 0.68 + Math.sin(nebulaTime * 0.9) * 50;
-        const grad2 = ctx.createRadialGradient(cx2, cy2, 20, cx2, cy2, Math.max(width, height) * 0.46);
-        grad2.addColorStop(0, 'rgba(6, 182, 212, 0.08)');
-        grad2.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad2;
-        ctx.fillRect(0, 0, width, height);
+      const drawSparkleStar = (cx, cy, r, color, alpha) => {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let i = 0; i < 4; i++) {
+          const angle = (i * Math.PI) / 2;
+          ctx.lineTo(cx + Math.cos(angle) * r * 2.2, cy + Math.sin(angle) * r * 2.2);
+          const midAngle = angle + Math.PI / 4;
+          ctx.lineTo(cx + Math.cos(midAngle) * r * 0.55, cy + Math.sin(midAngle) * r * 0.55);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
       };
 
       const renderLoop = () => {
-        if (guiMode !== "cyber") {
-          canvas.classList.add("hidden");
-          cancelAnimationFrame(cyberCanvasAnimId);
-          cyberCanvasAnimId = null;
+        if (activeCanvasMode !== guiMode) {
+          cancelAnimationFrame(modeCanvasAnimId);
+          modeCanvasAnimId = null;
           return;
         }
+
         ctx.clearRect(0, 0, width, height);
-        drawNebula();
+        animTime += 0.012;
+        const isDark = document.documentElement.classList.contains("dark");
 
-        for (const s of stars) {
-          s.alpha += Math.sin(nebulaTime * 2 + s.x) * s.twinkleSpeed;
-          if (s.alpha < 0.15) s.alpha = 0.15;
-          if (s.alpha > 0.9) s.alpha = 0.9;
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-          ctx.fillStyle = s.isColored ? '#00f0ff' : '#ffffff';
-          ctx.globalAlpha = s.alpha * 0.65;
-          ctx.fill();
-        }
+        if (guiMode === "simple") {
+          // --- SIMPLE MODE: Warm Zen Aurora + Soft Bokeh Orbs + Glowing Fireflies ---
+          const simplePalette = isDark
+            ? ["#10b981", "#34d399", "#fbbf24", "#38bdf8"]
+            : ["#059669", "#10b981", "#d97706", "#0284c7"];
 
-        for (const p of particles) {
-          p.x += p.speedX;
-          p.y += p.speedY;
-          if (p.y < -10) p.y = height + 10;
-          if (p.x < -10) p.x = width + 10;
-          if (p.x > width + 10) p.x = -10;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = p.isAccent ? p.color : 'rgba(255, 255, 255, 0.45)';
-          ctx.globalAlpha = p.alpha;
-          ctx.fill();
+          // Breathing soft aurora glow
+          const ax1 = width * 0.3 + Math.sin(animTime * 0.7) * 80;
+          const ay1 = height * 0.35 + Math.cos(animTime * 0.5) * 50;
+          const agrad1 = ctx.createRadialGradient(ax1, ay1, 15, ax1, ay1, Math.max(width, height) * 0.42);
+          agrad1.addColorStop(0, isDark ? "rgba(16, 185, 129, 0.08)" : "rgba(16, 185, 129, 0.10)");
+          agrad1.addColorStop(0.6, isDark ? "rgba(56, 189, 248, 0.04)" : "rgba(14, 165, 233, 0.05)");
+          agrad1.addColorStop(1, "transparent");
+          ctx.fillStyle = agrad1;
+          ctx.fillRect(0, 0, width, height);
+
+          const ax2 = width * 0.72 - Math.cos(animTime * 0.6) * 70;
+          const ay2 = height * 0.68 + Math.sin(animTime * 0.8) * 55;
+          const agrad2 = ctx.createRadialGradient(ax2, ay2, 20, ax2, ay2, Math.max(width, height) * 0.38);
+          agrad2.addColorStop(0, isDark ? "rgba(251, 191, 36, 0.06)" : "rgba(245, 158, 11, 0.08)");
+          agrad2.addColorStop(1, "transparent");
+          ctx.fillStyle = agrad2;
+          ctx.fillRect(0, 0, width, height);
+
+          // Floating Pastel Bokeh Orbs
+          for (const b of simpleBokeh) {
+            b.x += b.speedX + Math.sin(animTime + b.phase) * 0.15;
+            b.y += b.speedY;
+            if (b.y < -b.radius * 2) b.y = height + b.radius * 2;
+            if (b.x < -b.radius * 2) b.x = width + b.radius * 2;
+            if (b.x > width + b.radius * 2) b.x = -b.radius * 2;
+
+            const pulseR = b.radius * (1 + Math.sin(animTime * 1.4 + b.phase) * 0.12);
+            const col = simplePalette[b.colorIdx];
+            const bGrad = ctx.createRadialGradient(b.x, b.y, pulseR * 0.1, b.x, b.y, pulseR);
+            bGrad.addColorStop(0, col);
+            bGrad.addColorStop(1, "transparent");
+            ctx.save();
+            ctx.globalAlpha = isDark ? 0.08 : 0.09;
+            ctx.fillStyle = bGrad;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, pulseR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // Floating Zen Fireflies & Sparkles
+          for (const f of simpleFireflies) {
+            f.phase += f.swayFreq;
+            f.x += Math.sin(f.phase) * f.swayAmp;
+            f.y += f.baseSpeedY;
+            if (f.y < -15) f.y = height + 15;
+            if (f.x < -15) f.x = width + 15;
+            if (f.x > width + 15) f.x = -15;
+
+            const glowAlpha = (Math.sin(f.phase * 2) * 0.3 + 0.55) * (isDark ? 0.78 : 0.65);
+            const col = simplePalette[f.colorIdx];
+
+            // Outer soft halo
+            const halo = ctx.createRadialGradient(f.x, f.y, 0.5, f.x, f.y, f.size * 4.2);
+            halo.addColorStop(0, col);
+            halo.addColorStop(1, "transparent");
+            ctx.save();
+            ctx.globalAlpha = glowAlpha * 0.45;
+            ctx.fillStyle = halo;
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.size * 4.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            if (f.isSparkle) {
+              drawSparkleStar(f.x, f.y, f.size, col, glowAlpha);
+            } else {
+              ctx.save();
+              ctx.globalAlpha = glowAlpha;
+              ctx.fillStyle = col;
+              ctx.beginPath();
+              ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+            }
+          }
+        } else if (guiMode === "tech") {
+          // --- TECH MODE: Quantum Constellation Network + Live Data Pulses + Telemetry Glyphs ---
+          const techColors = isDark
+            ? ["#818cf8", "#38bdf8", "#34d399", "#c084fc"]
+            : ["#4f46e5", "#0284c7", "#059669", "#7c3aed"];
+          const lineRgb = isDark ? "129, 140, 248" : "79, 70, 229";
+          const pulseColor = isDark ? "#38bdf8" : "#4f46e5";
+
+          // Subtle ambient telemetry field
+          const tx = width * 0.5 + Math.cos(animTime * 0.5) * 90;
+          const ty = height * 0.45 + Math.sin(animTime * 0.6) * 60;
+          const tGrad = ctx.createRadialGradient(tx, ty, 10, tx, ty, Math.max(width, height) * 0.45);
+          tGrad.addColorStop(0, isDark ? "rgba(99, 102, 241, 0.08)" : "rgba(99, 102, 241, 0.07)");
+          tGrad.addColorStop(0.5, isDark ? "rgba(14, 165, 233, 0.04)" : "rgba(14, 165, 233, 0.04)");
+          tGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = tGrad;
+          ctx.fillRect(0, 0, width, height);
+
+          // Update nodes
+          for (const n of techNodes) {
+            n.x += n.vx;
+            n.y += n.vy;
+            if (n.x < 0 || n.x > width) n.vx *= -1;
+            if (n.y < 0 || n.y > height) n.vy *= -1;
+            n.pulsePhase += 0.03;
+          }
+
+          // Connect nearby nodes & animate traveling data packets
+          const maxDist = 145;
+          for (let i = 0; i < techNodes.length; i++) {
+            const a = techNodes[i];
+            for (let j = i + 1; j < techNodes.length; j++) {
+              const b = techNodes[j];
+              const dx = b.x - a.x;
+              const dy = b.y - a.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < maxDist) {
+                const linkAlpha = (1 - dist / maxDist) * (isDark ? 0.28 : 0.22);
+                ctx.strokeStyle = `rgba(${lineRgb}, ${linkAlpha.toFixed(3)})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+
+                // Traveling data packet on hub links
+                if ((a.isHub || b.isHub) && (i + j) % 3 === 0) {
+                  const t = (animTime * 1.1 + i * 0.37) % 1;
+                  const px = a.x + dx * t;
+                  const py = a.y + dy * t;
+                  ctx.save();
+                  ctx.globalAlpha = (1 - dist / maxDist) * (isDark ? 0.85 : 0.75);
+                  ctx.fillStyle = pulseColor;
+                  ctx.beginPath();
+                  ctx.arc(px, py, 2.1, 0, Math.PI * 2);
+                  ctx.fill();
+                  ctx.restore();
+                }
+              }
+            }
+          }
+
+          // Draw nodes & expanding radar rings on hubs
+          for (const n of techNodes) {
+            const col = techColors[n.colorIdx];
+            if (n.isHub) {
+              const ringR = n.radius + ((animTime * 18 + n.pulsePhase * 10) % 22);
+              const ringAlpha = Math.max(0, (1 - (ringR - n.radius) / 22) * (isDark ? 0.35 : 0.28));
+              ctx.save();
+              ctx.strokeStyle = col;
+              ctx.globalAlpha = ringAlpha;
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.arc(n.x, n.y, ringR, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.restore();
+            }
+
+            ctx.save();
+            ctx.globalAlpha = isDark ? 0.75 : 0.65;
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, n.isHub ? n.radius * 1.35 : n.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // Floating Quant Telemetry Micro-Glyphs
+          ctx.save();
+          ctx.font = "600 10px 'JetBrains Mono', monospace";
+          for (const g of techGlyphParticles) {
+            g.y += g.speedY;
+            if (g.y < -20) {
+              g.y = height + 20;
+              g.x = Math.random() * width;
+            }
+            ctx.globalAlpha = g.alpha * (isDark ? 0.55 : 0.42);
+            ctx.fillStyle = isDark ? "#818cf8" : "#4f46e5";
+            ctx.fillText(g.text, g.x, g.y);
+          }
+          ctx.restore();
+        } else {
+          // --- CYBER MODE: Cyberpunk Nebula + Twinkling Stars + Rising Matrix Stream ---
+          const cx1 = width * 0.5 + Math.sin(animTime * 0.7) * 60;
+          const cy1 = height * 0.4 + Math.cos(animTime * 0.55) * 40;
+          const grad1 = ctx.createRadialGradient(cx1, cy1, 10, cx1, cy1, Math.max(width, height) * 0.42);
+          grad1.addColorStop(0, 'rgba(0, 240, 255, 0.09)');
+          grad1.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)');
+          grad1.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad1;
+          ctx.fillRect(0, 0, width, height);
+
+          const cx2 = width * 0.5 - Math.cos(animTime * 0.5) * 70;
+          const cy2 = height * 0.68 + Math.sin(animTime * 0.65) * 50;
+          const grad2 = ctx.createRadialGradient(cx2, cy2, 20, cx2, cy2, Math.max(width, height) * 0.46);
+          grad2.addColorStop(0, 'rgba(6, 182, 212, 0.08)');
+          grad2.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad2;
+          ctx.fillRect(0, 0, width, height);
+
+          for (const s of cyberStars) {
+            s.alpha += Math.sin(animTime * 1.4 + s.x) * s.twinkleSpeed;
+            if (s.alpha < 0.15) s.alpha = 0.15;
+            if (s.alpha > 0.9) s.alpha = 0.9;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fillStyle = s.isColored ? '#00f0ff' : '#ffffff';
+            ctx.globalAlpha = s.alpha * 0.65;
+            ctx.fill();
+          }
+
+          for (const p of cyberParticles) {
+            p.x += p.speedX;
+            p.y += p.speedY;
+            if (p.y < -10) p.y = height + 10;
+            if (p.x < -10) p.x = width + 10;
+            if (p.x > width + 10) p.x = -10;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.isAccent ? p.color : 'rgba(255, 255, 255, 0.45)';
+            ctx.globalAlpha = p.alpha;
+            ctx.fill();
+          }
         }
 
         ctx.globalAlpha = 1;
-        cyberCanvasAnimId = requestAnimationFrame(renderLoop);
+        modeCanvasAnimId = requestAnimationFrame(renderLoop);
       };
 
-      cyberCanvasAnimId = requestAnimationFrame(renderLoop);
+      modeCanvasAnimId = requestAnimationFrame(renderLoop);
     }
 
     function switchSystem(sys) {
