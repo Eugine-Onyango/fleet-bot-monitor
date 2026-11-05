@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Trading Helper • Friendly Live Tracker</title>
   <!-- App Icons and Favicons -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -11,7 +11,7 @@
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#10b981">
+  <meta name="theme-color" id="metaThemeColor" content="#090d16">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Bot Monitor">
@@ -507,6 +507,49 @@
       box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.28), 0 0 24px rgba(99, 102, 241, 0.18) !important;
     }
 
+    /* 🌈 Living Top & Bottom Edge Energy Portals (Simple / Tech / Cyber) */
+    @keyframes edge-shimmer-flow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .edge-energy-bar {
+      background-size: 300% 300%;
+      animation: edge-shimmer-flow 6s ease infinite;
+    }
+    body.gui-simple .edge-energy-bar {
+      background-image: linear-gradient(90deg, #10b981, #38bdf8, #f59e0b, #34d399, #0ea5e9, #10b981);
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.55), 0 0 32px rgba(56, 189, 248, 0.35);
+    }
+    body.gui-simple .edge-ambient-glow-top {
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.22) 0%, rgba(56, 189, 248, 0.08) 55%, transparent 100%);
+    }
+    body.gui-simple .edge-ambient-glow-bottom {
+      background: linear-gradient(0deg, rgba(16, 185, 129, 0.24) 0%, rgba(245, 158, 11, 0.09) 55%, transparent 100%);
+    }
+
+    body.gui-tech .edge-energy-bar {
+      background-image: linear-gradient(90deg, #4f46e5, #06b6d4, #8b5cf6, #10b981, #38bdf8, #4f46e5);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.65), 0 0 36px rgba(56, 189, 248, 0.4);
+    }
+    body.gui-tech .edge-ambient-glow-top {
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.26) 0%, rgba(56, 189, 248, 0.10) 55%, transparent 100%);
+    }
+    body.gui-tech .edge-ambient-glow-bottom {
+      background: linear-gradient(0deg, rgba(99, 102, 241, 0.28) 0%, rgba(139, 92, 246, 0.12) 55%, transparent 100%);
+    }
+
+    body.gui-cyber .edge-energy-bar {
+      background-image: linear-gradient(90deg, #00f5ff, #3b82f6, #a855f7, #06b6d4, #22d3ee, #00f5ff);
+      box-shadow: 0 0 24px rgba(0, 245, 255, 0.8), 0 0 45px rgba(59, 130, 246, 0.5);
+    }
+    body.gui-cyber .edge-ambient-glow-top {
+      background: linear-gradient(180deg, rgba(0, 245, 255, 0.28) 0%, rgba(59, 130, 246, 0.12) 55%, transparent 100%);
+    }
+    body.gui-cyber .edge-ambient-glow-bottom {
+      background: linear-gradient(0deg, rgba(0, 245, 255, 0.30) 0%, rgba(168, 85, 247, 0.14) 55%, transparent 100%);
+    }
+
     /* Clean horizontal scroll without visible scrollbars */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -519,11 +562,21 @@
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-[#0f172a] dark:text-slate-100 min-h-screen flex flex-col antialiased relative">
 
-  <!-- Cyber Nebula & Particle Canvas (CV_WEB / Cybersecurity Aesthetic) -->
-  <canvas id="cyberParticleCanvas" class="fixed inset-0 pointer-events-none z-0 hidden"></canvas>
+  <!-- Multi-Mode Ambient & Particle Canvas (Simple / Tech / Cyber) -->
+  <canvas id="cyberParticleCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+  <!-- Top & Bottom Mode-Reactive Energy Portals (Phone Top Status Bar & Bottom Chin / Desktop Titlebar) -->
+  <div id="topEdgePortal" class="fixed top-0 inset-x-0 pointer-events-none z-40">
+    <div class="h-[3.5px] w-full edge-energy-bar"></div>
+    <div class="h-10 w-full edge-ambient-glow-top transition-all duration-500"></div>
+  </div>
+  <div id="bottomEdgePortal" class="fixed bottom-0 inset-x-0 pointer-events-none z-40">
+    <div class="h-12 w-full edge-ambient-glow-bottom transition-all duration-500"></div>
+    <div class="h-[3.5px] w-full edge-energy-bar"></div>
+  </div>
 
   <!-- Friendly Top Bar -->
-  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#1e293b]/95 backdrop-blur sticky top-0 z-30 transition-colors relative">
+  <header class="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/75 dark:bg-[#0f172a]/75 backdrop-blur-xl sticky top-0 z-30 transition-colors relative">
     <div class="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
       
       <!-- Logo & App Name -->
@@ -1130,6 +1183,40 @@
         ctx.restore();
       };
 
+      let lastMetaUpdate = 0;
+      const lerpHex = (hex1, hex2, t) => {
+        const c1 = parseInt(hex1.slice(1), 16);
+        const c2 = parseInt(hex2.slice(1), 16);
+        const r = Math.round(((c1 >> 16) & 255) * (1 - t) + ((c2 >> 16) & 255) * t);
+        const g = Math.round(((c1 >> 8) & 255) * (1 - t) + ((c2 >> 8) & 255) * t);
+        const b = Math.round((c1 & 255) * (1 - t) + (c2 & 255) * t);
+        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+      };
+
+      const drawEdgeAuroraWave = (yBase, isBottom, colors, waveAmp, alpha) => {
+        ctx.save();
+        for (let w = 0; w < colors.length; w++) {
+          ctx.beginPath();
+          const dir = isBottom ? -1 : 1;
+          ctx.moveTo(0, yBase);
+          for (let x = 0; x <= width; x += 24) {
+            const waveY =
+              yBase +
+              dir *
+                (Math.sin(x * 0.008 + animTime * (1.3 + w * 0.35) + w * 1.7) * waveAmp +
+                 Math.cos(x * 0.015 - animTime * 0.9 + w) * (waveAmp * 0.55) +
+                 waveAmp * 0.9);
+            ctx.lineTo(x, waveY);
+          }
+          ctx.lineTo(width, yBase);
+          ctx.closePath();
+          ctx.fillStyle = colors[w];
+          ctx.globalAlpha = alpha;
+          ctx.fill();
+        }
+        ctx.restore();
+      };
+
       const renderLoop = () => {
         if (activeCanvasMode !== guiMode) {
           cancelAnimationFrame(modeCanvasAnimId);
@@ -1141,8 +1228,34 @@
         animTime += 0.012;
         const isDark = document.documentElement.classList.contains("dark");
 
+        // Dynamically animate browser/PWA/phone top & bottom system bar color to match active mode effects!
+        const nowMs = performance.now();
+        if (nowMs - lastMetaUpdate > 140) {
+          lastMetaUpdate = nowMs;
+          const metaEl = document.getElementById("metaThemeColor");
+          if (metaEl) {
+            const palettes =
+              guiMode === "cyber"
+                ? ["#050b16", "#082f49", "#0c1938", "#1e1035", "#06283d"]
+                : guiMode === "tech"
+                ? isDark
+                  ? ["#0f172a", "#1e1b4b", "#172554", "#2e1065", "#0c4a6e"]
+                  : ["#e0e7ff", "#dbeafe", "#ede9fe", "#e0f2fe"]
+                : isDark
+                ? ["#064e3b", "#0f766e", "#0c4a6e", "#115e59", "#1e293b"]
+                : ["#d1fae5", "#e0f2fe", "#fef3c7", "#ccfbf1"];
+            const cyclePos = (animTime * 0.45) % palettes.length;
+            const idx1 = Math.floor(cyclePos);
+            const idx2 = (idx1 + 1) % palettes.length;
+            const frac = cyclePos - idx1;
+            metaEl.setAttribute("content", lerpHex(palettes[idx1], palettes[idx2], frac));
+          }
+        }
+
         if (guiMode === "simple") {
-          // --- SIMPLE MODE: Warm Zen Aurora + Soft Bokeh Orbs + Glowing Fireflies ---
+          // --- SIMPLE MODE: Warm Zen Aurora + Top/Bottom Silk Waves + Soft Bokeh Orbs + Glowing Fireflies ---
+          drawEdgeAuroraWave(0, false, ["#10b981", "#38bdf8", "#fbbf24"], 22, isDark ? 0.14 : 0.16);
+          drawEdgeAuroraWave(height, true, ["#10b981", "#fbbf24", "#38bdf8"], 24, isDark ? 0.15 : 0.17);
           const simplePalette = isDark
             ? ["#10b981", "#34d399", "#fbbf24", "#38bdf8"]
             : ["#059669", "#10b981", "#d97706", "#0284c7"];
@@ -1224,7 +1337,23 @@
             }
           }
         } else if (guiMode === "tech") {
-          // --- TECH MODE: Quantum Constellation Network + Live Data Pulses + Telemetry Glyphs ---
+          // --- TECH MODE: Quantum Constellation Network + Top/Bottom Telemetry Oscilloscope + Live Data Pulses ---
+          drawEdgeAuroraWave(0, false, ["#6366f1", "#0ea5e9", "#8b5cf6"], 18, isDark ? 0.16 : 0.14);
+          drawEdgeAuroraWave(height, true, ["#6366f1", "#8b5cf6", "#10b981"], 20, isDark ? 0.17 : 0.15);
+          // Draw crisp telemetry sine trace along top and bottom edges
+          ctx.save();
+          ctx.strokeStyle = isDark ? "rgba(56, 189, 248, 0.45)" : "rgba(79, 70, 229, 0.38)";
+          ctx.lineWidth = 1.4;
+          for (const edgeY of [14, height - 14]) {
+            ctx.beginPath();
+            for (let x = 0; x <= width; x += 10) {
+              const yOff = Math.sin(x * 0.025 - animTime * 3.2) * 6 * Math.sin(x * 0.004 + animTime);
+              if (x === 0) ctx.moveTo(x, edgeY + yOff);
+              else ctx.lineTo(x, edgeY + yOff);
+            }
+            ctx.stroke();
+          }
+          ctx.restore();
           const techColors = isDark
             ? ["#818cf8", "#38bdf8", "#34d399", "#c084fc"]
             : ["#4f46e5", "#0284c7", "#059669", "#7c3aed"];
@@ -1325,7 +1454,9 @@
           }
           ctx.restore();
         } else {
-          // --- CYBER MODE: Cyberpunk Nebula + Twinkling Stars + Rising Matrix Stream ---
+          // --- CYBER MODE: Cyberpunk Nebula + Top/Bottom Neon Plasma Horizon + Twinkling Stars + Rising Matrix Stream ---
+          drawEdgeAuroraWave(0, false, ["#00f5ff", "#3b82f6", "#a855f7"], 24, 0.18);
+          drawEdgeAuroraWave(height, true, ["#00f5ff", "#a855f7", "#06b6d4"], 26, 0.20);
           const cx1 = width * 0.5 + Math.sin(animTime * 0.7) * 60;
           const cy1 = height * 0.4 + Math.cos(animTime * 0.55) * 40;
           const grad1 = ctx.createRadialGradient(cx1, cy1, 10, cx1, cy1, Math.max(width, height) * 0.42);

@@ -4,8 +4,8 @@
   "description": "Live automated trading fleet monitor and recovery tracker",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#10b981",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
   "orientation": "portrait",
   "icons": [
     {
@@ -31,5 +31,9 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
+  ],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
   ]
 }
