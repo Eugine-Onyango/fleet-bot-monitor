@@ -1,100 +1,150 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- Deep Space Obsidian-Sapphire Squircle Background -->
-    <radialGradient id="bgCore" cx="50%" cy="38%" r="70%">
-      <stop offset="0%" stop-color="#131c38" />
-      <stop offset="55%" stop-color="#090d1a" />
+    <radialGradient id="bgCore" cx="50%" cy="44%" r="68%">
+      <stop offset="0%" stop-color="#0d2544" />
+      <stop offset="55%" stop-color="#081226" />
       <stop offset="100%" stop-color="#040711" />
     </radialGradient>
-
-    <!-- Multi-Mode Rim Gradient (Cyan -> Violet -> Emerald -> Gold) -->
+    <radialGradient id="falconHalo" cx="50%" cy="46%" r="44%">
+      <stop offset="0%" stop-color="#00f5ff" stop-opacity="0.22" />
+      <stop offset="50%" stop-color="#10b981" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
     <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#00f5ff" />
-      <stop offset="35%" stop-color="#6366f1" />
-      <stop offset="70%" stop-color="#a855f7" />
+      <stop offset="50%" stop-color="#38bdf8" />
       <stop offset="100%" stop-color="#10b981" />
     </linearGradient>
-
-    <!-- Glowing Hexagon Core Gradient -->
-    <linearGradient id="hexGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0f172a" stop-opacity="0.95" />
-      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0.95" />
-    </linearGradient>
-
-    <!-- Ascending Apex Delta Wing Gradient -->
-    <linearGradient id="apexWing" x1="50%" y1="100%" x2="50%" y2="0%">
-      <stop offset="0%" stop-color="#06b6d4" />
-      <stop offset="50%" stop-color="#00f5ff" />
-      <stop offset="100%" stop-color="#ffffff" />
-    </linearGradient>
-
-    <!-- Golden Profit Crown / Bullish Flame Gradient -->
-    <linearGradient id="goldCrown" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#f59e0b" />
-      <stop offset="55%" stop-color="#fbbf24" />
-      <stop offset="100%" stop-color="#fef08a" />
-    </linearGradient>
-
-    <!-- Emerald Bullish Candle Gradient -->
-    <linearGradient id="emeraldBar" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#059669" />
-      <stop offset="100%" stop-color="#34d399" />
-    </linearGradient>
-
-    <filter id="neonGlow" x="-25%" y="-25%" width="150%" height="150%">
-      <feGaussianBlur stdDeviation="10" result="blur" />
+    <filter id="neonBloom" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
-    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.6" />
+    <filter id="dropShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.7" />
     </filter>
   </defs>
-
-  <!-- Outer Squircle Base -->
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgCore)" />
-  <!-- Glowing Multi-Mode Border -->
-  <rect x="20" y="20" width="472" height="472" rx="108" fill="none" stroke="url(#rimGrad)" stroke-width="10" opacity="0.95" />
-  <rect x="30" y="30" width="452" height="452" rx="98" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.12" />
-
-  <!-- Ambient Nebula Orbs Inside Icon -->
-  <circle cx="155" cy="150" r="110" fill="#00f5ff" opacity="0.10" filter="url(#neonGlow)" />
-  <circle cx="360" cy="355" r="115" fill="#a855f7" opacity="0.12" filter="url(#neonGlow)" />
-  <circle cx="256" cy="240" r="130" fill="#10b981" opacity="0.08" filter="url(#neonGlow)" />
-
-  <!-- Outer Quantum Orbital Ring -->
-  <g transform="rotate(-24 256 256)">
-    <ellipse cx="256" cy="256" rx="192" ry="74" fill="none" stroke="url(#rimGrad)" stroke-width="6" stroke-dasharray="18 10" opacity="0.65" />
-    <circle cx="448" cy="256" r="9" fill="#00f5ff" filter="url(#neonGlow)" />
-    <circle cx="64" cy="256" r="8" fill="#34d399" filter="url(#neonGlow)" />
+  <!-- App Squircle Background -->
+  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#bgCore)" />
+  <circle cx="256" cy="240" r="210" fill="url(#falconHalo)" />
+  <rect x="20" y="20" width="472" height="472" rx="106" fill="none" stroke="url(#rimGrad)" stroke-width="6" />
+  <rect x="28" y="28" width="456" height="456" rx="98" fill="none" stroke="#6366f1" stroke-width="2" stroke-opacity="0.6" />
+  <!-- Maverick Falcon Low-Poly Facets -->
+  <g filter="url(#dropShadow)">
+    <polygon points="82,58 198,282 118,156" fill="#0f213a" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="82,58 150,156 233,276 198,282" fill="#1e3a5f" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="82,58 106.5,93.3 102.3,93.3 91.8,76.5 97.0,87.4 92.8,87.4" fill="#00f5ff" />
+    <polygon points="430,58 314,282 394,156" fill="#0f213a" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="430,58 362,156 279,276 314,282" fill="#1e3a5f" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="430,58 405.5,93.3 409.7,93.3 420.2,76.5 415.0,87.4 419.2,87.4" fill="#00f5ff" />
+    <polygon points="76,144 180,294 130,206" fill="#0d2538" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="76,144 128,168 204,286 180,294" fill="#1a4463" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="76,144 97.8,154.1 98.1,159.4 86.8,152.7 93.0,158.5 93.3,163.8" fill="#00f5ff" />
+    <polygon points="436,144 332,294 382,206" fill="#0d2538" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="436,144 384,168 308,286 332,294" fill="#1a4463" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="436,144 414.2,154.1 413.9,159.4 425.2,152.7 419.0,158.5 418.7,163.8" fill="#00f5ff" />
+    <polygon points="90,200 186,308 142,250" fill="#0c2b3b" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="90,200 140,214 210,298 186,308" fill="#155269" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="90,200 112.0,206.2 112.3,211.6 101.1,207.0 107.4,211.6 107.7,217.0" fill="#00f5ff" />
+    <polygon points="422,200 326,308 370,250" fill="#0c2b3b" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="422,200 372,214 302,298 326,308" fill="#155269" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="422,200 400.0,206.2 399.7,211.6 410.9,207.0 404.6,211.6 404.3,217.0" fill="#00f5ff" />
+    <polygon points="108,250 194,322 154,288" fill="#0a3034" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="108,250 154,258 216,312 194,322" fill="#116162" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="108,250 129.2,253.7 129.2,258.5 118.7,255.3 124.6,258.9 124.6,263.7" fill="#34d399" />
+    <polygon points="404,250 318,322 358,288" fill="#0a3034" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="404,250 358,258 296,312 318,322" fill="#116162" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="404,250 382.8,253.7 382.8,258.5 393.3,255.3 387.4,258.9 387.4,263.7" fill="#34d399" />
+    <polygon points="130,296 200,336 170,322" fill="#083436" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="130,296 172,296 222,326 200,336" fill="#0f766e" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="130,296 150.2,296.0 149.9,300.4 140.1,299.2 145.5,301.5 145.2,305.9" fill="#34d399" />
+    <polygon points="382,296 312,336 342,322" fill="#083436" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="382,296 340,296 290,326 312,336" fill="#0f766e" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="382,296 361.8,296.0 362.1,300.4 371.9,299.2 366.5,301.5 366.8,305.9" fill="#34d399" />
+    <polygon points="160,330 210,348 188,344" fill="#09393b" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="160,330 196,326 228,340 210,348" fill="#0d9488" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="160,330 178.0,328.0 176.6,331.2 168.4,331.3 172.6,332.4 171.2,335.6" fill="#fbbf24" />
+    <polygon points="352,330 302,348 324,344" fill="#09393b" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="352,330 316,326 284,340 302,348" fill="#0d9488" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="352,330 334.0,328.0 335.4,331.2 343.6,331.3 339.4,332.4 340.8,335.6" fill="#fbbf24" />
+    <polygon points="184,352 218,358 204,358" fill="#0b3d3e" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="184,352 214,342 234,350 218,358" fill="#14b8a6" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="184,352 199.6,346.8 197.7,349.8 190.9,351.4 194.3,351.5 192.4,354.5" fill="#fbbf24" />
+    <polygon points="328,352 294,358 308,358" fill="#0b3d3e" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="328,352 298,342 278,350 294,358" fill="#14b8a6" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="328,352 312.4,346.8 314.3,349.8 321.1,351.4 317.7,351.5 319.6,354.5" fill="#fbbf24" />
+    <polygon points="208,366 222,368 215,368" fill="#0f4c4d" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="208,366 228,350 238,358 222,368" fill="#2dd4bf" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="208,366 218.8,357.4 217.6,361.0 212.9,364.0 215.4,363.3 214.2,366.9" fill="#fbbf24" />
+    <polygon points="304,366 290,368 297,368" fill="#0f4c4d" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="304,366 284,350 274,358 290,368" fill="#2dd4bf" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="304,366 293.2,357.4 294.4,361.0 299.1,364.0 296.6,363.3 297.8,366.9" fill="#fbbf24" />
+    <polygon points="144,148 174,210 156,218 228,294 234,276" fill="#00f5ff" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="368,148 338,210 356,218 284,294 278,276" fill="#00f5ff" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="156,218 182,248 166,258 228,314 228,294" fill="#06b6d4" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="356,218 330,248 346,258 284,314 284,294" fill="#06b6d4" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="166,258 192,282 178,292 230,332 228,314" fill="#14b8a6" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="346,258 320,282 334,292 282,332 284,314" fill="#14b8a6" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="178,292 204,312 192,322 234,346 230,332" fill="#10b981" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="334,292 308,312 320,322 278,346 282,332" fill="#10b981" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="192,322 216,336 206,344 238,358 234,346" fill="#34d399" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="320,322 296,336 306,344 274,358 278,346" fill="#34d399" stroke="#070c16" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="144,148 160,172 234,276 227,282" fill="#e0f2fe" />
+    <polygon points="368,148 352,172 278,276 285,282" fill="#e0f2fe" />
+    <polygon points="238,360 212,416 228,410 244,370" fill="#155269" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="212,416 221.4,395.8 219.8,403.8 216.9,408.8 220.8,405.3 219.2,413.3" fill="#00f5ff" />
+    <polygon points="274,360 300,416 284,410 268,370" fill="#155269" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="300,416 290.6,395.8 292.2,403.8 295.1,408.8 291.2,405.3 292.8,413.3" fill="#00f5ff" />
+    <polygon points="244,368 228,442 246,432 252,376" fill="#1e3a5f" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="228,442 233.4,416.8 233.7,427.0 231.9,432.3 235.8,427.3 236.1,437.5" fill="#34d399" />
+    <polygon points="268,368 284,442 266,432 260,376" fill="#1e3a5f" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="284,442 278.6,416.8 278.3,427.0 280.1,432.3 276.2,427.3 275.9,437.5" fill="#34d399" />
+    <polygon points="256,372 246,380 248,444 256,464" fill="#38bdf8" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="256,372 266,380 264,444 256,464" fill="#0284c7" stroke="#060a12" stroke-width="1.0" stroke-linejoin="round" />
+    <polygon points="248,436 256,464 264,436 260,433 256,452 252,433" fill="#fbbf24" />
+    <polygon points="244,250 256,247 268,250 279,274 285,308 281,336 271,362 256,384 241,362 231,336 227,308 233,274" fill="#070b14" stroke="#070b14" stroke-width="3.5" stroke-linejoin="round" />
+    <polygon points="244,250 256,247 256,263 233,274" fill="#ffffff" stroke="#ffffff" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="268,250 256,247 256,263 279,274" fill="#e2e8f0" stroke="#e2e8f0" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="233,274 246,268 256,298 227,308" fill="#f8fafc" stroke="#f8fafc" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="279,274 266,268 256,298 285,308" fill="#cbd5e1" stroke="#cbd5e1" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="227,308 256,298 256,338 241,326" fill="#e0f2fe" stroke="#e0f2fe" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="285,308 256,298 256,338 271,326" fill="#94a3b8" stroke="#94a3b8" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="227,308 241,326 231,336" fill="#bae6fd" stroke="#bae6fd" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="285,308 271,326 281,336" fill="#64748b" stroke="#64748b" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="231,336 241,326 256,338 256,364 241,362" fill="#bae6fd" stroke="#bae6fd" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="281,336 271,326 256,338 256,364 271,362" fill="#64748b" stroke="#64748b" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="241,362 256,364 256,384" fill="#7dd3fc" stroke="#7dd3fc" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="271,362 256,364 256,384" fill="#38bdf8" stroke="#38bdf8" stroke-width="0.5" stroke-linejoin="round" />
+    <polygon points="241,267 256,260 271,267 267,273 256,267 245,273" fill="#fbbf24" />
+    <polygon points="246,271 256,267 256,298" fill="#1e293b" />
+    <polygon points="266,271 256,267 256,298" fill="#090d16" />
   </g>
-
-  <!-- Central Isometric Quantum Hexagon Shield -->
-  <g filter="url(#softShadow)">
-    <polygon points="256,82 406,168 406,344 256,430 106,344 106,168" fill="url(#hexGrad)" stroke="url(#rimGrad)" stroke-width="8" stroke-linejoin="round" />
+  <!-- Neon Tip & Visor Bloom Overlay -->
+  <g filter="url(#neonBloom)" opacity="0.85">
+    <polygon points="82,58 106.5,93.3 102.3,93.3 91.8,76.5 97.0,87.4 92.8,87.4" fill="#00f5ff" />
+    <polygon points="430,58 405.5,93.3 409.7,93.3 420.2,76.5 415.0,87.4 419.2,87.4" fill="#00f5ff" />
+    <polygon points="76,144 97.8,154.1 98.1,159.4 86.8,152.7 93.0,158.5 93.3,163.8" fill="#00f5ff" />
+    <polygon points="436,144 414.2,154.1 413.9,159.4 425.2,152.7 419.0,158.5 418.7,163.8" fill="#00f5ff" />
+    <polygon points="90,200 112.0,206.2 112.3,211.6 101.1,207.0 107.4,211.6 107.7,217.0" fill="#00f5ff" />
+    <polygon points="422,200 400.0,206.2 399.7,211.6 410.9,207.0 404.6,211.6 404.3,217.0" fill="#00f5ff" />
+    <polygon points="108,250 129.2,253.7 129.2,258.5 118.7,255.3 124.6,258.9 124.6,263.7" fill="#34d399" />
+    <polygon points="404,250 382.8,253.7 382.8,258.5 393.3,255.3 387.4,258.9 387.4,263.7" fill="#34d399" />
+    <polygon points="130,296 150.2,296.0 149.9,300.4 140.1,299.2 145.5,301.5 145.2,305.9" fill="#34d399" />
+    <polygon points="382,296 361.8,296.0 362.1,300.4 371.9,299.2 366.5,301.5 366.8,305.9" fill="#34d399" />
+    <polygon points="160,330 178.0,328.0 176.6,331.2 168.4,331.3 172.6,332.4 171.2,335.6" fill="#fbbf24" />
+    <polygon points="352,330 334.0,328.0 335.4,331.2 343.6,331.3 339.4,332.4 340.8,335.6" fill="#fbbf24" />
+    <polygon points="184,352 199.6,346.8 197.7,349.8 190.9,351.4 194.3,351.5 192.4,354.5" fill="#fbbf24" />
+    <polygon points="328,352 312.4,346.8 314.3,349.8 321.1,351.4 317.7,351.5 319.6,354.5" fill="#fbbf24" />
+    <polygon points="208,366 218.8,357.4 217.6,361.0 212.9,364.0 215.4,363.3 214.2,366.9" fill="#fbbf24" />
+    <polygon points="304,366 293.2,357.4 294.4,361.0 299.1,364.0 296.6,363.3 297.8,366.9" fill="#fbbf24" />
+    <polygon points="144,148 174,210 156,218 228,294 234,276" fill="#00f5ff" />
+    <polygon points="368,148 338,210 356,218 284,294 278,276" fill="#00f5ff" />
+    <polygon points="144,148 160,172 234,276 227,282" fill="#00f5ff" />
+    <polygon points="368,148 352,172 278,276 285,282" fill="#00f5ff" />
+    <polygon points="212,416 221.4,395.8 219.8,403.8 216.9,408.8 220.8,405.3 219.2,413.3" fill="#00f5ff" />
+    <polygon points="300,416 290.6,395.8 292.2,403.8 295.1,408.8 291.2,405.3 292.8,413.3" fill="#00f5ff" />
+    <polygon points="228,442 233.4,416.8 233.7,427.0 231.9,432.3 235.8,427.3 236.1,437.5" fill="#34d399" />
+    <polygon points="284,442 278.6,416.8 278.3,427.0 280.1,432.3 276.2,427.3 275.9,437.5" fill="#34d399" />
+    <polygon points="248,436 256,464 264,436 260,433 256,452 252,433" fill="#fbbf24" />
+    <polygon points="241,267 256,260 271,267 267,273 256,267 245,273" fill="#fbbf24" />
   </g>
-
-  <!-- 3 Ascending Quantum Candlesticks Inside Hexagon -->
-  <!-- Left Bar (Cyan/Emerald) -->
-  <line x1="176" y1="242" x2="176" y2="348" stroke="#34d399" stroke-width="5" stroke-linecap="round" opacity="0.85" />
-  <rect x="160" y="268" width="32" height="58" rx="8" fill="url(#emeraldBar)" />
-
-  <!-- Center Bar (Cyan/Indigo) -->
-  <line x1="256" y1="195" x2="256" y2="338" stroke="#00f5ff" stroke-width="5" stroke-linecap="round" opacity="0.9" />
-  <rect x="240" y="222" width="32" height="86" rx="8" fill="url(#apexWing)" />
-
-  <!-- Right Bar (Gold Crown) -->
-  <line x1="336" y1="145" x2="336" y2="318" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" opacity="0.95" />
-  <rect x="320" y="172" width="32" height="112" rx="8" fill="url(#goldCrown)" filter="url(#neonGlow)" />
-
-  <!-- Supersonic Ascending Lightning / Profit Trajectory Arrow -->
-  <path d="M128,332 L208,266 L266,294 L374,142" fill="none" stroke="#00f5ff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" filter="url(#neonGlow)" opacity="0.65" />
-  <path d="M128,332 L208,266 L266,294 L374,142" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
-
-  <!-- Arrowhead / Apex Star at Peak (374, 142) -->
-  <polygon points="392,118 338,136 364,152 380,178" fill="#fbbf24" filter="url(#neonGlow)" />
-  <polygon points="392,118 344,136 365,150 378,172" fill="#ffffff" />
-
-  <!-- Glowing Apex Crown Jewel Node at Top Vertex -->
-  <circle cx="256" cy="82" r="14" fill="#00f5ff" filter="url(#neonGlow)" />
-  <circle cx="256" cy="82" r="6" fill="#ffffff" />
 </svg>

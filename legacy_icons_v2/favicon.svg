@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Deep Space Obsidian-Sapphire Squircle Background -->
+    <radialGradient id="bgCore" cx="50%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#131c38" />
+      <stop offset="55%" stop-color="#090d1a" />
+      <stop offset="100%" stop-color="#040711" />
+    </radialGradient>
+
+    <!-- Multi-Mode Rim Gradient (Cyan -> Violet -> Emerald -> Gold) -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f5ff" />
+      <stop offset="35%" stop-color="#6366f1" />
+      <stop offset="70%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Glowing Hexagon Core Gradient -->
+    <linearGradient id="hexGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0.95" />
+    </linearGradient>
+
+    <!-- Ascending Apex Delta Wing Gradient -->
+    <linearGradient id="apexWing" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#00f5ff" />
+      <stop offset="100%" stop-color="#ffffff" />
+    </linearGradient>
+
+    <!-- Golden Profit Crown / Bullish Flame Gradient -->
+    <linearGradient id="goldCrown" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="55%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#fef08a" />
+    </linearGradient>
+
+    <!-- Emerald Bullish Candle Gradient -->
+    <linearGradient id="emeraldBar" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <filter id="neonGlow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <!-- Outer Squircle Base -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgCore)" />
+  <!-- Glowing Multi-Mode Border -->
+  <rect x="20" y="20" width="472" height="472" rx="108" fill="none" stroke="url(#rimGrad)" stroke-width="10" opacity="0.95" />
+  <rect x="30" y="30" width="452" height="452" rx="98" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.12" />
+
+  <!-- Ambient Nebula Orbs Inside Icon -->
+  <circle cx="155" cy="150" r="110" fill="#00f5ff" opacity="0.10" filter="url(#neonGlow)" />
+  <circle cx="360" cy="355" r="115" fill="#a855f7" opacity="0.12" filter="url(#neonGlow)" />
+  <circle cx="256" cy="240" r="130" fill="#10b981" opacity="0.08" filter="url(#neonGlow)" />
+
+  <!-- Outer Quantum Orbital Ring -->
+  <g transform="rotate(-24 256 256)">
+    <ellipse cx="256" cy="256" rx="192" ry="74" fill="none" stroke="url(#rimGrad)" stroke-width="6" stroke-dasharray="18 10" opacity="0.65" />
+    <circle cx="448" cy="256" r="9" fill="#00f5ff" filter="url(#neonGlow)" />
+    <circle cx="64" cy="256" r="8" fill="#34d399" filter="url(#neonGlow)" />
+  </g>
+
+  <!-- Central Isometric Quantum Hexagon Shield -->
+  <g filter="url(#softShadow)">
+    <polygon points="256,82 406,168 406,344 256,430 106,344 106,168" fill="url(#hexGrad)" stroke="url(#rimGrad)" stroke-width="8" stroke-linejoin="round" />
+  </g>
+
+  <!-- 3 Ascending Quantum Candlesticks Inside Hexagon -->
+  <!-- Left Bar (Cyan/Emerald) -->
+  <line x1="176" y1="242" x2="176" y2="348" stroke="#34d399" stroke-width="5" stroke-linecap="round" opacity="0.85" />
+  <rect x="160" y="268" width="32" height="58" rx="8" fill="url(#emeraldBar)" />
+
+  <!-- Center Bar (Cyan/Indigo) -->
+  <line x1="256" y1="195" x2="256" y2="338" stroke="#00f5ff" stroke-width="5" stroke-linecap="round" opacity="0.9" />
+  <rect x="240" y="222" width="32" height="86" rx="8" fill="url(#apexWing)" />
+
+  <!-- Right Bar (Gold Crown) -->
+  <line x1="336" y1="145" x2="336" y2="318" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" opacity="0.95" />
+  <rect x="320" y="172" width="32" height="112" rx="8" fill="url(#goldCrown)" filter="url(#neonGlow)" />
+
+  <!-- Supersonic Ascending Lightning / Profit Trajectory Arrow -->
+  <path d="M128,332 L208,266 L266,294 L374,142" fill="none" stroke="#00f5ff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" filter="url(#neonGlow)" opacity="0.65" />
+  <path d="M128,332 L208,266 L266,294 L374,142" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Arrowhead / Apex Star at Peak (374, 142) -->
+  <polygon points="392,118 338,136 364,152 380,178" fill="#fbbf24" filter="url(#neonGlow)" />
+  <polygon points="392,118 344,136 365,150 378,172" fill="#ffffff" />
+
+  <!-- Glowing Apex Crown Jewel Node at Top Vertex -->
+  <circle cx="256" cy="82" r="14" fill="#00f5ff" filter="url(#neonGlow)" />
+  <circle cx="256" cy="82" r="6" fill="#ffffff" />
+</svg>
