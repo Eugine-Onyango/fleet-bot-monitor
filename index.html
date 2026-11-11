@@ -108,7 +108,7 @@
         heroTag.innerHTML = `🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070)`;
       }
       if (peaceText) {
-        peaceText.innerHTML = `Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • Standard Vol 10 (R_10) Only • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>`;
+        peaceText.innerHTML = `Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • Fast Vol 100s (1HZ100V) Only • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>`;
       }
       if (peakBadge) {
         peakBadge.innerText = `Rounds: ${h.summary ? h.summary.total_rounds : 0}`;
@@ -244,7 +244,7 @@
               const fStake = (h.family_stakes && h.family_stakes[fKey]) || { acc1_stake: 0.35, acc2_stake: 0.35, acc1_streak: 0, acc2_streak: 0 };
               const currentSys = (h.system || (h.cycle && h.cycle.current_system) || 'C/P #1');
               const isActive = currentSys === fKey;
-              const fNames = { 'C/P #1': 'Call / Put #1 (Standard Vol 10)', 'C/P #2': 'Call / Put #2 (Standard Vol 10)', 'C/P #3': 'Call / Put #3 (Standard Vol 10)', 'O/U #1': 'Over 5 / Under 5 #1', 'O/U #2': 'Over 5 / Under 5 #2', 'O/U #3': 'Over 5 / Under 5 #3', 'E/O #1': 'Even / Odd #1', 'E/O #2': 'Even / Odd #2', 'E/O #3': 'Even / Odd #3' };
+              const fNames = { 'C/P #1': 'Call / Put #1 (Fast Vol 100s)', 'C/P #2': 'Call / Put #2 (Fast Vol 100s)', 'C/P #3': 'Call / Put #3 (Fast Vol 100s)', 'O/U #1': 'Over 5 / Under 5 #1', 'O/U #2': 'Over 5 / Under 5 #2', 'O/U #3': 'Over 5 / Under 5 #3', 'E/O #1': 'Even / Odd #1', 'E/O #2': 'Even / Odd #2', 'E/O #3': 'Even / Odd #3' };
               return `
                 <div class="rounded-2xl p-4 transition-all duration-300 border ${isActive ? 'bg-gradient-to-br from-purple-950/80 to-slate-900 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)] ring-1 ring-purple-400' : 'bg-slate-900/60 border-slate-800 opacity-75'}">
                   <div class="flex items-center justify-between mb-2">
@@ -685,7 +685,7 @@
             <span class="text-sm flex-shrink-0">🧪</span>
             <div class="text-left truncate">
               <div class="truncate">🧪 Hedge Lab (Acc 1 & 2)</div>
-              <div id="accSub-hedge" class="text-[10px] opacity-75 font-semibold truncate">Triple Call/Put (C/P ⇄ C/P ⇄ C/P) • Standard Vol 10 • 10m Rest</div>
+              <div id="accSub-hedge" class="text-[10px] opacity-75 font-semibold truncate">Triple Call/Put (C/P ⇄ C/P ⇄ C/P) • Fast Vol 100s • 10m Rest</div>
             </div>
           </div>
           <span id="accProfit-hedge" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -2415,7 +2415,7 @@
         }
         const peaceText = document.getElementById("peaceOfMindText");
         if (peaceText) {
-          peaceText.innerHTML = "Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • Standard Vol 10 (R_10) Only • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>";
+          peaceText.innerHTML = "Triple Call/Put Hedge (C/P #1 ⇄ C/P #2 ⇄ C/P #3) • Independent 2.1x Slot Stakes • Fast Vol 100s (1HZ100V) Only • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>";
         }        // Hide fleet drawdown notice (leak from other 216 bots)
         const ddNotice = document.getElementById("drawdownNotice");
         if (ddNotice) ddNotice.classList.add("hidden");
