@@ -58,6 +58,283 @@
 
     let hedgeTimerInterval = null;
 
+    let acc1TimerInterval = null;
+
+    function formatAcc1Time(secs) {
+      if (secs <= 0) return "EXECUTING...";
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function startAcc1Timer(nextRunTs) {
+      if (acc1TimerInterval) clearInterval(acc1TimerInterval);
+      const update = () => {
+        const timerEl = document.getElementById("acc1LiveTimer");
+        if (!timerEl) return;
+        const nowSec = Math.floor(Date.now() / 1000);
+        const rem = Math.max(0, nextRunTs - nowSec);
+        timerEl.innerText = formatAcc1Time(rem);
+      };
+      update();
+      acc1TimerInterval = setInterval(update, 1000);
+    }
+
+    function renderAcc1Trinity(a1Data, data) {
+      const container = document.getElementById("fleetsContainer");
+      const heroTag = document.getElementById("heroCardTag");
+      const profitEl = document.getElementById("statTotalProfit");
+      const peaceText = document.getElementById("peaceOfMindText");
+      const peakBadge = document.getElementById("peakBadge");
+
+      const isCyberMode = guiMode === "cyber";
+      const isTechMode = guiMode === "tech";
+
+      const a = a1Data || {
+        status: "RUNNING",
+        market: "1HZ100V",
+        stake: 0.35,
+        cooldown_minutes: 10,
+        current_round: 1,
+        countdown_seconds: 0,
+        next_round_plan: {
+          system: "Step 1/6",
+          side: "CALL",
+          barrier: null,
+          label: "Call (Rise ▲)",
+          stake: 0.35,
+          loss_streak: 0
+        },
+        campaign: {
+          campaign_number: 1,
+          step_index: 0,
+          total_steps: 6,
+          steps: [],
+          current_stake: 0.35,
+          loss_streak: 0,
+          won_in_campaign: false,
+          target: "Step 1/6: Initializing"
+        },
+        summary: {
+          total_rounds: 0,
+          completed_campaigns: 0,
+          profit: 0.0,
+          wins: 0,
+          losses: 0,
+          peak_profit: 0.0,
+          peak_stake: 0.35
+        },
+        recent_trades: []
+      };
+
+      const summary = a.summary || {};
+      const campaign = a.campaign || {};
+      const profit = Number(summary.profit) || 0.0;
+      const isProfitable = profit >= 0;
+
+      if (profitEl) {
+        profitEl.innerText = `${isProfitable ? '+' : ''}$${profit.toFixed(2)}`;
+        profitEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${isProfitable ? 'text-emerald-500' : 'text-rose-500'}`;
+      }
+      if (heroTag) {
+        heroTag.className = isCyberMode
+          ? "inline-flex items-center text-xs font-mono font-bold tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-400/60 shadow-[0_0_12px_rgba(16,185,129,0.3)] mb-2.5"
+          : "inline-flex items-center text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 mb-2.5";
+        heroTag.innerHTML = `⚡ ACCOUNT 1 • SINGLE-ACCOUNT TRINITY (DOT91203477)`;
+      }
+      if (peaceText) {
+        peaceText.innerHTML = `Cross-Family Trinity Campaign (Randomized C/P, E/O, O/U) • 6-Step Inverted Campaign • Fast Vol 100s (1HZ100V) • 10m Cooldown • <b>Unbroken 2.1x Recovery Active</b>`;
+      }
+      if (peakBadge) {
+        peakBadge.innerText = `Rounds: ${summary.total_rounds || 0}`;
+      }
+
+      const plan = a.next_round_plan || {
+        side: "CALL", barrier: null, label: "Call (Rise ▲)", stake: 0.35, loss_streak: 0
+      };
+
+      const trades = (a.recent_trades || []).slice(0, 15);
+      const isCooldown = a.status === "COOLDOWN" || a.cooldown_type === "cycle_rest";
+      const isFastSwitch = a.status === "FAST_SWITCH" || a.cooldown_type === "fast_switch";
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <!-- Active Campaign Bridge Card -->
+          <div class="bg-gradient-to-br from-slate-900 via-[#131f24] to-slate-900 border-2 border-emerald-500/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-white">
+            <div class="absolute -top-12 -right-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              
+              <!-- Current Execution Box -->
+              <div class="w-full md:w-7/12 bg-slate-800/80 border border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-black text-xs sm:text-sm tracking-wide text-emerald-300">ACCOUNT 1 (DOT91203477) • ${plan.system || 'Step 1/6'}</span>
+                  </div>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded ${plan.loss_streak > 0 ? 'bg-amber-950 border-amber-500 text-amber-300 font-bold animate-pulse' : 'bg-emerald-950 border-emerald-700 text-emerald-300'} border">
+                    Stake $${Number(plan.stake || 0.35).toFixed(2)}${plan.loss_streak > 0 ? ' (Streak ' + plan.loss_streak + ')' : ''}
+                  </span>
+                </div>
+                <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    ${plan.label || plan.side}
+                  </span>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
+                  <span>Session Profit & Record:</span>
+                  <span class="font-mono font-bold ${summary.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                    ${summary.profit >= 0 ? '+' : ''}$${Number(summary.profit || 0.0).toFixed(2)} (${summary.wins || 0}W / ${summary.losses || 0}L)
+                  </span>
+                </div>
+                <div class="mt-1.5 flex items-center justify-between text-xs text-slate-400">
+                  <span>Peak Exposure Stake:</span>
+                  <span class="font-mono font-bold text-amber-300">$${Number(summary.peak_stake || 0.35).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <!-- Center Rest & Cooldown Timer -->
+              <div class="w-full md:w-5/12 flex flex-col items-center justify-center text-center px-2">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-600/30 border border-emerald-400 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20 mb-2">
+                  ⚡
+                </div>
+                <div class="text-xs font-black uppercase tracking-wider text-emerald-300">Single-Account Trinity</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-0.5">${a.market} • <span class="text-emerald-300 font-bold">${a.system || '10m Cooldown'}</span></div>
+                
+                <div class="mt-3 w-full bg-slate-800/90 border border-emerald-500/30 rounded-xl px-3 py-2 text-center">
+                  <div class="text-[10px] ${isFastSwitch ? "text-amber-300 animate-pulse font-black" : "text-emerald-300 font-black"} uppercase tracking-widest">
+                    ${isFastSwitch ? "⚡ FAST SWITCH" : (isCooldown ? "💤 10-MINUTE REST" : "🎯 LIVE STREAM")}
+                  </div>
+                  <div id="acc1LiveTimer" class="text-lg font-mono font-black text-white tracking-widest">
+                    ${formatAcc1Time(a.countdown_seconds || 0)}
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 truncate">${campaign.target || (isCooldown ? "10m rest until next campaign" : "Executing next step")}</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Campaign Architecture Badges -->
+            <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded ${isFastSwitch ? "bg-amber-900/60 border border-amber-500 text-amber-300 animate-pulse" : "bg-emerald-900/60 border border-emerald-700 text-emerald-300"} font-bold">
+                  ${isFastSwitch ? "⚡ Fast Switch (4s)" : "💤 10m Campaign Rest"}
+                </span>
+                <span class="px-2 py-0.5 rounded bg-indigo-900/60 border border-indigo-700 text-indigo-300 font-bold">
+                  Campaign #${campaign.campaign_number || 1} (Step ${(campaign.step_index || 0) + 1}/6)
+                </span>
+                <span class="px-2 py-0.5 rounded bg-blue-900/60 border border-blue-700 text-blue-300 font-bold">Inverted Counterpart Phase 2</span>
+                <span class="px-2 py-0.5 rounded bg-rose-900/60 border border-rose-700 text-rose-300 font-bold">⚡ Unbroken 2.1x Recovery</span>
+                <span class="px-2 py-0.5 rounded bg-teal-900/60 border border-teal-700 text-teal-300 font-bold">Fast Vol 100s (1HZ100V)</span>
+              </div>
+              <div class="font-mono text-emerald-300">
+                Next Execution: Round #${a.current_round || 1}
+              </div>
+            </div>
+          </div>
+
+          <!-- Campaign Phases Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="rounded-2xl p-4 transition-all duration-300 border bg-gradient-to-br from-emerald-950/80 to-slate-900 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)] ring-1 ring-emerald-400">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-black text-xs uppercase tracking-wider text-emerald-300">Active Campaign</span>
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 animate-pulse">LIVE</span>
+              </div>
+              <div class="text-xl font-mono font-black text-white">$${Number(campaign.current_stake || 0.35).toFixed(2)}</div>
+              <div class="text-[11px] text-slate-400 mt-1 flex items-center justify-between">
+                <span>Loss Streak:</span>
+                <span class="font-bold ${campaign.loss_streak > 0 ? 'text-amber-400' : 'text-slate-300'}">${campaign.loss_streak || 0}</span>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-800">
+                Resets to $0.35 on win • Unbroken on cooldown
+              </div>
+            </div>
+
+            <div class="rounded-2xl p-4 transition-all duration-300 border bg-slate-900/60 border-slate-800">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-black text-xs uppercase tracking-wider text-slate-400">Phase 1 (Initial 3)</span>
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Steps 1-3</span>
+              </div>
+              <div class="text-sm font-bold text-slate-200">1 C/P • 1 E/O • 1 O/U</div>
+              <div class="text-[11px] text-slate-400 mt-1">Randomized selection each campaign</div>
+              <div class="text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-800">
+                4s fast switch between steps
+              </div>
+            </div>
+
+            <div class="rounded-2xl p-4 transition-all duration-300 border bg-slate-900/60 border-slate-800">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-black text-xs uppercase tracking-wider text-slate-400">Phase 2 (Inverted 3)</span>
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Steps 4-6</span>
+              </div>
+              <div class="text-sm font-bold text-slate-200">Inverted Opposite Sides</div>
+              <div class="text-[11px] text-slate-400 mt-1">Runs immediately without cooling</div>
+              <div class="text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-800">
+                Cooldown triggers after Step 6 (or upon win)
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Executed Trades Table -->
+          <div class="bg-white dark:bg-[#1e293b] rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-base">📜</span>
+                <h3 class="font-black text-sm text-slate-800 dark:text-white">Account 1 Live Trade Stream (Fast Vol 100s)</h3>
+              </div>
+              <span class="text-[11px] font-bold text-slate-400 font-mono">1HZ100V • 1s Ticks</span>
+            </div>
+
+            ${trades.length === 0 ? `
+              <div class="text-center py-8 text-slate-400 text-xs font-semibold">
+                Waiting for Account 1 first trade execution...
+              </div>
+            ` : `
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                      <th class="py-2 px-3">Round</th>
+                      <th class="py-2 px-3">Step</th>
+                      <th class="py-2 px-3">Contract / Label</th>
+                      <th class="py-2 px-3">Stake</th>
+                      <th class="py-2 px-3">Result</th>
+                      <th class="py-2 px-3 text-right">Profit</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                    ${trades.map(t => {
+                      const isWon = t.status === "WON";
+                      return `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td class="py-2.5 px-3 font-mono font-bold text-slate-700 dark:text-slate-300">#${t.round}</td>
+                          <td class="py-2.5 px-3 text-slate-500 font-mono">Step ${t.step}/6</td>
+                          <td class="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">${t.label || t.side}</td>
+                          <td class="py-2.5 px-3 font-mono text-amber-500 font-bold">$${Number(t.stake || 0.35).toFixed(2)}</td>
+                          <td class="py-2.5 px-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isWon ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                              ${t.status}
+                            </span>
+                          </td>
+                          <td class="py-2.5 px-3 text-right font-mono font-bold ${isWon ? 'text-emerald-500' : 'text-rose-500'}">
+                            ${isWon ? '+' : ''}$${Number(t.profit || 0.0).toFixed(2)}
+                          </td>
+                        </tr>
+                      `;
+                    }).join("")}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+
+      startAcc1Timer(a.next_run_ts || Math.floor(Date.now() / 1000) + (a.countdown_seconds || 0));
+    }
+
+
     function renderHedgeLab(hedgeData) {
       const container = document.getElementById("fleetsContainer");
       const heroTag = document.getElementById("heroCardTag");
@@ -652,8 +929,8 @@
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="text-sm flex-shrink-0">🔄</span>
             <div class="text-left truncate">
-              <div class="truncate">Account 1 • Best of 6</div>
-              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Best of 6 (Call/Even/Under/Put/Odd/Over) • Single Best Side • 36 Bots</div>
+              <div class="truncate">Account 1 • Trinity</div>
+              <div id="accSub-acc1" class="text-[10px] opacity-85 font-semibold truncate">Cross-Family (C/P, E/O, O/U) • Fast Vol 100s • 10m Cooldown</div>
             </div>
           </div>
           <span id="accProfit-acc1" class="px-2 py-0.5 rounded-lg text-[11px] bg-white/20 font-black flex-shrink-0">+$0.00</span>
@@ -893,12 +1170,25 @@
       if (profAcc3) profAcc3.className = inactiveProf;
       if (profAccHedge) profAccHedge.className = inactiveProf;
 
+      if (data && data.acc1_lab && data.acc1_lab.summary) {
+        const a1Prof = Number(data.acc1_lab.summary.profit) || 0.0;
+        if (profAcc1) profAcc1.innerText = `${a1Prof >= 0 ? '+' : ''}$${a1Prof.toFixed(2)}`;
+      }
+
       if (currentAccount === "hedge") {
         if (btnAccHedge) btnAccHedge.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25";
         if (profAccHedge) profAccHedge.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
-          badge.innerText = "🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070) • 10m Cooldown • Alternating Sides";
+          badge.innerText = "🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070) • Fast Vol 100s • 10m Cooldown";
+        }
+        if (sysGrid) sysGrid.classList.add("hidden");
+      } else if (currentAccount === "acc1" && data && data.acc1_lab) {
+        if (btnAcc1) btnAcc1.className = "w-full min-w-0 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25";
+        if (profAcc1) profAcc1.className = activeProf;
+        if (badge) {
+          badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
+          badge.innerText = "⚡ ACCOUNT 1 • SINGLE-ACCOUNT TRINITY (DOT91203477) • 10m Cooldown • Fast Vol 100s";
         }
         if (sysGrid) sysGrid.classList.add("hidden");
       } else if (currentAccount === "acc2") {
@@ -2308,8 +2598,12 @@
         const dStr = days === 1 ? "1 day" : `${days} days`;
         if (hours > 0) {
           const hStr = hours === 1 ? "1 hour" : `${hours} hours`;
+          if (mins > 0) {
+            return `${dStr}, ${hStr}, ${mins}m`;
+          }
           return `${dStr}, ${hStr}`;
         }
+        if (mins > 0) return `${dStr}, ${mins}m`;
         return dStr;
       }
 
@@ -2452,14 +2746,12 @@
         if (statExposureMkt) statExposureMkt.innerText = `Current Leg: $${maxLegStake.toFixed(2)}`;
 
         // Middle Banner & Runtime
-        let uptimeStr = `Round #${totalRounds} Live (3m Rest)`;
+        let uptimeStr = `Round #${totalRounds} Live (10m Rest)`;
         if (hl.started_at) {
           const startTs = new Date(hl.started_at).getTime();
           if (!isNaN(startTs)) {
             const diffSecs = Math.max(0, Math.floor((Date.now() - startTs) / 1000));
-            const hrs = Math.floor(diffSecs / 3600);
-            const mins = Math.floor((diffSecs % 3600) / 60);
-            uptimeStr = hrs > 0 ? `${hrs}h ${mins}m (Round #${totalRounds})` : `${mins}m (Round #${totalRounds})`;
+            uptimeStr = `${formatFriendlyUptime(diffSecs)} (Round #${totalRounds})`;
           }
         }
         const uptimeEl = document.getElementById("fleetUptimeVal");
@@ -2482,6 +2774,93 @@
         }
 
         renderHedgeLab(data.hedge_lab);
+        return;
+      }
+
+      // If user is viewing Account 1 Single-Account Trinity
+      if (currentAccount === "acc1" && data.acc1_lab) {
+        updateAccountSwitcherUI(data);
+
+        const sysGrid = document.getElementById("systemSwitcherGrid");
+        if (sysGrid) sysGrid.classList.add("hidden");
+
+        const fleetTabsBar = document.getElementById("fleetTabsBar");
+        if (fleetTabsBar) fleetTabsBar.innerHTML = "";
+
+        const a1 = data.acc1_lab;
+        const a1Summary = a1.summary || {};
+        const profit = Number(a1Summary.profit) || 0.0;
+        const totalRounds = Number(a1Summary.total_rounds) || 0;
+        const wins = Number(a1Summary.wins) || 0;
+        const losses = Number(a1Summary.losses) || 0;
+        const peakProfit = Number(a1Summary.peak_profit) || Math.max(0.0, profit);
+        const plan = a1.next_round_plan || {};
+        const currentStake = Number(plan.stake || (a1.campaign && a1.campaign.current_stake) || 0.35);
+        const peakStake = Number(a1Summary.peak_stake || currentStake);
+
+        const ddNotice = document.getElementById("drawdownNotice");
+        if (ddNotice) ddNotice.classList.add("hidden");
+
+        // Hero 4 stat boxes strictly for Account 1 Trinity
+        const statActive = document.getElementById("statActiveBots");
+        const lblActive = document.getElementById("lblActiveBots");
+        if (statActive) statActive.innerText = "1 Node";
+        if (lblActive) lblActive.innerText = isCyberMode ? "QUANTUM STREAM ⚡" : "ACTIVE ENGINE";
+
+        const statWin = document.getElementById("statWinRate");
+        const lblWin = document.getElementById("lblWinRate");
+        const statWinLoss = document.getElementById("statWinLossRecord");
+        if (statWin) statWin.innerText = `${totalRounds} Rounds`;
+        if (lblWin) lblWin.innerText = isCyberMode ? "EFFICIENCY RATIO 📊" : "ROUNDS RUN";
+        if (statWinLoss) statWinLoss.innerText = `${wins} Wins • ${losses} Deficits`;
+
+        const statPeak = document.getElementById("statPeakProfit");
+        const lblPeak = document.getElementById("lblPeakProfit");
+        const statPeakDiff = document.getElementById("statPeakProfitDiff");
+        if (statPeak) statPeak.innerText = `+$${peakProfit.toFixed(2)}`;
+        if (lblPeak) lblPeak.innerText = isCyberMode ? "PEAK TELEMETRY 🏆" : "PEAK PROFIT";
+        const dd = Math.max(0, peakProfit - profit);
+        if (statPeakDiff) {
+          statPeakDiff.innerText = dd > 0 ? `-$${dd.toFixed(2)} from Peak` : "Max Reached";
+          statPeakDiff.className = dd > 0 ? "text-[10px] text-rose-500 font-bold block mt-0.5" : "text-[10px] text-emerald-500 font-bold block mt-0.5";
+        }
+
+        const statExposure = document.getElementById("statOverallPeak");
+        const lblExposure = document.getElementById("lblPeakStake");
+        const statExposureMkt = document.getElementById("statOverallPeakMarket");
+        if (statExposure) statExposure.innerText = `$${peakStake.toFixed(2)}`;
+        if (lblExposure) lblExposure.innerText = isCyberMode ? "PEAK STAKE ⚡" : "PEAK STAKE";
+        if (statExposureMkt) statExposureMkt.innerText = `Current: $${currentStake.toFixed(2)}`;
+
+        // Middle Banner & Runtime
+        let uptimeStr = `Round #${totalRounds} Live (10m Rest)`;
+        if (a1.started_at) {
+          const startTs = new Date(a1.started_at).getTime();
+          if (!isNaN(startTs)) {
+            const diffSecs = Math.max(0, Math.floor((Date.now() - startTs) / 1000));
+            uptimeStr = `${formatFriendlyUptime(diffSecs)} (Round #${totalRounds})`;
+          }
+        }
+        const uptimeEl = document.getElementById("fleetUptimeVal");
+        if (uptimeEl) uptimeEl.innerText = uptimeStr;
+
+        const comfortingNotice = document.getElementById("comfortingNotice");
+        if (comfortingNotice) {
+          comfortingNotice.classList.remove("hidden");
+          comfortingNotice.innerHTML = `
+            <div class="flex items-center justify-between gap-3 text-xs sm:text-sm font-black text-emerald-900 dark:text-emerald-200">
+              <div class="flex items-center gap-2">
+                <span class="text-base">⚡</span>
+                <span>Account 1: Single-Account Trinity • Fast Vol 100s (1HZ100V) • 10m Cooldown • Unbroken Recovery</span>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                ${a1.status || "RUNNING"}
+              </span>
+            </div>
+          `;
+        }
+
+        renderAcc1Trinity(data.acc1_lab, data);
         return;
       }
 

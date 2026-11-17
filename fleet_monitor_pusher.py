@@ -504,8 +504,27 @@ def build_payload():
         except Exception:
             pass
 
+    acc1_lab_file = "/root/acc1_trinity/acc1_state.json" if os.name != "nt" else "acc1_trinity_local/acc1_state.json"
+    acc1_lab_data = None
+    if os.path.exists(acc1_lab_file):
+        try:
+            with open(acc1_lab_file, "r", encoding="utf-8") as af:
+                acc1_lab_data = json.load(af)
+        except Exception:
+            pass
+
+    if acc1_lab_data and "summary" in acc1_lab_data:
+        a1_sum = acc1_lab_data["summary"]
+        a1_profit = round(float(a1_sum.get("profit", 0.0)), 2)
+        a1_peak = round(float(a1_sum.get("peak_profit", 0.0)), 2)
+        peaks["account_systems"]["acc1_all"] = a1_peak
+        peaks["account_systems"]["acc1_eo"] = a1_peak
+        peaks["account_systems"]["acc1_ou"] = a1_peak
+        peaks["account_systems"]["acc1_cp"] = a1_peak
+
     return {
         "hedge_lab": hedge_lab_data,
+        "acc1_lab": acc1_lab_data,
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "reset_at": peaks.get("reset_at", datetime.now(timezone.utc).isoformat()),
         "total_active_bots": total_active_bots,
