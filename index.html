@@ -385,7 +385,7 @@
         heroTag.innerHTML = `🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070)`;
       }
       if (peaceText) {
-        peaceText.innerHTML = `Cross-Family Trinity Hedge (Randomized C/P, E/O, O/U) • Set A (C,E,U) vs Set B (P,O,O) • Unbroken 2.1x Recovery Across Cooldowns • All Fast 1s Markets (1HZ10V-100V) • 1s Breather • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>`;
+        peaceText.innerHTML = `Cross-Family Trinity Hedge (Randomized C/P, E/O, O/U) • Set A (C,E,U) vs Set B (P,O,O) • Unbroken 2.1x Recovery Across Cooldowns • All Fast 1s Markets (1HZ10V-100V) • 0s Switch • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>`;
       }
       if (peakBadge) {
         peakBadge.innerText = `Rounds: ${h.summary ? h.summary.total_rounds : 0}`;
@@ -962,7 +962,7 @@
             <span class="text-sm flex-shrink-0">🧪</span>
             <div class="text-left truncate">
               <div class="truncate">🧪 Hedge Lab (Acc 1 & 2)</div>
-              <div id="accSub-hedge" class="text-[10px] opacity-75 font-semibold truncate">Cross-Family Trinity (C/E/U vs P/O/O) • All Fast 1s Markets • 1s Breather</div>
+              <div id="accSub-hedge" class="text-[10px] opacity-75 font-semibold truncate">Cross-Family Trinity (C/E/U vs P/O/O) • All Fast 1s Markets • 0s Switch</div>
             </div>
           </div>
           <span id="accProfit-hedge" class="px-2 py-0.5 rounded-lg text-[11px] bg-slate-200 dark:bg-slate-700 font-black flex-shrink-0">+$0.00</span>
@@ -1180,7 +1180,7 @@
         if (profAccHedge) profAccHedge.className = activeProf;
         if (badge) {
           badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
-          badge.innerText = "🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070) • All Fast 1s Markets • 1s Breather • 10m Cooldown";
+          badge.innerText = "🧪 HEDGE LAB • ACC 1 (DOT91203477) ⇄ ACC 2 (DOT93845070) • All Fast 1s Markets • 0s Switch • 10m Cooldown";
         }
         if (sysGrid) sysGrid.classList.add("hidden");
       } else if (currentAccount === "acc1" && data && data.acc1_lab) {
@@ -2709,7 +2709,7 @@
         }
         const peaceText = document.getElementById("peaceOfMindText");
         if (peaceText) {
-          peaceText.innerHTML = "Cross-Family Trinity Hedge (Randomized C/P, E/O, O/U) • Set A (C,E,U) vs Set B (P,O,O) • Invert on Loss (No Cooling) • All Fast 1s Markets (1HZ10V - 1HZ100V) • 1s Breather • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>";
+          peaceText.innerHTML = "Cross-Family Trinity Hedge (Randomized C/P, E/O, O/U) • Set A (C,E,U) vs Set B (P,O,O) • Invert on Loss (No Cooling) • All Fast 1s Markets (1HZ10V - 1HZ100V) • 0s Switch • 10m Cooldown • <b>Existing Fleet Bots Untouched</b>";
         }        // Hide fleet drawdown notice (leak from other 216 bots)
         const ddNotice = document.getElementById("drawdownNotice");
         if (ddNotice) ddNotice.classList.add("hidden");
@@ -2764,7 +2764,7 @@
             <div class="flex items-center justify-between gap-3 text-xs sm:text-sm font-black text-purple-900 dark:text-purple-200">
               <div class="flex items-center gap-2">
                 <span class="text-base">🧪</span>
-                <span>Hedge Lab: Acc 1 (DOT91203477) ⇄ Acc 2 (DOT93845070) • All Fast 1s Markets (1HZ10V - 1HZ100V) • 1s Breather • 10m Cooldown</span>
+                <span>Hedge Lab: Acc 1 (DOT91203477) ⇄ Acc 2 (DOT93845070) • All Fast 1s Markets (1HZ10V - 1HZ100V) • 0s Switch • 10m Cooldown</span>
               </div>
               <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
                 ${hl.status || "RUNNING"}
