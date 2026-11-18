@@ -219,7 +219,7 @@
             <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="px-2 py-0.5 rounded ${isFastSwitch ? "bg-amber-900/60 border border-amber-500 text-amber-300 animate-pulse" : "bg-emerald-900/60 border border-emerald-700 text-emerald-300"} font-bold">
-                  ${isFastSwitch ? "⚡ Fast Switch (4s)" : "💤 10m Campaign Rest"}
+                  ${isFastSwitch ? "⚡ Immediate Switch (0s)" : "💤 10m Campaign Rest"}
                 </span>
                 <span class="px-2 py-0.5 rounded bg-indigo-900/60 border border-indigo-700 text-indigo-300 font-bold">
                   Campaign #${campaign.campaign_number || 1} (Step ${(campaign.step_index || 0) + 1}/6)
@@ -259,7 +259,7 @@
               <div class="text-sm font-bold text-slate-200">1 C/P • 1 E/O • 1 O/U</div>
               <div class="text-[11px] text-slate-400 mt-1">Randomized selection each campaign</div>
               <div class="text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-800">
-                4s fast switch between steps
+                Instant 0s switch between steps
               </div>
             </div>
 
